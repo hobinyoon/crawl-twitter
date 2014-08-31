@@ -40,12 +40,8 @@ public final class Crawl {
 						break;
 				} while ((cursor = ids.getNextCursor()) != 0);
 			}
-
-			for (long id: fids) {
-				System.out.printf("%d ", id);
-			}
-
-			System.out.printf("\n");
+			//for (long id: fids)
+			//	System.out.printf("%d\n", id);
 		} catch (TwitterException te) {
 			te.printStackTrace();
 			System.out.println("Failed to get friends' ids: " + te.getMessage());

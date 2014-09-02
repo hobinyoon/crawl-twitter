@@ -1,7 +1,6 @@
--- CREATE DATABASE twitter;
+CREATE DATABASE twitter IF NOT EXISTS;
 
-USE twitter;
-
-CREATE TABLE followers (
-	id BIGINT,
-	followers BLOB);
+CREATE TABLE IF NOT EXISTS twitter.followers (
+	id BIGINT NOT NULL,
+	followers TEXT NOT NULL,
+	PRIMARY KEY (id));

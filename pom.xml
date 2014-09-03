@@ -39,6 +39,11 @@
 					<artifactId>json-simple</artifactId>
 					<version>1.1.1</version>
 				</dependency>
+				<dependency>
+					<groupId>mysql</groupId>
+					<artifactId>mysql-connector-java</artifactId>
+					<version>5.1.32</version>
+				</dependency>
     </dependencies>
     <build>
         <defaultGoal>install</defaultGoal>
@@ -53,8 +58,8 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <configuration>
                     <encoding>UTF-8</encoding>
-                    <source>5</source>
-                    <target>5</target>
+                    <source>7</source>
+                    <target>7</target>
                 </configuration>
                 <version>2.5.1</version>
             </plugin>

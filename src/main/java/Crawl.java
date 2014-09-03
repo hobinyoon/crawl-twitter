@@ -10,10 +10,13 @@ import twitter4j.TwitterFactory;
 import twitter4j.conf.ConfigurationBuilder;
 
 public final class Crawl {
-	static final long CRAWL_FRIENDS_MAX = 1000;
+	static final long CRAWL_FRIENDS_MAX = 5000;
 
 	public static void main(String[] args) {
 		try {
+			//ChildSN.LoadParentsToCrawlToDB();
+			System.exit(0);
+
 			ConfigurationBuilder cb = new ConfigurationBuilder();
 			TwitterCredential tc = new TwitterCredential();
 			cb.setDebugEnabled(true)
@@ -29,8 +32,8 @@ public final class Crawl {
 			{
 				IDs ids;
 				do {
-					//ids = twitter.getFriendsIDs(seed_twitter_id, cursor);
-					ids = twitter.getFollowersIDs(seed_twitter_id, cursor);
+					ids = twitter.getFriendsIDs(seed_twitter_id, cursor);
+					//ids = twitter.getFollowersIDs(seed_twitter_id, cursor);
 					for (long id : ids.getIDs()) {
 						fids.add(id);
 						if (fids.size() == CRAWL_FRIENDS_MAX)
@@ -45,6 +48,10 @@ public final class Crawl {
 		} catch (TwitterException te) {
 			te.printStackTrace();
 			System.out.println("Failed to get friends' ids: " + te.getMessage());
+			System.exit(-1);
+		} catch (Exception e) {
+			e.printStackTrace();
+			System.out.println("Exception caught: " + e);
 			System.exit(-1);
 		}
 	}

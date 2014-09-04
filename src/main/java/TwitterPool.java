@@ -30,10 +30,11 @@ public class TwitterPool {
 
 
 	public static TwitterStream GetNextTwitterStream() {
-		// Not sure if a stream is ever throttled.
+		// Not sure if a stream is ever throttled. I guess not.
 		ConfigurationBuilder cb = new ConfigurationBuilder();
 		TwitterCredential tc = new TwitterCredential();
 		cb.setDebugEnabled(true)
+			.setJSONStoreEnabled(true)
 			.setOAuthConsumerKey(tc.consumerKey)
 			.setOAuthConsumerSecret(tc.consumerSecret)
 			.setOAuthAccessToken(tc.token)

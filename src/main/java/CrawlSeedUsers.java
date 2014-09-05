@@ -30,7 +30,7 @@ public class CrawlSeedUsers {
 				Calendar cal = Calendar.getInstance();
 				cal.set(2013, 8, 1, 0, 0, 0);	// 8 means September
 				oldest_date = cal.getTime();
-				System.out.println(oldest_date);
+				//System.out.println(oldest_date);
 			}
 
 			@Override
@@ -64,10 +64,9 @@ public class CrawlSeedUsers {
 						if (youtube_link == null)
 							break;
 
-						Util.ClearLine();
 						User u = status.getUser();
 						long uid = u.getId();
-						System.out.printf("%d %s %d %s\n", uid, u.getScreenName(), status.getId(), youtube_link);
+						StdoutWriter.W(String.format("%d %s %d %s", uid, u.getScreenName(), status.getId(), youtube_link));
 
 						if (DB.InsertUser(uid)) {
 							cnt_new_users ++;
@@ -85,8 +84,7 @@ public class CrawlSeedUsers {
 						return;
 					} while (false);
 
-					Util.ClearLine();
-					System.out.printf("new=%d dup=%d crawled=%d", cnt_new_users, cnt_dup_users, cnt_all);
+					StdoutWriter.Update(String.format("new=%d dup=%d crawled=%d", cnt_new_users, cnt_dup_users, cnt_all));
 				} catch (SQLException e) {
 					System.out.println("Got an exception: " + e);
 					System.exit(1);

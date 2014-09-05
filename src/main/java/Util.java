@@ -7,6 +7,5 @@ public class Util {
 		final String ESC = "\033[";
 		System.out.print(ESC + "1K");	// clear from cursor to beginning of the line
 		System.out.print(ESC + "1G"); // move the cursor to column 1
-		System.out.flush();
 	}
 }

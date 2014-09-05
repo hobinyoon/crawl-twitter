@@ -5,6 +5,7 @@ public final class Crawl {
 	static void Cleanup() {
 		System.out.println("\nCleaning up ...");
 		DB.Close();
+		StdoutWriter.Stop();
 	}
 
 	public static void main(String[] args) {
@@ -16,6 +17,7 @@ public final class Crawl {
 				}
 			});
 
+			StdoutWriter.Run();
 			CrawlSeedUsers.Run();
 		} catch (Exception e) {
 			e.printStackTrace();

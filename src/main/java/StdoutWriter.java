@@ -64,7 +64,6 @@ public class StdoutWriter {
 			_t.join();
 		} catch (InterruptedException e) {
 			e.printStackTrace();
-			System.out.println("Thread interrupted.");
 		}
 	}
 }

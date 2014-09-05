@@ -19,7 +19,7 @@ import twitter4j.json.DataObjectFactory;
 
 
 public class CrawlSeedUsers {
-	static void Run() throws Exception {
+	static void Run() {
 		StatusListener listener = new StatusListener() {
 			int cnt_all = 0;
 			int cnt_new_users = 0;

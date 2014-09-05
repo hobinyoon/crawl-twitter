@@ -11,6 +11,6 @@ CREATE TABLE IF NOT EXISTS twitter.friends (
 	friends TEXT NOT NULL,
 	PRIMARY KEY (id));
 
-CREATE TABLE IF NOT EXISTS twitter.child_sns_to_crawl (
-	sn varchar(15),
-	PRIMARY KEY (sn));
+CREATE TABLE IF NOT EXISTS twitter.child_ids_to_crawl (
+	id BIGINT,
+	PRIMARY KEY (id));

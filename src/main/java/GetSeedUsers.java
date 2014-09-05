@@ -12,6 +12,7 @@ import twitter4j.StatusListener;
 import twitter4j.Twitter;
 import twitter4j.TwitterStream;
 import twitter4j.TwitterStreamFactory;
+import twitter4j.User;
 import twitter4j.json.DataObjectFactory;
 
 

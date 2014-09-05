@@ -20,7 +20,7 @@ public class StdoutWriter {
 						Thread.sleep(1000 / update_freq);
 					}
 				} catch (InterruptedException e) {
-					System.out.println("Thread interrupted. Well... it's okay not to do anything on it.");
+					;
 				}
 			}
 		};
@@ -50,7 +50,6 @@ public class StdoutWriter {
 		_lock.lock();
 		try {
 			Util.ClearLine();
-			System.out.println("");
 			System.out.println(s);
 		} finally {
 			_lock.unlock();
@@ -59,11 +58,13 @@ public class StdoutWriter {
 
 	public static void Stop() {
 		try {
-			_stop_requested = true;
-			_t.join();
 			System.out.println("");
+			_stop_requested = true;
+			_t.interrupt();
+			_t.join();
 		} catch (InterruptedException e) {
-			System.out.println("Thread interrupted. Well... it's okay not to do anything on it.");
+			e.printStackTrace();
+			System.out.println("Thread interrupted.");
 		}
 	}
 }

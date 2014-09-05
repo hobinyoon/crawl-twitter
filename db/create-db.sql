@@ -13,4 +13,5 @@ CREATE TABLE IF NOT EXISTS twitter.friends (
 
 CREATE TABLE IF NOT EXISTS twitter.child_ids_to_crawl (
 	id BIGINT,
+	status CHAR(1) NOT NULL DEFAULT 'u',	-- u: unused, c: crawled
 	PRIMARY KEY (id));

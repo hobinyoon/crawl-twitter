@@ -3,7 +3,7 @@ package crawltwitter;
 
 public final class Crawl {
 	static void Cleanup() {
-		System.out.println("Cleaning up ...");
+		System.out.println("\nCleaning up ...");
 		DB.Close();
 	}
 
@@ -16,11 +16,7 @@ public final class Crawl {
 				}
 			});
 
-			DB.Insert();
-
-			//GetSeedUsers.Run();
-
-			//Practice.GetFriendsIDs();
+			CrawlSeedUsers.Run();
 		} catch (Exception e) {
 			e.printStackTrace();
 			System.out.println("Exception caught: " + e);

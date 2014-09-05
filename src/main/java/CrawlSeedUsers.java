@@ -1,5 +1,6 @@
 package crawltwitter;
 
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -13,14 +14,16 @@ import twitter4j.Twitter;
 import twitter4j.TwitterStream;
 import twitter4j.TwitterStreamFactory;
 import twitter4j.User;
+import twitter4j.URLEntity;
 import twitter4j.json.DataObjectFactory;
 
 
-public class GetSeedUsers {
+public class CrawlSeedUsers {
 	static void Run() throws Exception {
 		StatusListener listener = new StatusListener() {
 			int cnt_all = 0;
-			int cnt_needed = 0;
+			int cnt_new_users = 0;
+			int cnt_dup_users = 0;
 			Date oldest_date;
 
 			{
@@ -32,41 +35,62 @@ public class GetSeedUsers {
 
 			@Override
 			public void onStatus(Status status) {
-				//System.out.println(status);
-				//System.out.println("@" + status.getUser().getScreenName() + " [" + status.getText() + "]");
-
-				cnt_all ++;
-
-				do {
-					// skip young users (created after the oldest_date)
-					if (status.getUser().getCreatedAt().after(oldest_date))
-						break;
-					// we are interested in retweets only.
-					if (! status.isRetweet())
-						break;
-					// Check if the parent tweet has location. Retweets does not have
-					// geolocation.
-					// https://dev.twitter.com/docs/streaming-apis/parameters#locations
-					if (status.getRetweetedStatus().getGeoLocation() == null)
-						break;
-
-					cnt_needed ++;
-					Util.ClearLine();
-					User u = status.getUser();
-					System.out.printf("%d %s\n", u.getId(), u.getScreenName());
-
-					//System.out.println(DataObjectFactory.getRawJSON(status));
+				try {
 					//System.out.println(status);
+					//System.out.println("@" + status.getUser().getScreenName() + " [" + status.getText() + "]");
 
-					//	System.out.println("@" + status.getUser().getScreenName()
-					//	+ " " + status.getUser().getCreatedAt()
-					//	+ " " + status.getGeoLocation()
-					//	+ " [" + status.getText() + "]");
-					return;
-				} while (false);
+					cnt_all ++;
 
-				Util.ClearLine();
-				System.out.printf("%d %d", cnt_needed, cnt_all);
+					do {
+						// skip young users (created after the oldest_date)
+						if (status.getUser().getCreatedAt().after(oldest_date))
+							break;
+						// we are interested in retweets only.
+						if (! status.isRetweet())
+							break;
+						// Check if the parent tweet has location. Retweets does not have
+						// geolocation.
+						// https://dev.twitter.com/docs/streaming-apis/parameters#locations
+						if (status.getRetweetedStatus().getGeoLocation() == null)
+							break;
+
+						String youtube_link = null;
+						for (URLEntity e: status.getURLEntities()) {
+							if (e.getExpandedURL().toLowerCase().contains("youtube")) {
+								youtube_link = e.getExpandedURL();
+								break;
+							}
+						}
+						if (youtube_link == null)
+							break;
+
+						Util.ClearLine();
+						User u = status.getUser();
+						long uid = u.getId();
+						System.out.printf("%d %s %d %s\n", uid, u.getScreenName(), status.getId(), youtube_link);
+
+						if (DB.InsertUser(uid)) {
+							cnt_new_users ++;
+						} else {
+							cnt_dup_users ++;
+						}
+
+						//System.out.println(DataObjectFactory.getRawJSON(status));
+						//System.out.println(status);
+
+						//	System.out.println("@" + status.getUser().getScreenName()
+						//	+ " " + status.getUser().getCreatedAt()
+						//	+ " " + status.getGeoLocation()
+						//	+ " [" + status.getText() + "]");
+						return;
+					} while (false);
+
+					Util.ClearLine();
+					System.out.printf("new=%d dup=%d crawled=%d", cnt_new_users, cnt_dup_users, cnt_all);
+				} catch (SQLException e) {
+					System.out.println("Got an exception: " + e);
+					System.exit(1);
+				}
 			}
 
 			@Override

@@ -14,11 +14,13 @@ public class DB {
 	static private String _user = "twitter";
 	static private String _password = "twitterpass";
 	static private Connection _conn = null;
+	static private PreparedStatement _ps_insert_user = null;
 
 	static {
 		try {
 			_conn = DriverManager.getConnection(_cs, _user, _password);
 			_conn.setAutoCommit(false);
+			_ps_insert_user = _conn.prepareStatement("INSERT INTO child_ids_to_crawl (id) VALUES (?)");
 		} catch (Exception e) {
 			e.printStackTrace();
 			System.out.println("Exception caught: " + e);
@@ -28,9 +30,10 @@ public class DB {
 
 	static void Close() {
 		try {
-			if (_conn != null) {
+			if (_ps_insert_user != null)
+				_ps_insert_user.close();
+			if (_conn != null)
 				_conn.close();
-			}
 		} catch (Exception e) {
 			e.printStackTrace();
 			System.out.println("Exception caught: " + e);
@@ -38,25 +41,20 @@ public class DB {
 		}
 	}
 
-	static void Insert() throws SQLException {
-		PreparedStatement ps = null;
-		String qs = "INSERT INTO child_ids_to_crawl (id) VALUES (?)";
+	static boolean InsertUser(long uid) throws SQLException {
 		try {
-			ps = _conn.prepareStatement(qs);
-			ps.setLong(1, 123);
-			ps.executeUpdate();
+			_ps_insert_user.setLong(1, uid);
+			_ps_insert_user.executeUpdate();
 			_conn.commit();
+			return true;
 		} catch (SQLException e) {
 			if (e.getErrorCode() == MysqlErrorNumbers.ER_DUP_ENTRY) {
 				//System.out.println("Duplicate entry: " + e.getMessage());
 				System.out.println(e);
 			} else
 				throw e;
-		} finally {
-			if (ps != null) {
-				ps.close();
-			}
 		}
+		return false;
 	}
 
 	static void Select() throws SQLException {

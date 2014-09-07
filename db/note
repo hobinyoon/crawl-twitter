@@ -1,3 +1,0 @@
-backup
-
-$ mysqldump -u twitter -p twitter > twitter.sql

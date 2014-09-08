@@ -20,7 +20,6 @@ CREATE TABLE IF NOT EXISTS twitter.uids_to_crawl (
 	PRIMARY KEY (id),
 	INDEX (status));
 
--- when crawling parent tweets, rt_id can be null
 CREATE TABLE IF NOT EXISTS twitter.tweets (
 	id BIGINT,
 	uid BIGINT NOT NULL,
@@ -29,7 +28,7 @@ CREATE TABLE IF NOT EXISTS twitter.tweets (
 	geo_longi DOUBLE NOT NULL,
 	youtube_link VARCHAR(1024) NOT NULL,
 	hashtags VARCHAR(145) NOT NULL,
-	rt_id BIGINT,
+	rt_id BIGINT NOT NULL,	-- -1 when not retweet
 	text VARCHAR(145) NOT NULL,
 	PRIMARY KEY (id),
 	INDEX (uid),

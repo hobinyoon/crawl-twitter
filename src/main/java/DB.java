@@ -194,14 +194,57 @@ public class DB {
 		}
 	}
 
+	static void AddChildUsersToCrawl(long[] uids) throws SQLException {
+		Statement stmt = null;
+		try {
+			stmt = _conn_crawl_tweets.createStatement();
+			for (long uid: uids) {
+				String status = null;
+				{
+					final String q = String.format("SELECT status FROM uids_to_crawl WHERE id=%d", uid);
+					ResultSet rs = stmt.executeQuery(q);
+					if (rs.next())
+						status = rs.getString("status");
+				}
+				if (status == null) {
+					// insert new child uid
+					final String q = String.format("INSERT INTO uids_to_crawl (id, crawled_at, status) VALUES (%d, NOW(), 'UC')", uid);
+					stmt.executeUpdate(q);
+					_conn_crawl_tweets.commit();
+					Mon.num_users_to_crawl_child_new ++;
+				} else if (status.equals("C") || status.equals("I")) {
+					// the uid is already crawled. do nothing.
+					// StdoutWriter.W(String.format("Parent uid %d is already crawled", uid));
+					Mon.num_users_to_crawl_child_dup ++;
+				} else {
+					// update status to 'UC' and crawled_at to NOW().
+					final String q = String.format("UPDATE uids_to_crawl SET status='UC', crawled_at=NOW() WHERE id=%d", uid);
+					stmt.executeUpdate(q);
+					_conn_crawl_tweets.commit();
+					Mon.num_users_to_crawl_child_dup ++;
+				}
+			}
+		} finally {
+			if (stmt != null) stmt.close();
+		}
+	}
+
 	static long GetUserToCrawl() throws SQLException {
-		// return uid with UP(uncrawled parent), US(uncrawled sibling), or
+		// returns uid with status UC (uncrawled child), UP(uncrawled parent), or
 		// U(uncrawled seeded), in the repective order. If none exists, return -1.
+		// I prioritize children, which will help build big fan-out faster, I
+		// guess.
 		Statement stmt = null;
 		try {
 			stmt = _conn_crawl_tweets.createStatement();
 			{
-				final String q = "SELECT * FROM uids_to_crawl WHERE status IN ('UP', 'UC') ORDER BY crawled_at DESC LIMIT 1";
+				final String q = "SELECT * FROM uids_to_crawl WHERE status='UC' ORDER BY crawled_at DESC LIMIT 1";
+				ResultSet rs = stmt.executeQuery(q);
+				if (rs.next())
+					return rs.getLong("id");
+			}
+			{
+				final String q = "SELECT * FROM uids_to_crawl WHERE status='UP' ORDER BY crawled_at DESC LIMIT 1";
 				ResultSet rs = stmt.executeQuery(q);
 				if (rs.next())
 					return rs.getLong("id");

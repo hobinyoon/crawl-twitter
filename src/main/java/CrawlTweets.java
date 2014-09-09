@@ -6,6 +6,7 @@ import java.util.Date;
 import java.util.List;
 import twitter4j.GeoLocation;
 import twitter4j.HashtagEntity;
+import twitter4j.IDs;
 import twitter4j.Paging;
 import twitter4j.Status;
 import twitter4j.Twitter;
@@ -155,11 +156,27 @@ public class CrawlTweets {
 					DB.AddParentUserToCrawl(s.getRetweetedStatus().getUser().getId());
 				}
 
-				if (s.isRetweeted()) {
-					// TODO: find user IDs of retweets of this tweet and add to
-					// uids_to_crawl. their statuses are 'UC'. Strange. I don't see any
-					// of these.
-					StdoutWriter.W(String.format("THE TWEET IS RETWEETED. NEED TO GET CHILDREN: id=%d", id));
+				// s.isRetweeted() doesn't seem to work. use getRetweetCount() instead.
+				int rt_cnt = s.getRetweetCount();
+				if (rt_cnt > 0) {
+					IDs c_ids = null;
+					do {
+						try {
+							c_ids = _tpt.twitter.getRetweeterIds(id, 200, -1);
+							break;
+						} catch (TwitterException e) {
+							int sc = e.getStatusCode();
+							if (sc == 429) {
+								StdoutWriter.W("Twitter credential is rate-limited. Switching to a new one.");
+								_tpt.SetRateLimited();
+								_tpt = TwitterPool.GetTwitter();
+							} else
+								throw e;
+						}
+					} while (true);
+					c_ids.getIDs();
+					DB.AddChildUsersToCrawl(c_ids.getIDs());
+					//StdoutWriter.W(String.format("The tweet is retweeted. Need to get children: id=%d rt_cnt=%d", id, rt_cnt));
 				}
 
 				DB.AddTweet(id, uid, ca, known_gl, youtube_link, ht_string.toString(), rt_id, s.getText());

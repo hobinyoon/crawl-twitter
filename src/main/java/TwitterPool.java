@@ -34,6 +34,7 @@ public class TwitterPool {
 			.setOAuthAccessToken(t.tc.token)
 			.setOAuthAccessTokenSecret(t.tc.secret);
 		t.twitter = new TwitterFactory(cb.build()).getInstance();
+		StdoutWriter.W(String.format("Got a new credential. token=%s", t.tc.token));
 		return t;
 	}
 
@@ -48,7 +49,6 @@ public class TwitterPool {
 			.setOAuthAccessToken(tc.token)
 			.setOAuthAccessTokenSecret(tc.secret);
 		TwitterStream ts = new TwitterStreamFactory(cb.build()).getInstance();
-		StdoutWriter.W(String.format("Got a new credential. token=%s", tc.token));
 		return ts;
 	}
 }

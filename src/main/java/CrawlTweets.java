@@ -54,12 +54,12 @@ public class CrawlTweets {
 		long uid = -1;
 		while (true) {
 			uid = DB.GetUserToCrawl();
+			Mon.current_uid = uid;
 			if (uid != -1)
 				break;
-			StdoutWriter.W("No user to crawl. will try again in 10 sec.");
-			Thread.sleep(10000);
+			//StdoutWriter.W("No user to crawl. will try again in 1 sec.");
+			Thread.sleep(1000);
 		}
-		Mon.current_uid = uid;
 
 		// one on Sep 2. Not the best tight bound.
 		long max_id = 506827318132629504L;

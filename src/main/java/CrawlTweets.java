@@ -83,7 +83,7 @@ public class CrawlTweets {
 				} catch (TwitterException e) {
 					int sc = e.getStatusCode();
 					if (sc == 429) {
-						StdoutWriter.W("Twitter credential is rate-limited. Switching to a new one.");
+						//StdoutWriter.W("Twitter credential is rate-limited. Switching to a new one.");
 						_tpt.SetRateLimited();
 						_tpt = TwitterPool.GetTwitter();
 					} else if (sc == 404) {
@@ -167,7 +167,7 @@ public class CrawlTweets {
 						} catch (TwitterException e) {
 							int sc = e.getStatusCode();
 							if (sc == 429) {
-								StdoutWriter.W("Twitter credential is rate-limited. Switching to a new one.");
+								//StdoutWriter.W("Twitter credential is rate-limited. Switching to a new one.");
 								_tpt.SetRateLimited();
 								_tpt = TwitterPool.GetTwitter();
 							} else

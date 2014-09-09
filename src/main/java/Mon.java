@@ -15,6 +15,8 @@ public class Mon {
 
 	static public long current_uid = 0;
 
+	static public long num_credentials_used = 0;
+
 	static {
 	}
 }

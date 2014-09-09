@@ -29,8 +29,8 @@ public class CrawlTweets {
 				} catch (InterruptedException e) {
 					;
 				} catch (Exception e) {
-					e.printStackTrace();
 					StdoutWriter.W(e.toString());
+					e.printStackTrace();
 					System.exit(1);
 				}
 			}

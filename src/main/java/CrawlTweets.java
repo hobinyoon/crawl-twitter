@@ -80,10 +80,15 @@ public class CrawlTweets {
 					_tpt.SetLastUsed();
 					break;
 				} catch (TwitterException e) {
-					if (e.getStatusCode() == 429) {
+					int sc = e.getStatusCode();
+					if (sc == 429) {
 						StdoutWriter.W("Twitter credential is rate-limited. Switching to a new one.");
 						_tpt.SetRateLimited();
 						_tpt = TwitterPool.GetTwitter();
+					} else if (sc == 404) {
+						StdoutWriter.W(String.format("Invalid user request. uid=%d", uid));
+						DB.MarkUserInvalid(uid);
+						return;
 					} else
 						throw e;
 				}

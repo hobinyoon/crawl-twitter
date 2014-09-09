@@ -177,7 +177,7 @@ public class DB {
 				final String q = String.format("INSERT INTO uids_to_crawl (id, crawled_at, status) VALUES (%d, NOW(), 'UP')", uid);
 				stmt.executeUpdate(q);
 				_conn_crawl_tweets.commit();
-			} else if (status.equals("C")) {
+			} else if (status.equals("C") || status.equals("I")) {
 				// the uid is already crawled. do nothing.
 				StdoutWriter.W(String.format("Parent uid %d is already crawled", uid));
 			} else {
@@ -221,6 +221,18 @@ public class DB {
 		_conn_crawl_tweets.commit();
 		Mon.num_crawled_users ++;
 		//StdoutWriter.W(String.format("crawled all tweets of user %d", uid));
+	}
+
+	static void MarkUserInvalid(long uid) throws SQLException {
+		Statement stmt = null;
+		try {
+			stmt = _conn_crawl_tweets.createStatement();
+			final String q = String.format("UPDATE uids_to_crawl SET status='I', crawled_at=NOW() WHERE id=%d", uid);
+			stmt.executeUpdate(q);
+			_conn_crawl_tweets.commit();
+		} finally {
+			if (stmt != null) stmt.close();
+		}
 	}
 
 	static void AddTweet(long id, long uid, Date created_at, GeoLocation location,

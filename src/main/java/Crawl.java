@@ -4,7 +4,7 @@ package crawltwitter;
 public final class Crawl {
 	static void Cleanup() {
 		System.out.println("\nCleaning up ...");
-		CrawlSeedUsers.Stop();
+		StreamSeedUsers.Stop();
 		CrawlTweets.Stop();
 		DB.Close();
 		StdoutWriter.Stop();
@@ -23,7 +23,7 @@ public final class Crawl {
 
 			// It seems that this needs to go through the end of the main function.
 			// strange thread model.
-			CrawlSeedUsers.Run();
+			StreamSeedUsers.Run();
 
 			CrawlTweets.Run();
 		} catch (Exception e) {

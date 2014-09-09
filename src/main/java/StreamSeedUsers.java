@@ -16,7 +16,7 @@ import twitter4j.URLEntity;
 import twitter4j.json.DataObjectFactory;
 
 
-public class CrawlSeedUsers {
+public class StreamSeedUsers {
 	static private TwitterStream _ts = null;
 
 	static void Run() throws Exception {
@@ -113,6 +113,6 @@ public class CrawlSeedUsers {
 			throw new RuntimeException("Unexpected");
 		_ts.cleanUp();
 		_ts.shutdown();
-		StdoutWriter.W("Stopping CrawlSeedUsers ...");
+		StdoutWriter.W("Stopping StreamSeedUsers ...");
 	}
 }

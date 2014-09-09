@@ -12,13 +12,14 @@ CREATE TABLE IF NOT EXISTS twitter.credentials (
 	last_rate_limited TIMESTAMP NULL DEFAULT NULL,	-- permit null
 	PRIMARY KEY (token));
 
--- When selecting, rows with 'UP' and 'US' has priority over those with 'U',
+-- When selecting, rows with 'UP' and 'UC' has priority over those with 'U',
 -- which helps build bigger fan-out.
 CREATE TABLE IF NOT EXISTS twitter.uids_to_crawl (
 	id BIGINT,
-	status VARCHAR(2) NOT NULL,	-- UP(uncrawled parent), US(uncrawled sibling), U(uncrawled seed), C(crawled)
+	crawled_at TIMESTAMP NOT NULL,
+	status VARCHAR(2) NOT NULL,	-- UP(uncrawled parent), UC(uncrawled child), U(uncrawled seed), C(crawled)
 	PRIMARY KEY (id),
-	INDEX (status));
+	INDEX (status, created_at));
 
 CREATE TABLE IF NOT EXISTS twitter.tweets (
 	id BIGINT,

@@ -1,14 +1,17 @@
 #! /bin/bash
 
-CUR_DATETIME=`date +%y%m%d-%H%H%S`
+set -e
+set -u
+
+CUR_DATETIME=`date +%y%m%d-%H%M%S`
 echo $CUR_DATETIME
 
 FN_OUT="/mnt/mdc-data/pgr/twitter/backup/twitter-"$CUR_DATETIME".sql"
 
-time mysqldump -u twitter -ptwitterpass twitter > $FN_OUT
+time /usr/bin/mysqldump --skip-tz-utc -u twitter -ptwitterpass twitter > $FN_OUT
 
-bzip2 -v9 $FN_OUT
+/bin/bzip2 -v9 $FN_OUT
 
-find /mnt/mdc-data/pgr/twitter/backup -type f -ls | sort -k 11 -r | head -n 5
+/usr/bin/find /mnt/mdc-data/pgr/twitter/backup -type f -ls | /usr/bin/sort -k 11 -r | /usr/bin/head -n 5
 
 echo "Strip the twitter credential table before distribution!"

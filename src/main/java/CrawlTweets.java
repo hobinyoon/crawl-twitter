@@ -157,8 +157,9 @@ public class CrawlTweets {
 
 				if (s.isRetweeted()) {
 					// TODO: find user IDs of retweets of this tweet and add to
-					// uids_to_crawl. their statuses are 'UC'
-					StdoutWriter.W(String.format("the tweet is retweeted. need to get children: id=%d", id));
+					// uids_to_crawl. their statuses are 'UC'. Strange. I don't see any
+					// of these.
+					StdoutWriter.W(String.format("THE TWEET IS RETWEETED. NEED TO GET CHILDREN: id=%d", id));
 				}
 
 				DB.AddTweet(id, uid, ca, known_gl, youtube_link, ht_string.toString(), rt_id, s.getText());

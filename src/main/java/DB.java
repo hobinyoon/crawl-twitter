@@ -177,6 +177,7 @@ public class DB {
 				final String q = String.format("INSERT INTO uids_to_crawl (id, crawled_at, status) VALUES (%d, NOW(), 'UP')", uid);
 				stmt.executeUpdate(q);
 				_conn_crawl_tweets.commit();
+				Mon.num_users_to_crawl_parent_new ++;
 			} else if (status.equals("C") || status.equals("I")) {
 				// the uid is already crawled. do nothing.
 				StdoutWriter.W(String.format("Parent uid %d is already crawled", uid));
@@ -185,6 +186,7 @@ public class DB {
 				final String q = String.format("UPDATE uids_to_crawl SET status='UP', crawled_at=NOW() WHERE id=%d", uid);
 				stmt.executeUpdate(q);
 				_conn_crawl_tweets.commit();
+				Mon.num_users_to_crawl_parent_dup ++;
 			}
 		} finally {
 			if (stmt != null) stmt.close();

@@ -9,6 +9,8 @@ public class Mon {
 	static public long num_crawled_tweets_inserted_to_db = 0;
 	static public long num_crawled_child_users = 0;
 
+	static public long current_c_uid = 0;
+
 	static {
 	}
 }

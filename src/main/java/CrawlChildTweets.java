@@ -59,7 +59,7 @@ public class CrawlChildTweets {
 			StdoutWriter.W("No child to crawl. will try again in 10 sec.");
 			Thread.sleep(10000);
 		}
-		StdoutWriter.W(String.format("c_id=%d", c_id));
+		Mon.current_c_uid = c_id;
 
 		// one on Sep 2. Not the best tight bound.
 		long max_id = 506827318132629504L;
@@ -81,7 +81,7 @@ public class CrawlChildTweets {
 					break;
 				} catch (TwitterException e) {
 					if (e.getStatusCode() == 429) {
-						StdoutWriter.W("Twitter credential is Rate-limited. Switching to a new one.");
+						StdoutWriter.W("Twitter credential is rate-limited. Switching to a new one.");
 						_tpt.SetRateLimited();
 						_tpt = TwitterPool.GetTwitter();
 					} else

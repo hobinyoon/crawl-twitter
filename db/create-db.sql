@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS twitter.uids_to_crawl (
 	status VARCHAR(2) NOT NULL,	-- UP(uncrawled parent), UC(uncrawled child), U(uncrawled seed), C(crawled),
 															-- I(invalid, such as non-existent user)
 	PRIMARY KEY (id),
-	INDEX (status, created_at));
+	INDEX (status, crawled_at));
 
 CREATE TABLE IF NOT EXISTS twitter.tweets (
 	id BIGINT,
@@ -29,9 +29,9 @@ CREATE TABLE IF NOT EXISTS twitter.tweets (
 	geo_lati DOUBLE NOT NULL,
 	geo_longi DOUBLE NOT NULL,
 	youtube_link VARCHAR(1024) NOT NULL,
-	hashtags VARCHAR(145) NOT NULL,
+	hashtags VARCHAR(450) NOT NULL,
 	rt_id BIGINT NOT NULL,	-- -1 when not retweet
-	text VARCHAR(145) NOT NULL,
+	text VARCHAR(450) NOT NULL,	-- give some cushion for utf8
 	PRIMARY KEY (id),
 	INDEX (uid),
 	INDEX (rt_id));

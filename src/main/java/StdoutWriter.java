@@ -33,15 +33,19 @@ public class StdoutWriter {
 		_lock.lock();
 		try {
 			Util.ClearLine();
-			System.out.print(String.format("%s seed_users: new=%d dup=%d crawled=%d children: inserted_tweets=%d crawled_tweets=%d crawled_users=%d cur_uid=%d",
+			System.out.print(String.format("%s users_to_crawl: s=%d sn=%d sd=%d pn=%d pd=%d cn=%d cd=%d crawl: tc=%d tn=%d uc=%d cur_uid=%d",
 						new SimpleDateFormat("HH:mm:ss").format(Calendar.getInstance().getTime()),
-						Mon.num_seed_users_new,
-						Mon.num_seed_users_dup,
-						Mon.num_seed_users_streamed,
-						Mon.num_crawled_tweets_inserted_to_db,
+						Mon.num_users_to_crawl_streamed,
+						Mon.num_users_to_crawl_streamed_new,
+						Mon.num_users_to_crawl_streamed_dup,
+						Mon.num_users_to_crawl_parent_new,
+						Mon.num_users_to_crawl_parent_dup,
+						Mon.num_users_to_crawl_child_new,
+						Mon.num_users_to_crawl_child_dup,
 						Mon.num_crawled_tweets,
-						Mon.num_crawled_child_users,
-						Mon.current_c_uid));
+						Mon.num_crawled_tweets_new,
+						Mon.num_crawled_users,
+						Mon.current_uid));
 			System.out.flush();
 			_status_written = true;
 		} finally {

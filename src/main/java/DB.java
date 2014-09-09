@@ -15,30 +15,34 @@ public class DB {
 	static private String _cs = "jdbc:mysql://localhost:3306/twitter";
 	static private String _user = "twitter";
 	static private String _password = "twitterpass";
-	static private Connection _conn_crawl_seed_users = null;
-	static private Connection _conn_crawl_child_tweets = null;
-	static private PreparedStatement _ps_add_seed_user = null;
+	static private Connection _conn_stream_seed_users = null;
+	static private Connection _conn_crawl_tweets = null;
+	static private PreparedStatement _ps_insert_seed_user = null;
 	static private PreparedStatement _ps_mark_seed_user_done = null;
-	static private PreparedStatement _ps_insert_child_tweet = null;
+	static private PreparedStatement _ps_insert_tweet = null;
 	static private PreparedStatement _ps_credential_rate_limited = null;
 	static private PreparedStatement _ps_credential_last_used = null;
 
 	static {
 		try {
-			_conn_crawl_seed_users = DriverManager.getConnection(_cs, _user, _password);
-			_conn_crawl_seed_users.setAutoCommit(false);
-			_conn_crawl_child_tweets = DriverManager.getConnection(_cs, _user, _password);
-			_conn_crawl_child_tweets.setAutoCommit(false);
+			_conn_stream_seed_users = DriverManager.getConnection(_cs, _user, _password);
+			_conn_stream_seed_users.setAutoCommit(false);
+			// This enables one connection read committed writes from the other connection.
+			_conn_stream_seed_users.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
+			_conn_crawl_tweets = DriverManager.getConnection(_cs, _user, _password);
+			_conn_crawl_tweets.setAutoCommit(false);
+			_conn_crawl_tweets.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
 
-			_ps_add_seed_user = _conn_crawl_seed_users.prepareStatement("INSERT INTO uids_to_crawl (id, status) VALUES (?, ?)");
-			_ps_mark_seed_user_done = _conn_crawl_child_tweets.prepareStatement("UPDATE uids_to_crawl SET status = 'C' WHERE id=(?)");
-			_ps_insert_child_tweet = _conn_crawl_child_tweets.prepareStatement(
+			_ps_insert_seed_user = _conn_stream_seed_users.prepareStatement(
+					"INSERT INTO uids_to_crawl (id, crawled_at, status) VALUES (?, NOW(), ?)");
+			_ps_mark_seed_user_done = _conn_crawl_tweets.prepareStatement("UPDATE uids_to_crawl SET status = 'C' WHERE id=(?)");
+			_ps_insert_tweet = _conn_crawl_tweets.prepareStatement(
 					"INSERT INTO tweets "
 					+ "(id, uid, created_at, geo_lati, geo_longi, youtube_link, hashtags, rt_id, text) "
 					+ "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
-			_ps_credential_last_used = _conn_crawl_child_tweets.prepareStatement(
+			_ps_credential_last_used = _conn_crawl_tweets.prepareStatement(
 					"UPDATE credentials SET last_used = now() WHERE token=(?)");
-			_ps_credential_rate_limited = _conn_crawl_child_tweets.prepareStatement(
+			_ps_credential_rate_limited = _conn_crawl_tweets.prepareStatement(
 					"UPDATE credentials SET last_rate_limited = now() WHERE token=(?)");
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -49,14 +53,14 @@ public class DB {
 
 	static void Close() {
 		try {
-			if (_ps_add_seed_user != null) _ps_add_seed_user.close();
+			if (_ps_insert_seed_user != null) _ps_insert_seed_user.close();
 			if (_ps_mark_seed_user_done != null) _ps_mark_seed_user_done.close();
-			if (_ps_insert_child_tweet != null) _ps_insert_child_tweet.close();
+			if (_ps_insert_tweet != null) _ps_insert_tweet.close();
 			if (_ps_credential_last_used != null) _ps_credential_last_used.close();
 			if (_ps_credential_rate_limited != null) _ps_credential_rate_limited.close();
 
-			if (_conn_crawl_seed_users != null) _conn_crawl_seed_users.close();
-			if (_conn_crawl_child_tweets != null) _conn_crawl_child_tweets.close();
+			if (_conn_stream_seed_users != null) _conn_stream_seed_users.close();
+			if (_conn_crawl_tweets != null) _conn_crawl_tweets.close();
 		} catch (Exception e) {
 			e.printStackTrace();
 			System.out.println("Exception caught: " + e);
@@ -86,7 +90,7 @@ public class DB {
 	static TC GetTwitterCredentialForStream() throws SQLException {
 		Statement stmt = null;
 		try {
-			stmt = _conn_crawl_seed_users.createStatement();
+			stmt = _conn_stream_seed_users.createStatement();
 			final String q = "SELECT * FROM credentials WHERE for_stream=true and (status is null or status !='i') LIMIT 1";
 			ResultSet rs = stmt.executeQuery(q);
 			long id = -1;
@@ -106,7 +110,7 @@ public class DB {
 	static TC GetTwitterCredential() throws SQLException {
 		Statement stmt = null;
 		try {
-			stmt = _conn_crawl_child_tweets.createStatement();
+			stmt = _conn_crawl_tweets.createStatement();
 			final String q = "SELECT * FROM credentials WHERE "
 				+ "for_stream=false "
 				+ "and (status is null or status!='i') "	// valid one
@@ -132,29 +136,59 @@ public class DB {
 	static void CredentialSetRateLimited(String token) throws SQLException {
 		_ps_credential_rate_limited.setString(1, token);
 		_ps_credential_rate_limited.executeUpdate();
-		_conn_crawl_child_tweets.commit();
+		_conn_crawl_tweets.commit();
 	}
 
 	static void CredentialSetLastUsed(String token) throws SQLException {
 		_ps_credential_last_used.setString(1, token);
 		_ps_credential_last_used.executeUpdate();
-		_conn_crawl_child_tweets.commit();
+		_conn_crawl_tweets.commit();
 	}
 
-	static boolean AddUserToCrawl(long uid, String status) throws SQLException {
+	static void AddSeedUserToCrawl(long uid) throws SQLException {
 		try {
-			_ps_add_seed_user.setLong(1, uid);
-			_ps_add_seed_user.setString(2, status);
-			_ps_add_seed_user.executeUpdate();
-			_conn_crawl_seed_users.commit();
-			return true;
+			_ps_insert_seed_user.setLong(1, uid);
+			_ps_insert_seed_user.setString(2, "U");	// U: uncrawled
+			_ps_insert_seed_user.executeUpdate();
+			_conn_stream_seed_users.commit();
+			Mon.num_users_to_crawl_streamed_new ++;
 		} catch (SQLException e) {
 			if (e.getErrorCode() == MysqlErrorNumbers.ER_DUP_ENTRY) {
 				StdoutWriter.W(String.format("Dup user: %d", uid));
+				Mon.num_users_to_crawl_streamed_dup ++;
 			} else
 				throw e;
 		}
-		return false;
+	}
+
+	static void AddParentUserToCrawl(long uid) throws SQLException {
+		Statement stmt = null;
+		try {
+			String status = null;
+			stmt = _conn_crawl_tweets.createStatement();
+			{
+				final String q = String.format("SELECT status FROM uids_to_crawl WHERE id=%d", uid);
+				ResultSet rs = stmt.executeQuery(q);
+				if (rs.next())
+					status = rs.getString("status");
+			}
+			if (status == null) {
+				// insert new parent uid
+				final String q = String.format("INSERT INTO uids_to_crawl (id, crawled_at, status) VALUES (%d, NOW(), 'UP')", uid);
+				stmt.executeUpdate(q);
+				_conn_crawl_tweets.commit();
+			} else if (status.equals("C")) {
+				// the uid is already crawled. do nothing.
+				StdoutWriter.W(String.format("Parent uid %d is already crawled", uid));
+			} else {
+				// update status to 'UP' and crawled_at to NOW().
+				final String q = String.format("UPDATE uids_to_crawl SET status='UP', crawled_at=NOW() WHERE id=%d", uid);
+				stmt.executeUpdate(q);
+				_conn_crawl_tweets.commit();
+			}
+		} finally {
+			if (stmt != null) stmt.close();
+		}
 	}
 
 	static long GetUserToCrawl() throws SQLException {
@@ -162,25 +196,19 @@ public class DB {
 		// U(uncrawled seeded), in the repective order. If none exists, return -1.
 		Statement stmt = null;
 		try {
-			stmt = _conn_crawl_child_tweets.createStatement();
+			stmt = _conn_crawl_tweets.createStatement();
 			{
-				final String q = "SELECT * FROM uids_to_crawl WHERE status='UP' LIMIT 1";
+				final String q = "SELECT * FROM uids_to_crawl WHERE status IN ('UP', 'UC') ORDER BY crawled_at DESC LIMIT 1";
 				ResultSet rs = stmt.executeQuery(q);
 				if (rs.next())
-					return rs.getInt("id");
-			}
-			{
-				final String q = "SELECT * FROM uids_to_crawl WHERE status='US' LIMIT 1";
-				ResultSet rs = stmt.executeQuery(q);
-				if (rs.next())
-					return rs.getInt("id");
+					return rs.getLong("id");
 			}
 			{
 				final String q = "SELECT * FROM uids_to_crawl WHERE status='U' LIMIT 1";
 				ResultSet rs = stmt.executeQuery(q);
 				if (! rs.next())
 					return -1;
-				return rs.getInt("id");
+				return rs.getLong("id");
 			}
 		} finally {
 			if (stmt != null) stmt.close();
@@ -190,28 +218,28 @@ public class DB {
 	static void MarkUserCrawled(long uid) throws SQLException {
 		_ps_mark_seed_user_done.setLong(1, uid);
 		_ps_mark_seed_user_done.executeUpdate();
-		_conn_crawl_child_tweets.commit();
-		Mon.num_crawled_child_users ++;
+		_conn_crawl_tweets.commit();
+		Mon.num_crawled_users ++;
 		//StdoutWriter.W(String.format("crawled all tweets of user %d", uid));
 	}
 
-	static void AddChildTweet(long id, long uid, Date created_at, GeoLocation location,
+	static void AddTweet(long id, long uid, Date created_at, GeoLocation location,
 			String youtube_link, String ht_string, long rt_id, String text)
 		throws SQLException {
 		try {
 			// StdoutWriter.W(String.format("%d %d %s %s %s %s %s", id, uid, created_at, location, youtube_link, ht_string, text));
-			_ps_insert_child_tweet.setLong(1, id);
-			_ps_insert_child_tweet.setLong(2, uid);
-			_ps_insert_child_tweet.setTimestamp(3, new java.sql.Timestamp(created_at.getTime()));
-			_ps_insert_child_tweet.setDouble(4, location.getLatitude());
-			_ps_insert_child_tweet.setDouble(5, location.getLongitude());
-			_ps_insert_child_tweet.setString(6, youtube_link);
-			_ps_insert_child_tweet.setString(7, ht_string);
-			_ps_insert_child_tweet.setLong(8, rt_id);
-			_ps_insert_child_tweet.setString(9, text);
-			_ps_insert_child_tweet.executeUpdate();
-			_conn_crawl_child_tweets.commit();
-			Mon.num_crawled_tweets_inserted_to_db ++;
+			_ps_insert_tweet.setLong(1, id);
+			_ps_insert_tweet.setLong(2, uid);
+			_ps_insert_tweet.setTimestamp(3, new java.sql.Timestamp(created_at.getTime()));
+			_ps_insert_tweet.setDouble(4, location.getLatitude());
+			_ps_insert_tweet.setDouble(5, location.getLongitude());
+			_ps_insert_tweet.setString(6, youtube_link);
+			_ps_insert_tweet.setString(7, ht_string);
+			_ps_insert_tweet.setLong(8, rt_id);
+			_ps_insert_tweet.setString(9, text);
+			_ps_insert_tweet.executeUpdate();
+			_conn_crawl_tweets.commit();
+			Mon.num_crawled_tweets_new ++;
 		} catch (SQLException e) {
 			if (e.getErrorCode() == MysqlErrorNumbers.ER_DUP_ENTRY) {
 				StdoutWriter.W(String.format("Dup tweet: %d", id));

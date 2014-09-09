@@ -5,7 +5,7 @@ public final class Crawl {
 	static void Cleanup() {
 		System.out.println("\nCleaning up ...");
 		CrawlSeedUsers.Stop();
-		CrawlChildTweets.Stop();
+		CrawlTweets.Stop();
 		DB.Close();
 		StdoutWriter.Stop();
 	}
@@ -25,7 +25,7 @@ public final class Crawl {
 			// strange thread model.
 			CrawlSeedUsers.Run();
 
-			CrawlChildTweets.Run();
+			CrawlTweets.Run();
 		} catch (Exception e) {
 			e.printStackTrace();
 			System.out.println("Exception caught: " + e);

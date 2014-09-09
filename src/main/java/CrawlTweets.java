@@ -14,7 +14,7 @@ import twitter4j.URLEntity;
 import twitter4j.json.DataObjectFactory;
 
 
-public class CrawlChildTweets {
+public class CrawlTweets {
 	private static Thread _t = null;
 	private static volatile boolean _stop_requested = false;
 
@@ -23,7 +23,7 @@ public class CrawlChildTweets {
 			public void run() {
 				try {
 					while (! _stop_requested) {
-						_CrawlChild();
+						_CrawlUserTweets();
 					}
 				} catch (InterruptedException e) {
 					;
@@ -42,7 +42,7 @@ public class CrawlChildTweets {
 			_stop_requested = true;
 			_t.interrupt();
 			_t.join();
-			StdoutWriter.W("CrawlChildTweets stopped.");
+			StdoutWriter.W("CrawlTweets stopped.");
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
@@ -50,16 +50,16 @@ public class CrawlChildTweets {
 
 	static TwitterPool.T _tpt = null;
 
-	static void _CrawlChild() throws Exception {
-		long c_id = -1;
+	static void _CrawlUserTweets() throws Exception {
+		long uid = -1;
 		while (true) {
-			c_id = DB.GetUserToCrawl();
-			if (c_id != -1)
+			uid = DB.GetUserToCrawl();
+			if (uid != -1)
 				break;
-			StdoutWriter.W("No child to crawl. will try again in 10 sec.");
+			StdoutWriter.W("No user to crawl. will try again in 10 sec.");
 			Thread.sleep(10000);
 		}
-		Mon.current_c_uid = c_id;
+		Mon.current_uid = uid;
 
 		// one on Sep 2. Not the best tight bound.
 		long max_id = 506827318132629504L;
@@ -76,7 +76,7 @@ public class CrawlChildTweets {
 			List<Status> statuses = null;
 			do {
 				try {
-					statuses = _tpt.twitter.getUserTimeline(c_id, p);
+					statuses = _tpt.twitter.getUserTimeline(uid, p);
 					_tpt.SetLastUsed();
 					break;
 				} catch (TwitterException e) {
@@ -101,7 +101,7 @@ public class CrawlChildTweets {
 					min_id = Math.min(min_id, id);
 
 				Mon.num_crawled_tweets ++;
-				//StdoutWriter.W(String.format(" %s %d %s", c_id, id, s.getCreatedAt()));
+				//StdoutWriter.W(String.format(" %s %d %s", uid, id, s.getCreatedAt()));
 
 				// locations; for the current tweet and for interpolation of others
 				GeoLocation gl = s.getGeoLocation();
@@ -145,14 +145,20 @@ public class CrawlChildTweets {
 				}
 
 				long rt_id = -1;
-				if (s.isRetweet())
+				if (s.isRetweet()) {
 					rt_id = s.getRetweetedStatus().getId();
+					DB.AddParentUserToCrawl(rt_id);
+				}
 
-				DB.AddChildTweet(id, c_id, ca, known_gl, youtube_link, ht_string.toString(), rt_id, s.getText());
-				// TODO: add rt_id to ids_to_crawl
+				if (s.isRetweeted()) {
+					// TODO: find user IDs of retweets of this tweet and add to
+					// uids_to_crawl. their statuses are 'UC'
+				}
+
+				DB.AddTweet(id, uid, ca, known_gl, youtube_link, ht_string.toString(), rt_id, s.getText());
 			}
 			if (statuses.size() == 0 || min_id == -1 || hit_oldest_date) {
-				DB.MarkUserCrawled(c_id);
+				DB.MarkUserCrawled(uid);
 				break;
 			}
 			//StdoutWriter.W(String.format("min_id=%d", min_id));

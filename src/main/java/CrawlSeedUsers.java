@@ -26,7 +26,7 @@ public class CrawlSeedUsers {
 				try {
 					//System.out.println(status);
 					//System.out.println("@" + status.getUser().getScreenName() + " [" + status.getText() + "]");
-					Mon.num_seed_users_streamed ++;
+					Mon.num_users_to_crawl_streamed ++;
 
 					do {
 						// skip young users
@@ -54,12 +54,7 @@ public class CrawlSeedUsers {
 						User u = status.getUser();
 						long uid = u.getId();
 						//StdoutWriter.W(String.format("%d %s %d %s", uid, u.getScreenName(), status.getId(), youtube_link));
-
-						if (DB.AddUserToCrawl(uid, "U")) {
-							Mon.num_seed_users_new ++;
-						} else {
-							Mon.num_seed_users_dup ++;
-						}
+						DB.AddSeedUserToCrawl(uid);
 
 						//System.out.println(DataObjectFactory.getRawJSON(status));
 						//System.out.println(status);

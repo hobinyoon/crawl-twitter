@@ -9,7 +9,6 @@ public class StdoutWriter {
 	private static final Lock _lock = new ReentrantLock();
 	private static volatile boolean _stop_requested = false;
 	private static Thread _t = null;
-	private static volatile String _status_update = null;
 
 	public static void Run() {
 		_t = new Thread() {
@@ -28,22 +27,20 @@ public class StdoutWriter {
 	}
 
 	static void _UpdateStatus() {
-		if (_status_update == null)
-			return;
-
 		_lock.lock();
 		try {
 			Util.ClearLine();
-			System.out.print(_status_update);
+			System.out.print(String.format("seed_users: new=%d dup=%d crawled=%d children: inserted_tweets=%d crawled_tweets=%d crawled_users=%d",
+						Mon.num_seed_users_new,
+						Mon.num_seed_users_dup,
+						Mon.num_seed_users_streamed,
+						Mon.num_crawled_tweets_inserted_to_db,
+						Mon.num_crawled_tweets,
+						Mon.num_crawled_child_users));
 			System.out.flush();
-			_status_update = null;
 		} finally {
 			_lock.unlock();
 		}
-	}
-
-	public static void Update(String s) {
-		_status_update = s;
 	}
 
 	public static void W(String s) {
@@ -58,10 +55,11 @@ public class StdoutWriter {
 
 	public static void Stop() {
 		try {
-			System.out.println("");
 			_stop_requested = true;
 			_t.interrupt();
 			_t.join();
+			Util.ClearLine();
+			System.out.println("StdoutWriter stopped.");
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}

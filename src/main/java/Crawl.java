@@ -4,6 +4,8 @@ package crawltwitter;
 public final class Crawl {
 	static void Cleanup() {
 		System.out.println("\nCleaning up ...");
+		CrawlSeedUsers.Stop();
+		CrawlChildTweets.Stop();
 		DB.Close();
 		StdoutWriter.Stop();
 	}
@@ -18,7 +20,12 @@ public final class Crawl {
 			});
 
 			StdoutWriter.Run();
+
+			// It seems that this needs to go through the end of the main function.
+			// strange thread model.
 			CrawlSeedUsers.Run();
+
+			CrawlChildTweets.Run();
 		} catch (Exception e) {
 			e.printStackTrace();
 			System.out.println("Exception caught: " + e);

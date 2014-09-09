@@ -2,8 +2,6 @@ package crawltwitter;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.List;
 import twitter4j.FilterQuery;
 import twitter4j.StallWarning;
@@ -19,31 +17,20 @@ import twitter4j.json.DataObjectFactory;
 
 
 public class CrawlSeedUsers {
-	static void Run() {
+	static private TwitterStream _ts = null;
+
+	static void Run() throws Exception {
 		StatusListener listener = new StatusListener() {
-			int cnt_all = 0;
-			int cnt_new_users = 0;
-			int cnt_dup_users = 0;
-			Date oldest_date;
-
-			{
-				Calendar cal = Calendar.getInstance();
-				cal.set(2013, 8, 1, 0, 0, 0);	// 8 means September
-				oldest_date = cal.getTime();
-				//System.out.println(oldest_date);
-			}
-
 			@Override
 			public void onStatus(Status status) {
 				try {
 					//System.out.println(status);
 					//System.out.println("@" + status.getUser().getScreenName() + " [" + status.getText() + "]");
-
-					cnt_all ++;
+					Mon.num_seed_users_streamed ++;
 
 					do {
-						// skip young users (created after the oldest_date)
-						if (status.getUser().getCreatedAt().after(oldest_date))
+						// skip young users
+						if (status.getUser().getCreatedAt().after(Conf.user_ca_oldest_date))
 							break;
 						// we are interested in retweets only.
 						if (! status.isRetweet())
@@ -66,12 +53,12 @@ public class CrawlSeedUsers {
 
 						User u = status.getUser();
 						long uid = u.getId();
-						StdoutWriter.W(String.format("%d %s %d %s", uid, u.getScreenName(), status.getId(), youtube_link));
+						//StdoutWriter.W(String.format("%d %s %d %s", uid, u.getScreenName(), status.getId(), youtube_link));
 
-						if (DB.InsertUser(uid)) {
-							cnt_new_users ++;
+						if (DB.AddUserToCrawl(uid, "U")) {
+							Mon.num_seed_users_new ++;
 						} else {
-							cnt_dup_users ++;
+							Mon.num_seed_users_dup ++;
 						}
 
 						//System.out.println(DataObjectFactory.getRawJSON(status));
@@ -83,8 +70,6 @@ public class CrawlSeedUsers {
 						//	+ " [" + status.getText() + "]");
 						return;
 					} while (false);
-
-					StdoutWriter.Update(String.format("new=%d dup=%d crawled=%d", cnt_new_users, cnt_dup_users, cnt_all));
 				} catch (SQLException e) {
 					System.out.println("Got an exception: " + e);
 					System.exit(1);
@@ -117,14 +102,22 @@ public class CrawlSeedUsers {
 			}
 		};
 
-		TwitterStream ts = TwitterPool.GetNextTwitterStream();
-		ts.addListener(listener);
+		_ts = TwitterPool.GetTwitterStream();
+		_ts.addListener(listener);
 		FilterQuery fq = new FilterQuery();
 		String[] keywordsArray = {"youtube"};
 		fq.track(keywordsArray);
 		// double[][] locations = { { 40.714623d, -74.006605d }, { 42.3583d, -71.0603d } };
 		// fq.locations(locations);
 		// Twitter doesn't filter both with keywords and locations.
-		ts.filter(fq);
+		_ts.filter(fq);
+	}
+
+	static public void Stop() {
+		if (_ts == null)
+			throw new RuntimeException("Unexpected");
+		_ts.cleanUp();
+		_ts.shutdown();
+		StdoutWriter.W("Stopping CrawlSeedUsers ...");
 	}
 }

@@ -10,6 +10,7 @@ CREATE TABLE IF NOT EXISTS twitter.credentials (
 	status CHAR(1),	-- v: valid, i: invalid, null: unknown
 	last_used TIMESTAMP NULL DEFAULT NULL,	-- permit null
 	last_rate_limited TIMESTAMP NULL DEFAULT NULL,	-- permit null
+	sec_until_retry INT DEFAULT NULL,
 	PRIMARY KEY (token));
 
 -- When selecting, rows with 'UP' and 'UC' has priority over those with 'U',

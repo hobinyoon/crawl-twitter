@@ -27,31 +27,18 @@ function build_src {
 		echo "Building package ... "
 		mvn package -DskipTests
 	fi
-
-	#if [ ! -f $DEF_CLASS_PATH_FILE ]; then
-	#	need_build=true
-	#else
-	#	# compare modification time of the class path file and src directory tree
-	#	MT_CP=`find $DEF_CLASS_PATH_FILE -printf "%Ay%Am%Ad-%AH%AM%AS\n"`
-	#	MT_SRC=`find src -name "*.java" -printf "%Ay%Am%Ad-%AH%AM%AS\n" | sort | tail -n 1`
-	#	if [[ "$MT_CP" < "$MT_SRC" ]]; then
-	#		need_build=true
-	#		echo "Last modification time:    "$MT_SRC
-	#		echo "Last classpath build time: "$MT_CP
-	#	fi
-	#fi
-
-	#if [ "$need_build" = true ] ; then
-	#	echo "Building package ... "
-	#	mvn package -DskipTests
-	#	echo -n "Building classpath dependency file ... "
-	#	/usr/bin/time --format="%es" mvn dependency:build-classpath | grep -ve "\[" > $DEF_CLASS_PATH_FILE
-	#fi
 }
+
+ARGC=$#
+if [ $ARGC -eq 1 ] && [ "$1" == "build_cp" ]
+then
+	echo -n "Building classpath dependency ... "
+	/usr/bin/time --format="%es" mvn dependency:build-classpath | grep -ve "\[" > $DEF_CLASS_PATH_FILE
+	exit 0
+fi
 
 build_src
 
-#java -cp target/crawl-twitter-0.1.jar:`cat $DEF_CLASS_PATH_FILE` crawltwitter.Crawl "${@:1}"
 java -cp $TARGET_JAR:`cat $DEF_CLASS_PATH_FILE` crawltwitter.Crawl "${@:1}"
 
 popd > /dev/null

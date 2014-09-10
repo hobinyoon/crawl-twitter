@@ -78,6 +78,7 @@ public class CrawlTweets {
 			p.setMaxId(max_id);
 			List<Status> statuses = null;
 			do {
+				long server_overload_sleep_time = 1000;
 				try {
 					if (_stop_requested) return;
 					statuses = _tpt.twitter.getUserTimeline(uid, p);
@@ -89,6 +90,9 @@ public class CrawlTweets {
 						//StdoutWriter.W(String.format("rate-limited: %s", e));
 						_tpt.SetRateLimitedAndWait(sec_until_reset);
 						_tpt = TwitterPool.GetTwitter();
+					} else if (e.getStatusCode() == 503) {	// Twitter servers overloaded
+						Thread.sleep(server_overload_sleep_time);
+						server_overload_sleep_time *= 2;
 					} else
 						throw e;
 				}
@@ -162,6 +166,7 @@ public class CrawlTweets {
 				if (rt_cnt > 0) {
 					IDs c_ids = null;
 					do {
+						long server_overload_sleep_time = 1000;
 						try {
 							if (_stop_requested) return;
 							c_ids = _tpt.twitter.getRetweeterIds(id, 200, -1);
@@ -173,6 +178,9 @@ public class CrawlTweets {
 								//StdoutWriter.W(String.format("rate-limited: %s", e));
 								_tpt.SetRateLimitedAndWait(sec_until_reset);
 								_tpt = TwitterPool.GetTwitter();
+							} else if (e.getStatusCode() == 503) {	// Twitter servers overloaded
+								Thread.sleep(server_overload_sleep_time);
+								server_overload_sleep_time *= 2;
 							} else
 								throw e;
 						}

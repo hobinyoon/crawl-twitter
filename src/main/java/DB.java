@@ -111,14 +111,15 @@ public class DB {
 			String consumer_secret = null;
 
 			while (true) {
-				final String q0 = "SELECT *, ADDDATE(last_rate_limited, INTERVAL sec_until_retry SECOND) as retry_after "
-					+ "FROM credentials "
-					+ "WHERE for_stream=false "
-						+ "and (status is null or status != 'I') "	// valid one
-						+ "and (NOW() - last_check_out > 60)"
-						+ "and token not in (select distinct(token) from cred_auth_history where status='F' and (NOW() - time_ < 86400)) "
-					+ "order by retry_after "
-					+ "LIMIT 1";
+				final String q0 = String.format(
+						"SELECT *, ADDDATE(last_rate_limited, INTERVAL sec_until_retry SECOND) as retry_after "
+						+ "FROM credentials "
+						+ "WHERE for_stream=false "
+							+ "and (status is null or status != 'I') "	// valid one
+							+ "and (NOW() - last_check_out > 60)"
+							+ "and token not in (select distinct(token) from cred_auth_history where status='F' and (NOW() - time_ < %d)) "	// 24 hour
+						+ "order by retry_after "
+						+ "LIMIT 1", Conf.cred_auth_fail_retry_wait_sec);
 				ResultSet rs = stmt.executeQuery(q0);
 				long id = -1;
 				if (! rs.next()) {

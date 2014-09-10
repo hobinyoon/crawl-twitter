@@ -7,13 +7,20 @@ CREATE TABLE IF NOT EXISTS twitter.credentials (
 	consumer_key VARCHAR(100) NOT NULL,
 	consumer_secret VARCHAR(100) NOT NULL,
 	for_stream BOOL NOT NULL,
-	status CHAR(1),	-- v: valid, i: invalid, null: unknown
-	last_used TIMESTAMP NULL DEFAULT NULL,	-- permit null
-	last_rate_limited TIMESTAMP NULL DEFAULT NULL,	-- permit null
+	status CHAR(1),	-- V: valid, I: invalid, null: unknown
+	last_check_out TIMESTAMP NULL DEFAULT NULL,	-- NULL means permit null
+	num_reqs_before_rate_limited INT DEFAULT 0,
+	last_rate_limited TIMESTAMP NULL DEFAULT NULL,
 	sec_until_retry INT DEFAULT NULL,
-	sec_until_rate_limited INT DEFAULT NULL,
 	rate_limited_ip VARCHAR(20) DEFAULT NULL,
 	PRIMARY KEY (token));
+
+CREATE TABLE IF NOT EXISTS twitter.cred_auth_history (
+	token VARCHAR(100),
+	status CHAR(1) NOT NULL,	-- S: auth succeeded, F: auth failed
+	time_ TIMESTAMP NOT NULL,
+	PRIMARY KEY (token),
+	INDEX (time_));
 
 -- When selecting, rows with 'UP' and 'UC' has priority over those with 'U',
 -- which helps build bigger fan-out.

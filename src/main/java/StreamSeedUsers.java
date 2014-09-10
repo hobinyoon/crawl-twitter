@@ -19,7 +19,7 @@ import twitter4j.json.DataObjectFactory;
 public class StreamSeedUsers {
 	static private TwitterStream _ts = null;
 
-	static void Run() throws Exception {
+	static void Start() throws Exception {
 		StatusListener listener = new StatusListener() {
 			@Override
 			public void onStatus(Status status) {

@@ -4,9 +4,14 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
+
+import joptsimple.OptionParser;
+import joptsimple.OptionSet;
 
 public final class Conf {
-	public static String dn_children = "/mnt/mdc-data/pbr/twitter/children/concise/children";
+	public static boolean stream_seed_users;
+
 	public static String db_user = "twitter";
 	public static String db_pass = "twitterpass";
 
@@ -38,5 +43,35 @@ public final class Conf {
 			System.out.println("Exception caught: " + e);
 			System.exit(1);
 		}
+	}
+
+	public static void ParseArgs(String[] args)
+		throws java.io.IOException, java.text.ParseException, java.lang.InterruptedException {
+		OptionSet options = _opt_parser.parse(args);
+		if (options.has("help")) {
+			_PrintHelp();
+			System.exit(0);
+		}
+		List<?> nonop_args = options.nonOptionArguments();
+		if (nonop_args.size() != 0) {
+			_PrintHelp();
+			System.exit(1);
+		}
+
+		stream_seed_users = (Boolean) options.valueOf("stream_seed_users");
+
+		System.out.printf("Conf:\n");
+		System.out.printf("  stream_seed_users: %b\n", stream_seed_users);
+	}
+
+	private static final OptionParser _opt_parser = new OptionParser() {{
+		accepts("help", "Show this help message");
+		accepts("stream_seed_users", "Stream seed users")
+			.withRequiredArg().ofType(Boolean.class).defaultsTo(false);
+	}};
+
+	private static void _PrintHelp() throws java.io.IOException {
+		System.out.println("Usage: Crawl [<option>]");
+		_opt_parser.printHelpOn(System.out);
 	}
 }

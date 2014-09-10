@@ -19,11 +19,14 @@ public final class Crawl {
 				}
 			});
 
+			Conf.ParseArgs(args);
+
 			StdoutWriter.Start();
 
 			// It seems that this needs to go through the end of the main function.
 			// strange thread model.
-			StreamSeedUsers.Run();
+			if (Conf.stream_seed_users)
+				StreamSeedUsers.Start();
 
 			CrawlTweets.Run();
 		} catch (Exception e) {

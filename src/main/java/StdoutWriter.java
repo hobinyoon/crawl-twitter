@@ -7,13 +7,20 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.Calendar;
 
 public class StdoutWriter {
+	private static volatile boolean _started = false;
 	private static int update_freq = 5;	// updates per sec
 	private static final Lock _lock = new ReentrantLock();
 	private static volatile boolean _stop_requested = false;
 	private static Thread _t = null;
 	private static volatile boolean _status_written = false;
 
-	public static void Run() {
+	static {
+		Start();
+	}
+
+	static void Start() {
+		if (_started)
+			return;
 		_t = new Thread() {
 			public void run() {
 				try {
@@ -27,6 +34,7 @@ public class StdoutWriter {
 			}
 		};
 		_t.start();
+		_started = true;
 	}
 
 	static void _UpdateStatus() {

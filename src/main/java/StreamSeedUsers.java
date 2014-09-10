@@ -109,10 +109,10 @@ public class StreamSeedUsers {
 	}
 
 	static public void Stop() {
-		if (_ts == null)
-			throw new RuntimeException("Unexpected");
-		_ts.cleanUp();
-		_ts.shutdown();
-		StdoutWriter.W("Stopping StreamSeedUsers ...");
+		if (_ts != null) {
+			_ts.cleanUp();
+			_ts.shutdown();
+			StdoutWriter.W("CrawlTweets stopped.");
+		}
 	}
 }

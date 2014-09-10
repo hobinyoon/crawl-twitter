@@ -19,7 +19,7 @@ public final class Crawl {
 				}
 			});
 
-			StdoutWriter.Run();
+			StdoutWriter.Start();
 
 			// It seems that this needs to go through the end of the main function.
 			// strange thread model.
@@ -29,7 +29,7 @@ public final class Crawl {
 		} catch (Exception e) {
 			e.printStackTrace();
 			System.out.println("Exception caught: " + e);
-			System.exit(-1);
+			System.exit(1);
 		}
 	}
 }

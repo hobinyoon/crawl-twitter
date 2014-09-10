@@ -41,9 +41,11 @@ public class CrawlTweets {
 	public static void Stop() {
 		try {
 			_stop_requested = true;
-			_t.interrupt();
-			_t.join();
-			StdoutWriter.W("CrawlTweets stopped.");
+			if (_t != null) {
+				_t.interrupt();
+				_t.join();
+				StdoutWriter.W("CrawlTweets stopped.");
+			}
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
@@ -85,7 +87,7 @@ public class CrawlTweets {
 					if (e.exceededRateLimitation()) {
 						int sec_until_reset = e.getRateLimitStatus().getSecondsUntilReset();
 						//StdoutWriter.W(String.format("rate-limited: %s", e));
-						_tpt.SetRateLimited(sec_until_reset);
+						_tpt.SetRateLimitedAndWait(sec_until_reset);
 						_tpt = TwitterPool.GetTwitter();
 					} else
 						throw e;
@@ -148,9 +150,11 @@ public class CrawlTweets {
 				}
 
 				long rt_id = -1;
+				long rt_uid = -1;
 				if (s.isRetweet()) {
 					rt_id = s.getRetweetedStatus().getId();
-					DB.AddParentUserToCrawl(s.getRetweetedStatus().getUser().getId());
+					rt_uid = s.getRetweetedStatus().getUser().getId();
+					DB.AddParentUserToCrawl(rt_uid);
 				}
 
 				// s.isRetweeted() doesn't seem to work. use getRetweetCount() instead.
@@ -167,7 +171,7 @@ public class CrawlTweets {
 							if (e.exceededRateLimitation()) {
 								int sec_until_reset = e.getRateLimitStatus().getSecondsUntilReset();
 								//StdoutWriter.W(String.format("rate-limited: %s", e));
-								_tpt.SetRateLimited(sec_until_reset);
+								_tpt.SetRateLimitedAndWait(sec_until_reset);
 								_tpt = TwitterPool.GetTwitter();
 							} else
 								throw e;
@@ -178,7 +182,7 @@ public class CrawlTweets {
 					//StdoutWriter.W(String.format("The tweet is retweeted. Need to get children: id=%d rt_cnt=%d", id, rt_cnt));
 				}
 
-				DB.AddTweet(id, uid, ca, known_gl, youtube_link, ht_string.toString(), rt_id, s.getText());
+				DB.AddTweet(id, uid, ca, known_gl, youtube_link, ht_string.toString(), rt_id, rt_uid, s.getText());
 			}
 			if (statuses.size() == 0 || min_id == -1 || hit_oldest_date) {
 				DB.MarkUserCrawled(uid);

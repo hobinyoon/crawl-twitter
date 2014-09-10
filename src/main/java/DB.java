@@ -39,12 +39,12 @@ public class DB {
 			_ps_mark_seed_user_done = _conn_crawl_tweets.prepareStatement("UPDATE uids_to_crawl SET status = 'C' WHERE id=(?)");
 			_ps_insert_tweet = _conn_crawl_tweets.prepareStatement(
 					"INSERT INTO tweets "
-					+ "(id, uid, created_at, geo_lati, geo_longi, youtube_link, hashtags, rt_id, text) "
-					+ "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+					+ "(id, uid, created_at, geo_lati, geo_longi, youtube_link, hashtags, rt_id, rt_uid, text) "
+					+ "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 			_ps_credential_last_used = _conn_crawl_tweets.prepareStatement(
 					"UPDATE credentials SET last_used = now() WHERE token=(?)");
 			_ps_credential_rate_limited = _conn_crawl_tweets.prepareStatement(
-					"UPDATE credentials SET last_rate_limited=NOW(), sec_until_retry=(?) WHERE token=(?)");
+					"UPDATE credentials SET last_rate_limited=NOW(), sec_until_retry=(?), sec_until_rate_limited=(?), rate_limited_ip=(?)  WHERE token=(?)");
 		} catch (Exception e) {
 			e.printStackTrace();
 			System.out.println("Exception caught: " + e);
@@ -122,7 +122,7 @@ public class DB {
 			long id = -1;
 			if (! rs.next())
 				throw new RuntimeException("Unexpected");
-			long wait_milli = rs.getTimestamp("retry_after").getTime() + Conf.cred_rate_limit_wait_cushion_in_milli - (new java.util.Date()).getTime();
+			long wait_milli = rs.getTimestamp("retry_after").getTime() + Conf.cred_rate_limit_wait_cushion_in_milli - (new Date()).getTime();
 			if (wait_milli > 0) {
 				StdoutWriter.W(String.format("wait for %d ms for the next available credential", wait_milli));
 				Thread.sleep(wait_milli);
@@ -138,9 +138,12 @@ public class DB {
 		}
 	}
 
-	static void CredentialSetRateLimited(String token, int sec_until_reset) throws SQLException {
+	static void CredentialSetRateLimited(String token, int sec_until_reset,
+			int sec_until_rate_limited) throws SQLException {
 		_ps_credential_rate_limited.setInt(1, sec_until_reset);
-		_ps_credential_rate_limited.setString(2, token);
+		_ps_credential_rate_limited.setInt(2, sec_until_rate_limited);
+		_ps_credential_rate_limited.setString(3, Conf.ip);
+		_ps_credential_rate_limited.setString(4, token);
 		_ps_credential_rate_limited.executeUpdate();
 		_conn_crawl_tweets.commit();
 	}
@@ -288,7 +291,7 @@ public class DB {
 	}
 
 	static void AddTweet(long id, long uid, Date created_at, GeoLocation location,
-			String youtube_link, String ht_string, long rt_id, String text)
+			String youtube_link, String ht_string, long rt_id, long rt_uid, String text)
 		throws SQLException {
 		try {
 			// StdoutWriter.W(String.format("%d %d %s %s %s %s %s", id, uid, created_at, location, youtube_link, ht_string, text));
@@ -300,7 +303,8 @@ public class DB {
 			_ps_insert_tweet.setString(6, youtube_link);
 			_ps_insert_tweet.setString(7, ht_string);
 			_ps_insert_tweet.setLong(8, rt_id);
-			_ps_insert_tweet.setString(9, text);
+			_ps_insert_tweet.setLong(9, rt_uid);
+			_ps_insert_tweet.setString(10, text);
 			_ps_insert_tweet.executeUpdate();
 			_conn_crawl_tweets.commit();
 			Mon.num_crawled_tweets_new ++;

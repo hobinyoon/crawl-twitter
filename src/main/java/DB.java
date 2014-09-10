@@ -123,8 +123,8 @@ public class DB {
 				ResultSet rs = stmt.executeQuery(q0);
 				long id = -1;
 				if (! rs.next()) {
-					StdoutWriter.W("No available credentials at this time. retrying in 10 sec ...");
-					Thread.sleep(10000);
+					StdoutWriter.W("No available credentials at this time. retrying in 10 mins ...");
+					Thread.sleep(600000);
 					continue;
 				}
 				long wait_milli = rs.getTimestamp("retry_after").getTime() + Conf.cred_rate_limit_wait_cushion_in_milli - (new Date()).getTime();

@@ -15,6 +15,8 @@ public final class Conf {
 	public static Date tweet_oldest_date = null;
 	public static Date tweet_youngest_date = null;
 
+	public static long cred_rate_limit_wait_cushion_in_milli = 5000;
+
 	static {
 		Calendar cal = Calendar.getInstance();
 		cal.set(2013, 8, 1, 0, 0, 0);	// 8 is September

@@ -77,19 +77,16 @@ public class CrawlTweets {
 			List<Status> statuses = null;
 			do {
 				try {
+					if (_stop_requested) return;
 					statuses = _tpt.twitter.getUserTimeline(uid, p);
 					_tpt.SetLastUsed();
 					break;
 				} catch (TwitterException e) {
-					int sc = e.getStatusCode();
-					if (sc == 429) {
-						//StdoutWriter.W("Twitter credential is rate-limited. Switching to a new one.");
-						_tpt.SetRateLimited();
+					if (e.exceededRateLimitation()) {
+						int sec_until_reset = e.getRateLimitStatus().getSecondsUntilReset();
+						//StdoutWriter.W(String.format("rate-limited: %s", e));
+						_tpt.SetRateLimited(sec_until_reset);
 						_tpt = TwitterPool.GetTwitter();
-					} else if (sc == 404) {
-						StdoutWriter.W(String.format("Invalid user request. uid=%d", uid));
-						DB.MarkUserInvalid(uid);
-						return;
 					} else
 						throw e;
 				}
@@ -162,13 +159,15 @@ public class CrawlTweets {
 					IDs c_ids = null;
 					do {
 						try {
+							if (_stop_requested) return;
 							c_ids = _tpt.twitter.getRetweeterIds(id, 200, -1);
+							_tpt.SetLastUsed();
 							break;
 						} catch (TwitterException e) {
-							int sc = e.getStatusCode();
-							if (sc == 429) {
-								//StdoutWriter.W("Twitter credential is rate-limited. Switching to a new one.");
-								_tpt.SetRateLimited();
+							if (e.exceededRateLimitation()) {
+								int sec_until_reset = e.getRateLimitStatus().getSecondsUntilReset();
+								//StdoutWriter.W(String.format("rate-limited: %s", e));
+								_tpt.SetRateLimited(sec_until_reset);
 								_tpt = TwitterPool.GetTwitter();
 							} else
 								throw e;

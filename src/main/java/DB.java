@@ -1,5 +1,6 @@
 package crawltwitter;
 
+import java.lang.InterruptedException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -43,7 +44,7 @@ public class DB {
 			_ps_credential_last_used = _conn_crawl_tweets.prepareStatement(
 					"UPDATE credentials SET last_used = now() WHERE token=(?)");
 			_ps_credential_rate_limited = _conn_crawl_tweets.prepareStatement(
-					"UPDATE credentials SET last_rate_limited = now() WHERE token=(?)");
+					"UPDATE credentials SET last_rate_limited=NOW(), sec_until_retry=(?) WHERE token=(?)");
 		} catch (Exception e) {
 			e.printStackTrace();
 			System.out.println("Exception caught: " + e);
@@ -107,21 +108,25 @@ public class DB {
 		}
 	}
 
-	static TC GetTwitterCredential() throws SQLException {
+	static TC GetTwitterCredential() throws SQLException, InterruptedException {
 		Statement stmt = null;
 		try {
 			stmt = _conn_crawl_tweets.createStatement();
-			final String q = "SELECT * FROM credentials WHERE "
+			final String q = "SELECT *, ADDDATE(last_rate_limited, INTERVAL sec_until_retry SECOND) as retry_after "
+				+ "FROM credentials WHERE "
 				+ "for_stream=false "
-				+ "and (status is null or status!='i') "	// valid one
-				// if rate-limited, it should have been more than 15 mins ago
-				+ "and (last_rate_limited is null or TIMESTAMPDIFF(MINUTE, last_rate_limited, NOW()) > 16) "
-				+ "order by last_used "	// pick the oldest one
+				+ "and (status is null or status != 'i') "	// valid one
+				+ "order by retry_after "
 				+ "LIMIT 1";
 			ResultSet rs = stmt.executeQuery(q);
 			long id = -1;
 			if (! rs.next())
-				throw new RuntimeException("No record");
+				throw new RuntimeException("Unexpected");
+			long wait_milli = rs.getTimestamp("retry_after").getTime() + Conf.cred_rate_limit_wait_cushion_in_milli - (new java.util.Date()).getTime();
+			if (wait_milli > 0) {
+				StdoutWriter.W(String.format("wait for %d ms for the next available credential", wait_milli));
+				Thread.sleep(wait_milli);
+			}
 			return new TC(
 					rs.getString("token"),
 					rs.getString("token_secret"),
@@ -133,8 +138,9 @@ public class DB {
 		}
 	}
 
-	static void CredentialSetRateLimited(String token) throws SQLException {
-		_ps_credential_rate_limited.setString(1, token);
+	static void CredentialSetRateLimited(String token, int sec_until_reset) throws SQLException {
+		_ps_credential_rate_limited.setInt(1, sec_until_reset);
+		_ps_credential_rate_limited.setString(2, token);
 		_ps_credential_rate_limited.executeUpdate();
 		_conn_crawl_tweets.commit();
 	}

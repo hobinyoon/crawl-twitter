@@ -13,8 +13,8 @@ public class TwitterPool {
 		DB.TC tc;
 		Twitter twitter;
 
-		public void SetRateLimited() throws SQLException {
-			DB.CredentialSetRateLimited(tc.token);
+		public void SetRateLimited(int sec_until_reset) throws SQLException {
+			DB.CredentialSetRateLimited(tc.token, sec_until_reset);
 		}
 
 		public void SetLastUsed() throws SQLException {

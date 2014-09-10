@@ -1,5 +1,7 @@
 package crawltwitter;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.Calendar;
 import java.util.Date;
 
@@ -17,6 +19,8 @@ public final class Conf {
 
 	public static long cred_rate_limit_wait_cushion_in_milli = 5000;
 
+	public static String ip = null;
+
 	static {
 		Calendar cal = Calendar.getInstance();
 		cal.set(2013, 8, 1, 0, 0, 0);	// 8 is September
@@ -26,5 +30,13 @@ public final class Conf {
 		tweet_oldest_date = user_ca_oldest_date;
 		cal.set(2014, 8, 1, 0, 0, 0);
 		tweet_youngest_date = cal.getTime();
+
+		try {
+			ip = InetAddress.getLocalHost().getHostAddress();
+		} catch (UnknownHostException e) {
+			e.printStackTrace();
+			System.out.println("Exception caught: " + e);
+			System.exit(1);
+		}
 	}
 }

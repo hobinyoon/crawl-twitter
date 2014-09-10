@@ -82,13 +82,17 @@ public class CrawlTweets {
 				try {
 					if (_stop_requested) return;
 					statuses = _tpt.twitter.getUserTimeline(uid, p);
-					_tpt.SetLastUsed();
+					_tpt.IncReqMade();
 					break;
 				} catch (TwitterException e) {
 					if (e.exceededRateLimitation()) {
 						int sec_until_reset = e.getRateLimitStatus().getSecondsUntilReset();
 						//StdoutWriter.W(String.format("rate-limited: %s", e));
 						_tpt.SetRateLimitedAndWait(sec_until_reset);
+						_tpt = TwitterPool.GetTwitter();
+					} else if (e.getStatusCode() == 401) {	// Authentication failed
+						StdoutWriter.W(String.format("Cred auth failed. token=%s. %s", _tpt.tc.token, e));
+						_tpt.AuthFailed();
 						_tpt = TwitterPool.GetTwitter();
 					} else if (e.getStatusCode() == 503) {	// Twitter servers overloaded
 						Thread.sleep(server_overload_sleep_time);
@@ -170,13 +174,17 @@ public class CrawlTweets {
 						try {
 							if (_stop_requested) return;
 							c_ids = _tpt.twitter.getRetweeterIds(id, 200, -1);
-							_tpt.SetLastUsed();
+							_tpt.IncReqMade();
 							break;
 						} catch (TwitterException e) {
 							if (e.exceededRateLimitation()) {
 								int sec_until_reset = e.getRateLimitStatus().getSecondsUntilReset();
 								//StdoutWriter.W(String.format("rate-limited: %s", e));
 								_tpt.SetRateLimitedAndWait(sec_until_reset);
+								_tpt = TwitterPool.GetTwitter();
+							} else if (e.getStatusCode() == 401) {	// Authentication failed
+								StdoutWriter.W(String.format("Cred auth failed. token=%s. %s", _tpt.tc.token, e));
+								_tpt.AuthFailed();
 								_tpt = TwitterPool.GetTwitter();
 							} else if (e.getStatusCode() == 503) {	// Twitter servers overloaded
 								Thread.sleep(server_overload_sleep_time);

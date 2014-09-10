@@ -17,22 +17,26 @@ public class TwitterPool {
 		Date created_at;
 
 		public void SetRateLimitedAndWait(int sec_until_reset) throws SQLException, InterruptedException {
-			int sec_until_rate_limited = (int) (((new Date()).getTime() - created_at.getTime()) / 1000);
-			DB.CredentialSetRateLimited(tc.token, sec_until_reset, sec_until_rate_limited);
-			if (sec_until_rate_limited < 10) {
+			DB.CredSetRateLimited(tc.token, sec_until_reset);
+			int num_reqs_before_rate_limited = DB.CredGetNumReqsBeforeRateLimited(tc.token);
+			if (num_reqs_before_rate_limited < 3) {
 				StdoutWriter.W(String.format("IP %s may be rate-limited. wait for %s ms ...", Conf.ip, sec_until_reset));
 				Thread.sleep(sec_until_reset * 1000);
 			}
 		}
 
-		public void SetLastUsed() throws SQLException {
-			DB.CredentialSetLastUsed(tc.token);
+		public void IncReqMade() throws SQLException {
+			DB.CredIncReqMade(tc.token);
+		}
+
+		public void AuthFailed() throws SQLException {
+			DB.CredAuthFailed(tc.token);
 		}
 	}
 
 	public static T GetTwitter() throws Exception {
 		T t = new T();
-		t.tc = DB.GetTwitterCredential();
+		t.tc = DB.GetTwitterCred();
 		ConfigurationBuilder cb = new ConfigurationBuilder();
 		cb.setDebugEnabled(true)
 			.setJSONStoreEnabled(true)
@@ -50,7 +54,7 @@ public class TwitterPool {
 
 	public static TwitterStream GetTwitterStream() throws Exception {
 		// A pool doesn't seem to be needed here. One handle is enough.
-		DB.TC tc = DB.GetTwitterCredentialForStream();
+		DB.TC tc = DB.GetTwitterCredForStream();
 		ConfigurationBuilder cb = new ConfigurationBuilder();
 		cb.setDebugEnabled(true)
 			.setJSONStoreEnabled(true)

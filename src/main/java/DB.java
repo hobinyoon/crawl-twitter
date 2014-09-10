@@ -13,24 +13,20 @@ import twitter4j.GeoLocation;
 
 
 public class DB {
-	static private String _cs = "jdbc:mysql://localhost:3306/twitter";
-	static private String _user = "twitter";
-	static private String _password = "twitterpass";
 	static private Connection _conn_stream_seed_users = null;
 	static private Connection _conn_crawl_tweets = null;
 	static private PreparedStatement _ps_insert_seed_user = null;
 	static private PreparedStatement _ps_mark_seed_user_done = null;
 	static private PreparedStatement _ps_insert_tweet = null;
 	static private PreparedStatement _ps_credential_rate_limited = null;
-	static private PreparedStatement _ps_credential_last_used = null;
 
 	static {
 		try {
-			_conn_stream_seed_users = DriverManager.getConnection(_cs, _user, _password);
+			_conn_stream_seed_users = DriverManager.getConnection(Conf.db_url, Conf.db_user, Conf.db_pass);
 			_conn_stream_seed_users.setAutoCommit(false);
 			// This enables one connection read committed writes from the other connection.
 			_conn_stream_seed_users.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
-			_conn_crawl_tweets = DriverManager.getConnection(_cs, _user, _password);
+			_conn_crawl_tweets = DriverManager.getConnection(Conf.db_url, Conf.db_user, Conf.db_pass);
 			_conn_crawl_tweets.setAutoCommit(false);
 			_conn_crawl_tweets.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
 
@@ -41,14 +37,8 @@ public class DB {
 					"INSERT INTO tweets "
 					+ "(id, uid, created_at, geo_lati, geo_longi, youtube_link, hashtags, rt_id, rt_uid, text) "
 					+ "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-			// TODO: replace last_used with last_checked_out. last_used is not a very
-			// useful info
-			_ps_credential_last_used = _conn_crawl_tweets.prepareStatement(
-					"UPDATE credentials SET last_used = now() WHERE token=(?)");
-			// TODO: add now many tweets it crawled before rate limited. it can be a
-			// good indicator of IP rate limiting.
 			_ps_credential_rate_limited = _conn_crawl_tweets.prepareStatement(
-					"UPDATE credentials SET last_rate_limited=NOW(), sec_until_retry=(?), sec_until_rate_limited=(?), rate_limited_ip=(?)  WHERE token=(?)");
+					"UPDATE credentials SET last_rate_limited=NOW(), sec_until_retry=(?), rate_limited_ip=(?)  WHERE token=(?)");
 		} catch (Exception e) {
 			e.printStackTrace();
 			System.out.println("Exception caught: " + e);
@@ -61,7 +51,6 @@ public class DB {
 			if (_ps_insert_seed_user != null) _ps_insert_seed_user.close();
 			if (_ps_mark_seed_user_done != null) _ps_mark_seed_user_done.close();
 			if (_ps_insert_tweet != null) _ps_insert_tweet.close();
-			if (_ps_credential_last_used != null) _ps_credential_last_used.close();
 			if (_ps_credential_rate_limited != null) _ps_credential_rate_limited.close();
 
 			if (_conn_stream_seed_users != null) _conn_stream_seed_users.close();
@@ -92,11 +81,11 @@ public class DB {
 		}
 	}
 
-	static TC GetTwitterCredentialForStream() throws SQLException {
+	static TC GetTwitterCredForStream() throws SQLException {
 		Statement stmt = null;
 		try {
 			stmt = _conn_stream_seed_users.createStatement();
-			final String q = "SELECT * FROM credentials WHERE for_stream=true and (status is null or status !='i') LIMIT 1";
+			final String q = "SELECT * FROM credentials WHERE for_stream=true and (status is null or status !='I') LIMIT 1";
 			ResultSet rs = stmt.executeQuery(q);
 			long id = -1;
 			if (! rs.next())
@@ -112,50 +101,104 @@ public class DB {
 		}
 	}
 
-	static TC GetTwitterCredential() throws SQLException, InterruptedException {
+	static TC GetTwitterCred() throws SQLException, InterruptedException {
 		Statement stmt = null;
 		try {
 			stmt = _conn_crawl_tweets.createStatement();
-			final String q = "SELECT *, ADDDATE(last_rate_limited, INTERVAL sec_until_retry SECOND) as retry_after "
-				+ "FROM credentials WHERE "
-				+ "for_stream=false "
-				+ "and (status is null or status != 'i') "	// valid one
-				+ "order by retry_after "
-				+ "LIMIT 1";
-			ResultSet rs = stmt.executeQuery(q);
-			long id = -1;
-			if (! rs.next())
-				throw new RuntimeException("Unexpected");
-			long wait_milli = rs.getTimestamp("retry_after").getTime() + Conf.cred_rate_limit_wait_cushion_in_milli - (new Date()).getTime();
-			if (wait_milli > 0) {
-				StdoutWriter.W(String.format("wait for %d ms for the next available credential", wait_milli));
-				Thread.sleep(wait_milli);
+			String token = null;
+			String token_secret = null;
+			String consumer_key = null;
+			String consumer_secret = null;
+
+			while (true) {
+				final String q0 = "SELECT *, ADDDATE(last_rate_limited, INTERVAL sec_until_retry SECOND) as retry_after "
+					+ "FROM credentials "
+					+ "WHERE for_stream=false "
+						+ "and (status is null or status != 'I') "	// valid one
+						+ "and (NOW() - last_check_out > 60)"
+						+ "and token not in (select distinct(token) from cred_auth_history where status='F' and (NOW() - time_ < 86400)) "
+					+ "order by retry_after "
+					+ "LIMIT 1";
+				ResultSet rs = stmt.executeQuery(q0);
+				long id = -1;
+				if (! rs.next()) {
+					StdoutWriter.W("No available credentials at this time. retrying in 10 sec ...");
+					Thread.sleep(10000);
+					continue;
+				}
+				long wait_milli = rs.getTimestamp("retry_after").getTime() + Conf.cred_rate_limit_wait_cushion_in_milli - (new Date()).getTime();
+				if (wait_milli > 0) {
+					StdoutWriter.W(String.format("All credentials are rate-limited. waiting for %d ms and retrying ...", wait_milli));
+					Thread.sleep(wait_milli);
+					continue;
+				}
+
+				token = rs.getString("token");
+				token_secret = rs.getString("token_secret");
+				consumer_key = rs.getString("consumer_key");
+				consumer_secret = rs.getString("consumer_secret");
+				final String q1 = String.format(
+						"UPDATE credentials "
+						+ "SET last_check_out=NOW(), num_reqs_before_rate_limited=0 "
+						+ "WHERE token='%s' and (NOW() - last_check_out > 60)", token);
+				int rows_updated = stmt.executeUpdate(q1);
+				if (rows_updated == 1) {
+					_conn_crawl_tweets.commit();
+					return new TC(token, token_secret, consumer_key, consumer_secret);
+				}
 			}
-			return new TC(
-					rs.getString("token"),
-					rs.getString("token_secret"),
-					rs.getString("consumer_key"),
-					rs.getString("consumer_secret"));
 		} finally {
 			if (stmt != null)
 				stmt.close();
 		}
 	}
 
-	static void CredentialSetRateLimited(String token, int sec_until_reset,
-			int sec_until_rate_limited) throws SQLException {
+	static void CredIncReqMade(String token) throws SQLException {
+		Statement stmt = null;
+		try {
+			stmt = _conn_crawl_tweets.createStatement();
+			final String q = String.format(
+					"UPDATE credentials "
+					+ "SET num_reqs_before_rate_limited = num_reqs_before_rate_limited + 1 "
+					+ "WHERE token='%s'", token);
+			stmt.executeUpdate(q);
+			_conn_crawl_tweets.commit();
+		} finally {
+			if (stmt != null)
+				stmt.close();
+		}
+	}
+
+	static void CredSetRateLimited(String token, int sec_until_reset) throws SQLException {
 		_ps_credential_rate_limited.setInt(1, sec_until_reset);
-		_ps_credential_rate_limited.setInt(2, sec_until_rate_limited);
-		_ps_credential_rate_limited.setString(3, Conf.ip);
-		_ps_credential_rate_limited.setString(4, token);
+		_ps_credential_rate_limited.setString(2, Conf.ip);
+		_ps_credential_rate_limited.setString(3, token);
 		_ps_credential_rate_limited.executeUpdate();
 		_conn_crawl_tweets.commit();
 	}
 
-	static void CredentialSetLastUsed(String token) throws SQLException {
-		_ps_credential_last_used.setString(1, token);
-		_ps_credential_last_used.executeUpdate();
-		_conn_crawl_tweets.commit();
+	static int CredGetNumReqsBeforeRateLimited(String token) throws SQLException {
+		final String q = String.format(
+				"SELECT num_reqs_before_rate_limited FROM credentials WHERE token='%s'", token);
+		Statement stmt = _conn_crawl_tweets.createStatement();
+		ResultSet rs = stmt.executeQuery(q);
+		if (! rs.next())
+			throw new RuntimeException(String.format("Unexpected. token=%s", token));
+		return rs.getInt("num_reqs_before_rate_limited");
+	}
+
+	static void CredAuthFailed(String token) throws SQLException {
+		Statement stmt = null;
+		try {
+			stmt = _conn_crawl_tweets.createStatement();
+			final String q = String.format(
+					"INSERT INTO cred_auth_history (time_, status, token) VALUES (NOW(), 'F', '%s')", token);
+			stmt.executeUpdate(q);
+			_conn_crawl_tweets.commit();
+		} finally {
+			if (stmt != null)
+				stmt.close();
+		}
 	}
 
 	static void AddSeedUserToCrawl(long uid) throws SQLException {

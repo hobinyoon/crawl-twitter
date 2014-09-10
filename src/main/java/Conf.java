@@ -11,7 +11,9 @@ import joptsimple.OptionSet;
 
 public final class Conf {
 	public static boolean stream_seed_users;
+	public static String db_ipaddr = null;
 
+	public static String db_url = null;
 	public static String db_user = "twitter";
 	public static String db_pass = "twitterpass";
 
@@ -59,15 +61,20 @@ public final class Conf {
 		}
 
 		stream_seed_users = (Boolean) options.valueOf("stream_seed_users");
+		db_ipaddr = (String) options.valueOf("db_ipaddr");
+		db_url = String.format("jdbc:mysql://%s:3306/twitter", Conf.db_ipaddr);
 
 		System.out.printf("Conf:\n");
 		System.out.printf("  stream_seed_users: %b\n", stream_seed_users);
+		System.out.printf("  db_ipaddr: %s\n", db_ipaddr);
 	}
 
 	private static final OptionParser _opt_parser = new OptionParser() {{
 		accepts("help", "Show this help message");
 		accepts("stream_seed_users", "Stream seed users")
 			.withRequiredArg().ofType(Boolean.class).defaultsTo(false);
+		accepts("db_ipaddr", "IP address of DB")
+			.withRequiredArg().ofType(String.class).defaultsTo("localhost");
 	}};
 
 	private static void _PrintHelp() throws java.io.IOException {

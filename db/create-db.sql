@@ -11,6 +11,8 @@ CREATE TABLE IF NOT EXISTS twitter.credentials (
 	last_used TIMESTAMP NULL DEFAULT NULL,	-- permit null
 	last_rate_limited TIMESTAMP NULL DEFAULT NULL,	-- permit null
 	sec_until_retry INT DEFAULT NULL,
+	sec_until_rate_limited INT DEFAULT NULL,
+	rate_limited_ip VARCHAR(20) DEFAULT NULL,
 	PRIMARY KEY (token));
 
 -- When selecting, rows with 'UP' and 'UC' has priority over those with 'U',
@@ -32,10 +34,12 @@ CREATE TABLE IF NOT EXISTS twitter.tweets (
 	youtube_link VARCHAR(1024) NOT NULL,
 	hashtags VARCHAR(450) NOT NULL,
 	rt_id BIGINT NOT NULL,	-- -1 when not retweet
+	rt_uid BIGINT NOT NULL,	-- -1 when not retweet
 	text VARCHAR(450) NOT NULL,	-- give some cushion for utf8
 	PRIMARY KEY (id),
 	INDEX (uid),
-	INDEX (rt_id));
+	INDEX (rt_id),
+	INDEX (rt_uid));
 
 -- Get (up to 100) user IDs of retweets of a tweet.
 -- https://dev.twitter.com/docs/api/1.1/get/statuses/retweeters/ids

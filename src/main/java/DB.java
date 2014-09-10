@@ -41,8 +41,12 @@ public class DB {
 					"INSERT INTO tweets "
 					+ "(id, uid, created_at, geo_lati, geo_longi, youtube_link, hashtags, rt_id, rt_uid, text) "
 					+ "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+			// TODO: replace last_used with last_checked_out. last_used is not a very
+			// useful info
 			_ps_credential_last_used = _conn_crawl_tweets.prepareStatement(
 					"UPDATE credentials SET last_used = now() WHERE token=(?)");
+			// TODO: add now many tweets it crawled before rate limited. it can be a
+			// good indicator of IP rate limiting.
 			_ps_credential_rate_limited = _conn_crawl_tweets.prepareStatement(
 					"UPDATE credentials SET last_rate_limited=NOW(), sec_until_retry=(?), sec_until_rate_limited=(?), rate_limited_ip=(?)  WHERE token=(?)");
 		} catch (Exception e) {
@@ -242,18 +246,18 @@ public class DB {
 		// returns uid with status UC (uncrawled child), UP(uncrawled parent), or
 		// U(uncrawled seeded), in the repective order. If none exists, return -1.
 		// I prioritize children, which will help build big fan-out faster, I
-		// guess.
+		// guess. "ORDER BY crawled at" makes breath-first like graph traversal.
 		Statement stmt = null;
 		try {
 			stmt = _conn_crawl_tweets.createStatement();
 			{
-				final String q = "SELECT * FROM uids_to_crawl WHERE status='UC' ORDER BY crawled_at DESC LIMIT 1";
+				final String q = "SELECT * FROM uids_to_crawl WHERE status='UC' ORDER BY crawled_at LIMIT 1";
 				ResultSet rs = stmt.executeQuery(q);
 				if (rs.next())
 					return rs.getLong("id");
 			}
 			{
-				final String q = "SELECT * FROM uids_to_crawl WHERE status='UP' ORDER BY crawled_at DESC LIMIT 1";
+				final String q = "SELECT * FROM uids_to_crawl WHERE status='UP' ORDER BY crawled_at LIMIT 1";
 				ResultSet rs = stmt.executeQuery(q);
 				if (rs.next())
 					return rs.getLong("id");

@@ -16,11 +16,11 @@ CREATE TABLE IF NOT EXISTS twitter.credentials (
 	PRIMARY KEY (token));
 
 CREATE TABLE IF NOT EXISTS twitter.cred_auth_history (
-	token VARCHAR(100),
-	status CHAR(1) NOT NULL,	-- S: auth succeeded, F: auth failed
 	time_ TIMESTAMP NOT NULL,
-	PRIMARY KEY (token),
-	INDEX (time_));
+	status CHAR(1) NOT NULL,	-- S: auth succeeded, F: auth failed
+	token VARCHAR(100) NOT NULL,
+	INDEX (time_),
+	INDEX (status));
 
 -- When selecting, rows with 'UP' and 'UC' has priority over those with 'U',
 -- which helps build bigger fan-out.

@@ -30,10 +30,10 @@ VALUE
 	'', -- twitter_pw
 	'', -- twitter_username
 	'', -- twitter_app_name
-	'', -- token
-	'', -- token_secret
 	'', -- consumer_key
-	''  -- consumer_secret
+	'', -- consumer_secret
+	'', -- token
+	''  -- token_secret
 );
 */
 

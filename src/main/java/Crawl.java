@@ -20,8 +20,8 @@ public final class Crawl {
 			});
 
 			Conf.ParseArgs(args);
-
 			StdoutWriter.Start();
+			DB.Init();
 
 			// It seems that this needs to go through the end of the main function.
 			// strange thread model.

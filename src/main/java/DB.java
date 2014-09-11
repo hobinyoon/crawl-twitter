@@ -22,7 +22,7 @@ public class DB {
 	static private PreparedStatement _ps_insert_tweet = null;
 	static private PreparedStatement _ps_credential_rate_limited = null;
 
-	static {
+	static public void Init () {
 		try {
 			_conn_stream_seed_users = DriverManager.getConnection(Conf.db_url, Conf.db_user, Conf.db_pass);
 			_conn_stream_seed_users.setAutoCommit(false);

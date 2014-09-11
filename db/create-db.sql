@@ -19,6 +19,7 @@ CREATE TABLE IF NOT EXISTS twitter.cred_auth_history (
 	time_ TIMESTAMP NOT NULL,
 	status CHAR(1) NOT NULL,	-- S: auth succeeded, F: auth failed
 	token VARCHAR(100) NOT NULL,
+	ip VARCHAR(20) NOT NULL,
 	INDEX (time_),
 	INDEX (status));
 

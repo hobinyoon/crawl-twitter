@@ -115,21 +115,22 @@ public class DB {
 
 			while (true) {
 				{
-					// wait for 1 hour when where has been more than 3 auth failures in the last hour
-					final String q = "SELECT count(*) as fail_cnt FROM cred_auth_history "
-						+ "WHERE status = 'F' and TIMESTAMPDIFF(SECOND, time_, NOW()) < 3600";
+					// wait for 1 hour when where has been more than 3 auth failures from this IP in the last hour
+					final String q = String.format("SELECT count(*) as fail_cnt FROM cred_auth_history "
+						+ "WHERE status = 'F' and TIMESTAMPDIFF(SECOND, time_, NOW()) < 3600 and ip = '%s'", Conf.ip);
 					ResultSet rs = stmt.executeQuery(q);
 					if (! rs.next())
 						throw new RuntimeException("Unexpected");
 					long fail_cnt = rs.getLong("fail_cnt");
 					if (fail_cnt >= 3) {
-						final String q1 = "SELECT time_ FROM cred_auth_history WHERE status = 'F' ORDER BY time_ desc LIMIT 1";
+						final String q1 = String.format("SELECT time_ FROM cred_auth_history "
+							+ "WHERE status = 'F' and ip = '%s' ORDER BY time_ desc LIMIT 1", Conf.ip);
 						ResultSet rs1 = stmt.executeQuery(q1);
 						if (! rs1.next())
 							throw new RuntimeException("Unexpected");
 						long wait_milli = 3600000L + rs1.getTimestamp("time_").getTime() - (new Date()).getTime();
-						StdoutWriter.W(String.format("%d auth failures in the last 3600 secs. waiting for %d sec and retrying ...",
-									fail_cnt, wait_milli / 1000));
+						StdoutWriter.W(String.format("%d auth failures from IP %s in the last 3600 secs. waiting for %d sec and retrying ...",
+									fail_cnt, Conf.ip, wait_milli / 1000));
 						Thread.sleep(wait_milli);
 						continue;
 					}
@@ -141,8 +142,8 @@ public class DB {
 							+ "FROM credentials "
 							+ "WHERE for_stream=false "
 							+ "and (status is null or status != 'I') "	// valid one
-							+ "and TIMESTAMPDIFF(SECOND, last_check_out, NOW()) > 60)"
-							+ "and token not in (select distinct(token) from cred_auth_history where status='F' and TIMESTAMPDIFF(SECOND, time_, NOW()) < %d)) "
+							+ "and TIMESTAMPDIFF(SECOND, last_check_out, NOW()) > 60 "	// not checked-out in the last 60 secs
+							+ "and token not in (select distinct(token) from cred_auth_history where status='F' and TIMESTAMPDIFF(SECOND, time_, NOW()) < %d) "
 							+ "order by retry_after "
 							+ "LIMIT 1", Conf.cred_auth_fail_retry_wait_sec);
 					ResultSet rs = stmt.executeQuery(q);
@@ -221,7 +222,8 @@ public class DB {
 		try {
 			stmt = _conn_crawl_tweets.createStatement();
 			final String q = String.format(
-					"INSERT INTO cred_auth_history (time_, status, token) VALUES (NOW(), 'F', '%s')", token);
+					"INSERT INTO cred_auth_history (time_, status, token, ip) VALUES (NOW(), 'F', '%s', '%s')",
+					token, Conf.ip);
 			stmt.executeUpdate(q);
 			_conn_crawl_tweets.commit();
 		} finally {

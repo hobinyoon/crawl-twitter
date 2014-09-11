@@ -2,6 +2,11 @@
 CREATE DATABASE IF NOT EXISTS twitter CHARACTER SET utf8 COLLATE utf8_bin;
 
 CREATE TABLE IF NOT EXISTS twitter.credentials (
+	email VARCHAR (50) NOT NULL,
+	email_pw VARCHAR (50) NOT NULL,
+	twitter_pw VARCHAR (50) NOT NULL,
+	twitter_username VARCHAR (50) NOT NULL,
+	twitter_app_name VARCHAR (50) NOT NULL,
 	token VARCHAR(100),
 	token_secret VARCHAR(100) NOT NULL,
 	consumer_key VARCHAR(100) NOT NULL,
@@ -14,6 +19,23 @@ CREATE TABLE IF NOT EXISTS twitter.credentials (
 	sec_until_retry INT DEFAULT NULL,
 	rate_limited_ip VARCHAR(20) DEFAULT NULL,
 	PRIMARY KEY (token));
+
+/*
+-- credential insert template
+INSERT INTO twitter.credentials
+(email, email_pw, twitter_pw, twitter_username, twitter_app_name, token, token_secret, consumer_key)
+VALUE
+('',  -- email
+	'', -- email_pw
+	'', -- twitter_pw
+	'', -- twitter_username
+	'', -- twitter_app_name
+	'', -- token
+	'', -- token_secret
+	'', -- consumer_key
+	''  -- consumer_secret
+);
+*/
 
 CREATE TABLE IF NOT EXISTS twitter.cred_auth_history (
 	time_ TIMESTAMP NOT NULL,

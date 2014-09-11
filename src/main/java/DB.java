@@ -142,7 +142,7 @@ public class DB {
 							+ "FROM credentials "
 							+ "WHERE for_stream=false "
 							+ "and (status is null or status != 'I') "	// valid one
-							+ "and TIMESTAMPDIFF(SECOND, last_check_out, NOW()) > 60 "	// not checked-out in the last 60 secs
+							+ "and (last_check_out is null or TIMESTAMPDIFF(SECOND, last_check_out, NOW()) > 60) "	// not checked-out in the last 60 secs
 							+ "and token not in (select distinct(token) from cred_auth_history where status='F' and TIMESTAMPDIFF(SECOND, time_, NOW()) < %d) "
 							+ "order by retry_after "
 							+ "LIMIT 1", Conf.cred_auth_fail_retry_wait_sec);
@@ -153,11 +153,13 @@ public class DB {
 						Thread.sleep(600000);
 						continue;
 					}
-					long wait_milli = rs.getTimestamp("retry_after").getTime() + Conf.cred_rate_limit_wait_cushion_in_milli - (new Date()).getTime();
-					if (wait_milli > 0) {
-						StdoutWriter.W(String.format("All credentials are rate-limited. waiting for %d ms and retrying ...", wait_milli));
-						Thread.sleep(wait_milli);
-						continue;
+					if (rs.getTimestamp("retry_after") != null) {
+						long wait_milli = rs.getTimestamp("retry_after").getTime() + Conf.cred_rate_limit_wait_cushion_in_milli - (new Date()).getTime();
+						if (wait_milli > 0) {
+							StdoutWriter.W(String.format("All credentials are rate-limited. waiting for %d ms and retrying ...", wait_milli));
+							Thread.sleep(wait_milli);
+							continue;
+						}
 					}
 					token = rs.getString("token");
 					token_secret = rs.getString("token_secret");
@@ -169,7 +171,8 @@ public class DB {
 					final String q = String.format(
 							"UPDATE credentials "
 							+ "SET last_check_out=NOW(), num_reqs_before_rate_limited=0 "
-							+ "WHERE token='%s' and TIMESTAMPDIFF(SECOND, last_check_out, NOW()) > 60", token);
+							+ "WHERE token='%s' "
+							+ "and (last_check_out is null or TIMESTAMPDIFF(SECOND, last_check_out, NOW()) > 60)", token);
 					int rows_updated = stmt.executeUpdate(q);
 					if (rows_updated == 1) {
 						_conn_crawl_tweets.commit();

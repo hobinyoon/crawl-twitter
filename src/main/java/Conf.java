@@ -1,9 +1,12 @@
 package crawltwitter;
 
 import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Enumeration;
 import java.util.List;
 
 import joptsimple.OptionParser;
@@ -41,12 +44,32 @@ public final class Conf {
 		tweet_youngest_date = cal.getTime();
 
 		try {
-			ip = InetAddress.getLocalHost().getHostAddress();
-		} catch (UnknownHostException e) {
+			ip = _GetIPv4Addr();
+		} catch (SocketException e) {
 			e.printStackTrace();
 			System.out.println("Exception caught: " + e);
 			System.exit(1);
 		}
+	}
+
+	private static String _GetIPv4Addr() throws SocketException {
+		Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
+		while (interfaces.hasMoreElements()) {
+			NetworkInterface iface = interfaces.nextElement();
+			// filters out 127.0.0.1 and inactive interfaces
+			if (iface.isLoopback() || !iface.isUp())
+				continue;
+
+			Enumeration<InetAddress> addresses = iface.getInetAddresses();
+			while(addresses.hasMoreElements()) {
+				InetAddress addr = addresses.nextElement();
+				String ip = addr.getHostAddress();
+				// get IPv4 address only
+				if (ip.matches("\\d+\\.\\d+\\.\\d+\\.\\d+"))
+					return ip;
+			}
+		}
+		return null;
 	}
 
 	public static void ParseArgs(String[] args)
@@ -67,6 +90,7 @@ public final class Conf {
 		db_url = String.format("jdbc:mysql://%s:3306/twitter", Conf.db_ipaddr);
 
 		System.out.printf("Conf:\n");
+		System.out.printf("  my ip addr: %s\n", ip);
 		System.out.printf("  stream_seed_users: %b\n", stream_seed_users);
 		System.out.printf("  db_ipaddr: %s\n", db_ipaddr);
 	}

@@ -1,5 +1,7 @@
 package crawltwitter;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.lang.InterruptedException;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -56,9 +58,10 @@ public class DB {
 			if (_conn_stream_seed_users != null) _conn_stream_seed_users.close();
 			if (_conn_crawl_tweets != null) _conn_crawl_tweets.close();
 		} catch (Exception e) {
-			e.printStackTrace();
-			System.out.println("Exception caught: " + e);
-			System.exit(-1);
+			StringWriter sw = new StringWriter();
+			e.printStackTrace(new PrintWriter(sw));
+			StdoutWriter.W(String.format("SQLException: %s\nStack trace: %s", e, sw));
+			// Do not System.exit() yet. There are more to be cleaned up.
 		}
 	}
 
@@ -111,41 +114,66 @@ public class DB {
 			String consumer_secret = null;
 
 			while (true) {
-				final String q0 = String.format(
-						"SELECT *, ADDDATE(last_rate_limited, INTERVAL sec_until_retry SECOND) as retry_after "
-						+ "FROM credentials "
-						+ "WHERE for_stream=false "
+				{
+					// wait for 1 hour when where has been more than 3 auth failures in the last hour
+					final String q = "SELECT count(*) as fail_cnt FROM cred_auth_history "
+						+ "WHERE status = 'F' and TIMESTAMPDIFF(SECOND, time_, NOW()) < 3600";
+					ResultSet rs = stmt.executeQuery(q);
+					if (! rs.next())
+						throw new RuntimeException("Unexpected");
+					long fail_cnt = rs.getLong("fail_cnt");
+					if (fail_cnt >= 3) {
+						final String q1 = "SELECT time_ FROM cred_auth_history WHERE status = 'F' ORDER BY time_ desc LIMIT 1";
+						ResultSet rs1 = stmt.executeQuery(q1);
+						if (! rs1.next())
+							throw new RuntimeException("Unexpected");
+						long wait_milli = 3600000L + rs1.getTimestamp("time_").getTime() - (new Date()).getTime();
+						StdoutWriter.W(String.format("%d auth failures in the last 3600 secs. waiting for %d sec and retrying ...",
+									fail_cnt, wait_milli / 1000));
+						Thread.sleep(wait_milli);
+						continue;
+					}
+				}
+				{
+					// pick the oldest rate-limited credential
+					final String q = String.format(
+							"SELECT *, ADDDATE(last_rate_limited, INTERVAL sec_until_retry SECOND) as retry_after "
+							+ "FROM credentials "
+							+ "WHERE for_stream=false "
 							+ "and (status is null or status != 'I') "	// valid one
-							+ "and (NOW() - last_check_out > 60)"
-							+ "and token not in (select distinct(token) from cred_auth_history where status='F' and (NOW() - time_ < %d)) "	// 24 hour
-						+ "order by retry_after "
-						+ "LIMIT 1", Conf.cred_auth_fail_retry_wait_sec);
-				ResultSet rs = stmt.executeQuery(q0);
-				long id = -1;
-				if (! rs.next()) {
-					StdoutWriter.W("No available credentials at this time. retrying in 10 mins ...");
-					Thread.sleep(600000);
-					continue;
+							+ "and TIMESTAMPDIFF(SECOND, last_check_out, NOW()) > 60)"
+							+ "and token not in (select distinct(token) from cred_auth_history where status='F' and TIMESTAMPDIFF(SECOND, time_, NOW()) < %d)) "
+							+ "order by retry_after "
+							+ "LIMIT 1", Conf.cred_auth_fail_retry_wait_sec);
+					ResultSet rs = stmt.executeQuery(q);
+					long id = -1;
+					if (! rs.next()) {
+						StdoutWriter.W("No available credentials at this time. retrying in 10 mins ...");
+						Thread.sleep(600000);
+						continue;
+					}
+					long wait_milli = rs.getTimestamp("retry_after").getTime() + Conf.cred_rate_limit_wait_cushion_in_milli - (new Date()).getTime();
+					if (wait_milli > 0) {
+						StdoutWriter.W(String.format("All credentials are rate-limited. waiting for %d ms and retrying ...", wait_milli));
+						Thread.sleep(wait_milli);
+						continue;
+					}
+					token = rs.getString("token");
+					token_secret = rs.getString("token_secret");
+					consumer_key = rs.getString("consumer_key");
+					consumer_secret = rs.getString("consumer_secret");
 				}
-				long wait_milli = rs.getTimestamp("retry_after").getTime() + Conf.cred_rate_limit_wait_cushion_in_milli - (new Date()).getTime();
-				if (wait_milli > 0) {
-					StdoutWriter.W(String.format("All credentials are rate-limited. waiting for %d ms and retrying ...", wait_milli));
-					Thread.sleep(wait_milli);
-					continue;
-				}
-
-				token = rs.getString("token");
-				token_secret = rs.getString("token_secret");
-				consumer_key = rs.getString("consumer_key");
-				consumer_secret = rs.getString("consumer_secret");
-				final String q1 = String.format(
-						"UPDATE credentials "
-						+ "SET last_check_out=NOW(), num_reqs_before_rate_limited=0 "
-						+ "WHERE token='%s' and (NOW() - last_check_out > 60)", token);
-				int rows_updated = stmt.executeUpdate(q1);
-				if (rows_updated == 1) {
-					_conn_crawl_tweets.commit();
-					return new TC(token, token_secret, consumer_key, consumer_secret);
+				{
+					// Check out the credential
+					final String q = String.format(
+							"UPDATE credentials "
+							+ "SET last_check_out=NOW(), num_reqs_before_rate_limited=0 "
+							+ "WHERE token='%s' and TIMESTAMPDIFF(SECOND, last_check_out, NOW()) > 60", token);
+					int rows_updated = stmt.executeUpdate(q);
+					if (rows_updated == 1) {
+						_conn_crawl_tweets.commit();
+						return new TC(token, token_secret, consumer_key, consumer_secret);
+					}
 				}
 			}
 		} finally {

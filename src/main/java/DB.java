@@ -323,18 +323,19 @@ public class DB {
 		// returns uid with status UC (uncrawled child), UP(uncrawled parent), or
 		// U(uncrawled seeded), in the repective order. If none exists, return -1.
 		// I prioritize children, which will help build big fan-out faster, I
-		// guess. "ORDER BY crawled at" makes breath-first like graph traversal.
+		// guess. "ORDER BY crawled at DESC" makes depth-first like graph
+		// traversal.
 		Statement stmt = null;
 		try {
 			stmt = _conn_crawl_tweets.createStatement();
 			{
-				final String q = "SELECT * FROM uids_to_crawl WHERE status='UC' ORDER BY crawled_at LIMIT 1";
+				final String q = "SELECT * FROM uids_to_crawl WHERE status='UC' ORDER BY crawled_at DESC LIMIT 1";
 				ResultSet rs = stmt.executeQuery(q);
 				if (rs.next())
 					return rs.getLong("id");
 			}
 			{
-				final String q = "SELECT * FROM uids_to_crawl WHERE status='UP' ORDER BY crawled_at LIMIT 1";
+				final String q = "SELECT * FROM uids_to_crawl WHERE status='UP' ORDER BY crawled_at DESC LIMIT 1";
 				ResultSet rs = stmt.executeQuery(q);
 				if (rs.next())
 					return rs.getLong("id");

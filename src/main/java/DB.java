@@ -128,10 +128,12 @@ public class DB {
 						ResultSet rs1 = stmt.executeQuery(q1);
 						if (! rs1.next())
 							throw new RuntimeException("Unexpected");
-						long wait_milli = 3600000L + rs1.getTimestamp("time_").getTime() - (new Date()).getTime();
-						StdoutWriter.W(String.format("%d auth failures from IP %s in the last 3600 secs. waiting for %d sec and retrying ...",
-									fail_cnt, Conf.ip, wait_milli / 1000));
-						Thread.sleep(wait_milli);
+						long wait_milli = 3610000L + rs1.getTimestamp("time_").getTime() - (new Date()).getTime();
+						if (wait_milli > 0) {
+							StdoutWriter.W(String.format("%d auth failures from IP %s in the last 3600 secs. waiting for %d sec and retrying ...",
+										fail_cnt, Conf.ip, wait_milli / 1000));
+							Thread.sleep(wait_milli);
+						}
 						continue;
 					}
 				}

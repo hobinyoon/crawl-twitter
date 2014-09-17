@@ -49,11 +49,13 @@ CREATE TABLE IF NOT EXISTS twitter.cred_auth_history (
 -- which helps build bigger fan-out.
 CREATE TABLE IF NOT EXISTS twitter.uids_to_crawl (
 	id BIGINT,
-	crawled_at TIMESTAMP NOT NULL,
+	added_at TIMESTAMP NULL,
+	crawled_at TIMESTAMP NULL,
 	status VARCHAR(2) NOT NULL,	-- UP(uncrawled parent), UC(uncrawled child), U(uncrawled seed), C(crawled),
 															-- I(invalid, such as non-existent user), P(protected)
 	PRIMARY KEY (id),
-	INDEX (status, crawled_at));
+	INDEX (status, crawled_at),
+	INDEX (added_at));
 
 CREATE TABLE IF NOT EXISTS twitter.tweets (
 	id BIGINT,

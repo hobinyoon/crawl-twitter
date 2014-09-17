@@ -85,7 +85,7 @@ public final class Conf {
 			System.exit(1);
 		}
 
-		stream_seed_users = (Boolean) options.valueOf("stream_seed_users");
+		stream_seed_users = options.has("stream_seed_users");
 		db_ipaddr = (String) options.valueOf("db_ipaddr");
 		db_url = String.format("jdbc:mysql://%s:3306/twitter", Conf.db_ipaddr);
 
@@ -97,8 +97,7 @@ public final class Conf {
 
 	private static final OptionParser _opt_parser = new OptionParser() {{
 		accepts("help", "Show this help message");
-		accepts("stream_seed_users", "Stream seed users")
-			.withRequiredArg().ofType(Boolean.class).defaultsTo(false);
+		accepts("stream_seed_users", "Stream seed users");
 		accepts("db_ipaddr", "IP address of DB")
 			.withRequiredArg().ofType(String.class).defaultsTo("localhost");
 	}};

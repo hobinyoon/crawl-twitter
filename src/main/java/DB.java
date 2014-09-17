@@ -270,7 +270,7 @@ public class DB {
 				stmt.executeUpdate(q);
 				_conn_crawl_tweets.commit();
 				Mon.num_users_to_crawl_parent_new ++;
-			} else if (status.equals("C") || status.equals("I")) {
+			} else if (status.equals("C") || status.equals("P") || status.equals("I")) {
 				// the uid is already crawled. do nothing.
 				// StdoutWriter.W(String.format("Parent uid %d is already crawled", uid));
 				Mon.num_users_to_crawl_parent_dup ++;
@@ -304,7 +304,7 @@ public class DB {
 					stmt.executeUpdate(q);
 					_conn_crawl_tweets.commit();
 					Mon.num_users_to_crawl_child_new ++;
-				} else if (status.equals("C") || status.equals("I")) {
+				} else if (status.equals("C") || status.equals("P") || status.equals("I")) {
 					// the uid is already crawled. do nothing.
 					// StdoutWriter.W(String.format("Parent uid %d is already crawled", uid));
 					Mon.num_users_to_crawl_child_dup ++;
@@ -362,11 +362,11 @@ public class DB {
 		//StdoutWriter.W(String.format("crawled all tweets of user %d", uid));
 	}
 
-	static void MarkUserInvalid(long uid) throws SQLException {
+	static void MarkUserProtected(long uid) throws SQLException {
 		Statement stmt = null;
 		try {
 			stmt = _conn_crawl_tweets.createStatement();
-			final String q = String.format("UPDATE uids_to_crawl SET status='I', crawled_at=NOW() WHERE id=%d", uid);
+			final String q = String.format("UPDATE uids_to_crawl SET status='P', crawled_at=NOW() WHERE id=%d", uid);
 			stmt.executeUpdate(q);
 			_conn_crawl_tweets.commit();
 		} finally {

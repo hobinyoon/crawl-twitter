@@ -164,10 +164,23 @@ public class CrawlTweets {
 				if (hashtags.length == 0)
 					continue;
 				StringBuilder ht_string = new StringBuilder();
-				for (int i = 0; i < hashtags.length; i ++) {
-					if (i != 0)
-						ht_string.append(" ");
-					ht_string.append(hashtags[i].getText());
+				{
+					boolean empty = true;
+					for (int i = 0; i < hashtags.length; i ++) {
+						String ht = hashtags[i].getText();
+						// we don't count hashtag "youtube". The tweet always has a youtube
+						// link. It's too common and won't help distinguish videos.
+						if (ht.equalsIgnoreCase("youtube"))
+							continue;
+						if (empty) {
+							empty = false;
+						} else {
+							ht_string.append(" ");
+						}
+						ht_string.append(ht);
+					}
+					if (empty)
+						continue;
 				}
 
 				long rt_id = -1;

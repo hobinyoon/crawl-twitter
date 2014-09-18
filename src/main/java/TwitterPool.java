@@ -36,7 +36,7 @@ public class TwitterPool {
 	public static T GetTwitter() throws Exception {
 		T t = new T();
 		t.tc = DB.GetTwitterCred();
-		// TODO: maybe I should make a pool of the twitter and reuse?
+		// Note: maybe I should make a pool of the twitter and reuse?
 		ConfigurationBuilder cb = new ConfigurationBuilder();
 		cb.setDebugEnabled(true)
 			.setJSONStoreEnabled(true)

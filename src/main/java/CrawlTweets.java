@@ -92,8 +92,9 @@ public class CrawlTweets {
 						_tpt.SetRateLimitedAndWait(sec_until_reset);
 						_tpt = TwitterPool.GetTwitter();
 					} else if (e.getStatusCode() == HttpResponseCode.UNAUTHORIZED) {
-						// "Invalid or expired token"
+						// 401: UNAUTHORIZED
 						if (e.getErrorCode() == 89) {
+							// "Invalid or expired token"
 							StdoutWriter.W(String.format("uid=%d token=%s TwitterException: [%s]",
 										uid, _tpt.tc.token, e));
 							System.exit(0);
@@ -103,15 +104,13 @@ public class CrawlTweets {
 					} else if (e.getStatusCode() == HttpResponseCode.NOT_FOUND) {
 						DB.MarkUserNotFound(uid);
 						return;
-					} else if (e.getStatusCode() == 401) {  // Authentication failed
-						StdoutWriter.W(String.format("Cred auth failed. token=%s. %s", _tpt.tc.token, e));
-						_tpt.AuthFailed();
-						_tpt = TwitterPool.GetTwitter();
-					} else if (e.getStatusCode() == 503) {	// Twitter servers overloaded
+					} else if (e.getStatusCode() == HttpResponseCode.SERVICE_UNAVAILABLE) {	// Twitter servers overloaded
 						Thread.sleep(server_overload_sleep_time);
 						server_overload_sleep_time *= 2;
-					} else
+					} else {
+						StdoutWriter.W(String.format("uid=%d token=%s", uid, _tpt.tc.token));
 						throw e;
+					}
 				}
 			} while (true);
 
@@ -209,8 +208,9 @@ public class CrawlTweets {
 								_tpt.SetRateLimitedAndWait(sec_until_reset);
 								_tpt = TwitterPool.GetTwitter();
 							} else if (e.getStatusCode() == HttpResponseCode.UNAUTHORIZED) {
-								// "Invalid or expired token"
+								// 401: UNAUTHORIZED
 								if (e.getErrorCode() == 89) {
+									// "Invalid or expired token"
 									StdoutWriter.W(String.format("uid=%d token=%s TwitterException: [%s]",
 												uid, _tpt.tc.token, e));
 									System.exit(0);
@@ -220,15 +220,13 @@ public class CrawlTweets {
 							} else if (e.getStatusCode() == HttpResponseCode.NOT_FOUND) {
 								DB.MarkUserNotFound(uid);
 								return;
-							} else if (e.getStatusCode() == 401) {  // Authentication failed
-								StdoutWriter.W(String.format("Cred auth failed. token=%s. %s", _tpt.tc.token, e));
-								_tpt.AuthFailed();
-								_tpt = TwitterPool.GetTwitter();
-							} else if (e.getStatusCode() == 503) {	// Twitter servers overloaded
+							} else if (e.getStatusCode() == HttpResponseCode.SERVICE_UNAVAILABLE) {	// Twitter servers overloaded
 								Thread.sleep(server_overload_sleep_time);
 								server_overload_sleep_time *= 2;
-							} else
+							} else {
+								StdoutWriter.W(String.format("uid=%d token=%s", uid, _tpt.tc.token));
 								throw e;
+							}
 						}
 					} while (true);
 					c_ids.getIDs();

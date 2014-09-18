@@ -270,9 +270,9 @@ public class DB {
 				stmt.executeUpdate(q);
 				_conn_crawl_tweets.commit();
 				Mon.num_users_to_crawl_parent_new ++;
-			} else if (status.equals("C") || status.equals("P") || status.equals("NF")) {
-				// the uid is already crawled or marked as uncrawlable.
-				// StdoutWriter.W(String.format("Parent uid %d is already crawled", uid));
+			} else if (status.equals("UC") || status.equals("C") || status.equals("P") || status.equals("NF")) {
+				// The uid is already crawled or marked as uncrawlable. We don't change
+				// 'UC' to 'UP', but do the other way around.
 				Mon.num_users_to_crawl_parent_dup ++;
 			} else {
 				// update status to 'UP' and added_at to NOW().
@@ -305,8 +305,7 @@ public class DB {
 					_conn_crawl_tweets.commit();
 					Mon.num_users_to_crawl_child_new ++;
 				} else if (status.equals("C") || status.equals("P") || status.equals("NF")) {
-					// the uid is already crawled or marked as uncrawlable.
-					// StdoutWriter.W(String.format("Parent uid %d is already crawled", uid));
+					// The uid is already crawled or marked as uncrawlable.
 					Mon.num_users_to_crawl_child_dup ++;
 				} else {
 					// update status to 'UC' and added_at to NOW().

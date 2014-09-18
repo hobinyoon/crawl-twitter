@@ -78,8 +78,8 @@ public class CrawlTweets {
 			//StdoutWriter.W(String.format("max_id=%d", max_id));
 			p.setMaxId(max_id);
 			List<Status> statuses = null;
+			long sleep_time = 1000;
 			do {
-				long server_overload_sleep_time = 1000;
 				try {
 					if (_stop_requested) return;
 					statuses = _tpt.twitter.getUserTimeline(uid, p);
@@ -104,12 +104,13 @@ public class CrawlTweets {
 					} else if (e.getStatusCode() == HttpResponseCode.NOT_FOUND) {
 						DB.MarkUserNotFound(uid);
 						return;
-					} else if (e.getStatusCode() == HttpResponseCode.SERVICE_UNAVAILABLE) {	// Twitter servers overloaded
-						Thread.sleep(server_overload_sleep_time);
-						server_overload_sleep_time *= 2;
 					} else {
-						StdoutWriter.W(String.format("uid=%d token=%s", uid, _tpt.tc.token));
-						throw e;
+						// It can be 130(Over capacity), 131(Internal error), or anything.
+						StdoutWriter.W(String.format("uid=%d token=%s TwitterException=[%s]\n"
+									+ "Waiting %d ms and retrying ...",
+									uid, _tpt.tc.token, e, sleep_time));
+						Thread.sleep(sleep_time);
+						sleep_time *= 2;
 					}
 				}
 			} while (true);
@@ -194,8 +195,8 @@ public class CrawlTweets {
 				int rt_cnt = s.getRetweetCount();
 				if (rt_cnt > 0) {
 					IDs c_ids = null;
+					long sleep_time1 = 1000;
 					do {
-						long server_overload_sleep_time = 1000;
 						try {
 							if (_stop_requested) return;
 							c_ids = _tpt.twitter.getRetweeterIds(id, 200, -1);
@@ -220,12 +221,13 @@ public class CrawlTweets {
 							} else if (e.getStatusCode() == HttpResponseCode.NOT_FOUND) {
 								DB.MarkUserNotFound(uid);
 								return;
-							} else if (e.getStatusCode() == HttpResponseCode.SERVICE_UNAVAILABLE) {	// Twitter servers overloaded
-								Thread.sleep(server_overload_sleep_time);
-								server_overload_sleep_time *= 2;
 							} else {
-								StdoutWriter.W(String.format("uid=%d token=%s", uid, _tpt.tc.token));
-								throw e;
+								// It can be 130(Over capacity), 131(Internal error), or anything.
+								StdoutWriter.W(String.format("uid=%d token=%s TwitterException=[%s]\n"
+											+ "Waiting %d ms and retrying ...",
+											uid, _tpt.tc.token, e, sleep_time1));
+								Thread.sleep(sleep_time1);
+								sleep_time1 *= 2;
 							}
 						}
 					} while (true);

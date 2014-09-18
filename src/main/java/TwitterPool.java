@@ -14,7 +14,6 @@ public class TwitterPool {
 	static public class T {
 		DB.TC tc;
 		Twitter twitter;
-		Date created_at;
 
 		public void SetRateLimitedAndWait(int sec_until_reset) throws SQLException, InterruptedException {
 			DB.CredSetRateLimited(tc.token, sec_until_reset);
@@ -37,6 +36,7 @@ public class TwitterPool {
 	public static T GetTwitter() throws Exception {
 		T t = new T();
 		t.tc = DB.GetTwitterCred();
+		// TODO: maybe I should make a pool of the twitter and reuse?
 		ConfigurationBuilder cb = new ConfigurationBuilder();
 		cb.setDebugEnabled(true)
 			.setJSONStoreEnabled(true)
@@ -46,7 +46,6 @@ public class TwitterPool {
 			.setOAuthAccessToken(t.tc.token)
 			.setOAuthAccessTokenSecret(t.tc.secret);
 		t.twitter = new TwitterFactory(cb.build()).getInstance();
-		t.created_at = new Date();
 		//StdoutWriter.W(String.format("Got a new credential. token=%s", t.tc.token));
 		Mon.num_credentials_used ++;
 		return t;

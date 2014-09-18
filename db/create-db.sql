@@ -51,8 +51,11 @@ CREATE TABLE IF NOT EXISTS twitter.uids_to_crawl (
 	id BIGINT,
 	added_at TIMESTAMP NULL,
 	crawled_at TIMESTAMP NULL,
-	status VARCHAR(2) NOT NULL,	-- UP(uncrawled parent), UC(uncrawled child), U(uncrawled seed), C(crawled),
-															-- I(invalid, such as non-existent user), P(protected)
+	status VARCHAR(2) NOT NULL, -- U(uncrawled seeded)
+															-- UC(uncrawled child), UP(uncrawled parent)
+															-- C(crawled)
+															-- P(unauthorized. the user's tweets are protected)
+															-- NF(the user is not found)
 	PRIMARY KEY (id),
 	INDEX (status, crawled_at),
 	INDEX (added_at));

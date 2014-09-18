@@ -6,6 +6,7 @@ import java.util.Date;
 import java.util.List;
 import twitter4j.GeoLocation;
 import twitter4j.HashtagEntity;
+import twitter4j.HttpResponseCode;
 import twitter4j.IDs;
 import twitter4j.Paging;
 import twitter4j.Status;
@@ -90,11 +91,22 @@ public class CrawlTweets {
 						//StdoutWriter.W(String.format("rate-limited: %s", e));
 						_tpt.SetRateLimitedAndWait(sec_until_reset);
 						_tpt = TwitterPool.GetTwitter();
-					} else if (e.getStatusCode() == 401) {	// Authentication failed
-						// that the user's tweets are protected. the error message is so
-						// misleading!
-						DB.MarkUserProtected(uid);
+					} else if (e.getStatusCode() == HttpResponseCode.UNAUTHORIZED) {
+						// "Invalid or expired token"
+						if (e.getErrorCode() == 89) {
+							StdoutWriter.W(String.format("uid=%d token=%s TwitterException: [%s]",
+										uid, _tpt.tc.token, e));
+							System.exit(0);
+						}
+						DB.MarkUserUnauthorized(uid);
 						return;
+					} else if (e.getStatusCode() == HttpResponseCode.NOT_FOUND) {
+						DB.MarkUserNotFound(uid);
+						return;
+					} else if (e.getStatusCode() == 401) {  // Authentication failed
+						StdoutWriter.W(String.format("Cred auth failed. token=%s. %s", _tpt.tc.token, e));
+						_tpt.AuthFailed();
+						_tpt = TwitterPool.GetTwitter();
 					} else if (e.getStatusCode() == 503) {	// Twitter servers overloaded
 						Thread.sleep(server_overload_sleep_time);
 						server_overload_sleep_time *= 2;
@@ -183,9 +195,22 @@ public class CrawlTweets {
 								//StdoutWriter.W(String.format("rate-limited: %s", e));
 								_tpt.SetRateLimitedAndWait(sec_until_reset);
 								_tpt = TwitterPool.GetTwitter();
-							} else if (e.getStatusCode() == 401) {	// Authentication failed
-								DB.MarkUserProtected(uid);
+							} else if (e.getStatusCode() == HttpResponseCode.UNAUTHORIZED) {
+								// "Invalid or expired token"
+								if (e.getErrorCode() == 89) {
+									StdoutWriter.W(String.format("uid=%d token=%s TwitterException: [%s]",
+												uid, _tpt.tc.token, e));
+									System.exit(0);
+								}
+								DB.MarkUserUnauthorized(uid);
 								return;
+							} else if (e.getStatusCode() == HttpResponseCode.NOT_FOUND) {
+								DB.MarkUserNotFound(uid);
+								return;
+							} else if (e.getStatusCode() == 401) {  // Authentication failed
+								StdoutWriter.W(String.format("Cred auth failed. token=%s. %s", _tpt.tc.token, e));
+								_tpt.AuthFailed();
+								_tpt = TwitterPool.GetTwitter();
 							} else if (e.getStatusCode() == 503) {	// Twitter servers overloaded
 								Thread.sleep(server_overload_sleep_time);
 								server_overload_sleep_time *= 2;

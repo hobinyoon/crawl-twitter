@@ -149,11 +149,9 @@ public class CrawlTweets {
 				// filter ones with youtube link
 				String youtube_link = null;
 				for (URLEntity e: s.getURLEntities()) {
-					if (e.getExpandedURL().toLowerCase().contains("youtube.")) {
-						youtube_link = e.getExpandedURL();
-						youtube_link = youtube_link.substring(youtube_link.indexOf("/watch?") + 7);
+					youtube_link = _FilterYouTubeLink(e.getExpandedURL());
+					if (youtube_link != null)
 						break;
-					}
 				}
 				if (youtube_link == null)
 					continue;
@@ -245,5 +243,16 @@ public class CrawlTweets {
 			//StdoutWriter.W(String.format("min_id=%d", min_id));
 			max_id = min_id - 1;
 		}
+	}
+
+	static String _FilterYouTubeLink(String url) {
+		if (! url.toLowerCase().contains("youtube."))
+			return null;
+		int pos = url.indexOf("v=");
+		if (pos == -1)
+			return null;
+		if (url.length() < pos + 2 + 11)
+			return null;
+		return url.substring(pos + 2, pos + 2 + 11);
 	}
 }

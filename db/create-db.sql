@@ -73,6 +73,7 @@ CREATE TABLE IF NOT EXISTS twitter.tweets (
 	text VARCHAR(450) NOT NULL,	-- give some cushion for utf8
 	PRIMARY KEY (id),
 	INDEX (uid),
+	INDEX (created_at),
 	INDEX (rt_id),
 	INDEX (rt_uid),
 	INDEX (youtube_video_id));

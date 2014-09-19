@@ -74,7 +74,8 @@ CREATE TABLE IF NOT EXISTS twitter.tweets (
 	PRIMARY KEY (id),
 	INDEX (uid),
 	INDEX (rt_id),
-	INDEX (rt_uid));
+	INDEX (rt_uid),
+	INDEX (youtube_link));
 
 -- Get (up to 100) user IDs of retweets of a tweet.
 -- https://dev.twitter.com/docs/api/1.1/get/statuses/retweeters/ids

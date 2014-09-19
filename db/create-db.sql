@@ -66,7 +66,7 @@ CREATE TABLE IF NOT EXISTS twitter.tweets (
 	created_at TIMESTAMP NOT NULL,
 	geo_lati DOUBLE NOT NULL,
 	geo_longi DOUBLE NOT NULL,
-	youtube_link VARCHAR(1024) NOT NULL,
+	youtube_video_id VARCHAR(22) NOT NULL,
 	hashtags VARCHAR(450) NOT NULL,
 	rt_id BIGINT NOT NULL,	-- -1 when not retweet
 	rt_uid BIGINT NOT NULL,	-- -1 when not retweet
@@ -75,7 +75,7 @@ CREATE TABLE IF NOT EXISTS twitter.tweets (
 	INDEX (uid),
 	INDEX (rt_id),
 	INDEX (rt_uid),
-	INDEX (youtube_link));
+	INDEX (youtube_video_id));
 
 -- Get (up to 100) user IDs of retweets of a tweet.
 -- https://dev.twitter.com/docs/api/1.1/get/statuses/retweeters/ids

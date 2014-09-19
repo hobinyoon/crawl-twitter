@@ -37,7 +37,7 @@ public class DB {
 			_ps_mark_seed_user_done = _conn_crawl_tweets.prepareStatement("UPDATE uids_to_crawl SET status='C', crawled_at=NOW() WHERE id=(?)");
 			_ps_insert_tweet = _conn_crawl_tweets.prepareStatement(
 					"INSERT INTO tweets "
-					+ "(id, uid, created_at, geo_lati, geo_longi, youtube_link, hashtags, rt_id, rt_uid, text) "
+					+ "(id, uid, created_at, geo_lati, geo_longi, youtube_video_id, hashtags, rt_id, rt_uid, text) "
 					+ "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 			_ps_credential_rate_limited = _conn_crawl_tweets.prepareStatement(
 					"UPDATE credentials SET last_rate_limited=NOW(), sec_until_retry=(?), rate_limited_ip=(?)  WHERE token=(?)");
@@ -386,16 +386,16 @@ public class DB {
 	}
 
 	static void AddTweet(long id, long uid, Date created_at, GeoLocation location,
-			String youtube_link, String ht_string, long rt_id, long rt_uid, String text)
+			String youtube_video_id, String ht_string, long rt_id, long rt_uid, String text)
 		throws SQLException {
 		try {
-			// StdoutWriter.W(String.format("%d %d %s %s %s %s %s", id, uid, created_at, location, youtube_link, ht_string, text));
+			// StdoutWriter.W(String.format("%d %d %s %s %s %s %s", id, uid, created_at, location, youtube_video_id, ht_string, text));
 			_ps_insert_tweet.setLong(1, id);
 			_ps_insert_tweet.setLong(2, uid);
 			_ps_insert_tweet.setTimestamp(3, new java.sql.Timestamp(created_at.getTime()));
 			_ps_insert_tweet.setDouble(4, location.getLatitude());
 			_ps_insert_tweet.setDouble(5, location.getLongitude());
-			_ps_insert_tweet.setString(6, youtube_link);
+			_ps_insert_tweet.setString(6, youtube_video_id);
 			_ps_insert_tweet.setString(7, ht_string);
 			_ps_insert_tweet.setLong(8, rt_id);
 			_ps_insert_tweet.setLong(9, rt_uid);

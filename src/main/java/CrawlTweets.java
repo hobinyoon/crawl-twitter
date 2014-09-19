@@ -147,13 +147,13 @@ public class CrawlTweets {
 					continue;
 
 				// filter ones with youtube link
-				String youtube_link = null;
+				String youtube_video_id = null;
 				for (URLEntity e: s.getURLEntities()) {
-					youtube_link = _FilterYouTubeLink(e.getExpandedURL());
-					if (youtube_link != null)
+					youtube_video_id = _FilterYouTubeLink(e.getExpandedURL());
+					if (youtube_video_id != null)
 						break;
 				}
-				if (youtube_link == null)
+				if (youtube_video_id == null)
 					continue;
 
 				// filter ones with hashtags. space is not allowed in them and and is
@@ -234,7 +234,7 @@ public class CrawlTweets {
 					//StdoutWriter.W(String.format("The tweet is retweeted. Need to get children: id=%d rt_cnt=%d", id, rt_cnt));
 				}
 
-				DB.AddTweet(id, uid, ca, known_gl, youtube_link, ht_string.toString(), rt_id, rt_uid, s.getText());
+				DB.AddTweet(id, uid, ca, known_gl, youtube_video_id, ht_string.toString(), rt_id, rt_uid, s.getText());
 			}
 			if (statuses.size() == 0 || min_id == -1 || hit_oldest_date) {
 				DB.MarkUserCrawled(uid);

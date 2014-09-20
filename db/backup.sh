@@ -15,4 +15,4 @@ time /usr/bin/mysqldump --skip-tz-utc -u twitter -ptwitterpass twitter > $FN_OUT
 
 /usr/bin/find /mnt/mdc-data/pgr/twitter/backup -type f -ls | /usr/bin/sort -k 11 -r | /usr/bin/head -n 5
 
-echo "Strip the twitter credential table before distribution!"
+echo "\nStrip the twitter credential table before distribution!"

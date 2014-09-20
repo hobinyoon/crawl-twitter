@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS twitter.credentials (
 	consumer_secret VARCHAR(100) NOT NULL,
 	for_stream BOOL NOT NULL,
 	status CHAR(1),	-- V: valid, I: invalid, null: unknown
-	last_check_out TIMESTAMP NULL DEFAULT NULL,	-- NULL means permit null
+	last_check_out TIMESTAMP NULL DEFAULT NULL,	-- permit null, no autoupdate
 	num_reqs_before_rate_limited INT DEFAULT 0,
 	last_rate_limited TIMESTAMP NULL DEFAULT NULL,
 	sec_until_retry INT DEFAULT NULL,
@@ -38,7 +38,7 @@ VALUE
 */
 
 CREATE TABLE IF NOT EXISTS twitter.cred_auth_history (
-	time_ TIMESTAMP NOT NULL,
+	time_ TIMESTAMP NULL DEFAULT NULL,
 	status CHAR(1) NOT NULL,	-- S: auth succeeded, F: auth failed
 	token VARCHAR(100) NOT NULL,
 	ip VARCHAR(20) NOT NULL,
@@ -49,8 +49,8 @@ CREATE TABLE IF NOT EXISTS twitter.cred_auth_history (
 -- which helps build bigger fan-out.
 CREATE TABLE IF NOT EXISTS twitter.uids_to_crawl (
 	id BIGINT,
-	added_at TIMESTAMP NULL,
-	crawled_at TIMESTAMP NULL,
+	added_at TIMESTAMP NULL DEFAULT NULL,
+	crawled_at TIMESTAMP NULL DEFAULT NULL,
 	status VARCHAR(2) NOT NULL, -- U(uncrawled seeded)
 															-- UC(uncrawled child), UP(uncrawled parent)
 															-- C(crawled)
@@ -63,7 +63,7 @@ CREATE TABLE IF NOT EXISTS twitter.uids_to_crawl (
 CREATE TABLE IF NOT EXISTS twitter.tweets (
 	id BIGINT,
 	uid BIGINT NOT NULL,
-	created_at TIMESTAMP NOT NULL,
+	created_at TIMESTAMP NULL DEFAULT NULL,
 	geo_lati DOUBLE NOT NULL,
 	geo_longi DOUBLE NOT NULL,
 	youtube_video_id VARCHAR(22) NOT NULL,

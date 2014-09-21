@@ -191,13 +191,13 @@ public class CrawlTweets {
 
 				// s.isRetweeted() doesn't seem to work. use getRetweetCount() instead.
 				int rt_cnt = s.getRetweetCount();
+				IDs c_uids = null;
 				if (rt_cnt > 0) {
-					IDs c_ids = null;
 					long sleep_time1 = 1000;
 					do {
 						try {
 							if (_stop_requested) return;
-							c_ids = _tpt.twitter.getRetweeterIds(id, 200, -1);
+							c_uids = _tpt.twitter.getRetweeterIds(id, 200, -1);
 							_tpt.IncReqMade();
 							break;
 						} catch (TwitterException e) {
@@ -229,12 +229,11 @@ public class CrawlTweets {
 							}
 						}
 					} while (true);
-					c_ids.getIDs();
-					DB.AddChildUsersToCrawl(c_ids.getIDs());
+					DB.AddChildUsersToCrawl(c_uids.getIDs());
 					//StdoutWriter.W(String.format("The tweet is retweeted. Need to get children: id=%d rt_cnt=%d", id, rt_cnt));
 				}
 
-				DB.AddTweet(id, uid, ca, known_gl, youtube_video_id, ht_string.toString(), rt_id, rt_uid, s.getText());
+				DB.AddTweet(id, uid, ca, known_gl, youtube_video_id, ht_string.toString(), rt_id, rt_uid, s.getText(), _IDsToStr(c_uids));
 			}
 			if (statuses.size() == 0 || min_id == -1 || hit_oldest_date) {
 				DB.MarkUserCrawled(uid);
@@ -254,5 +253,24 @@ public class CrawlTweets {
 		if (url.length() < pos + 2 + 11)
 			return null;
 		return url.substring(pos + 2, pos + 2 + 11);
+	}
+
+	static String _IDsToStr(IDs c_uids) {
+		if (c_uids == null)
+			return null;
+		long[] ids = c_uids.getIDs();
+		if (ids.length == 0)
+			return null;
+		StringBuilder sb = new StringBuilder();
+		boolean first = true;
+		for(long i: ids) {
+			if (first) {
+				first = false;
+			} else {
+				sb.append(" ");
+			}
+			sb.append(Long.toString(i));
+		}
+		return sb.toString();
 	}
 }

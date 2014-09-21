@@ -73,10 +73,10 @@ CREATE TABLE IF NOT EXISTS twitter.tweets (
 	rt_id BIGINT NOT NULL,	-- -1 when not retweet
 	rt_uid BIGINT NOT NULL,	-- -1 when not retweet
 	text VARCHAR(450) NOT NULL,	-- give some cushion for utf8
-	child_ids_uids VARCHAR(6000),	-- child tweet (retweet of this tweet)'s ids and uids
-																-- max 6000 = (18 + 1 + 10 + 1) * 200
-																--   example id 506289597807362048, uid 2740470659
-																--              012345678901234567      0123456789
+	child_uids VARCHAR(2200),	-- child tweets (retweet of this tweets)' uids
+														-- max 2200 = (10 + 1) * 200
+														--   example uid 2740470659
+														--               0123456789
 	PRIMARY KEY (id),
 	INDEX (uid),
 	INDEX (created_at),

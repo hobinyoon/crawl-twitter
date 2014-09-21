@@ -57,8 +57,10 @@ CREATE TABLE IF NOT EXISTS twitter.uids_to_crawl (
 															-- P(unauthorized. the user's tweets are protected)
 															-- NF(the user is not found)
 	PRIMARY KEY (id),
+	INDEX (status),
+	INDEX (crawled_at),
 	INDEX (status, crawled_at),
-	INDEX (added_at));
+	INDEX (status, added_at));
 
 CREATE TABLE IF NOT EXISTS twitter.tweets (
 	id BIGINT,

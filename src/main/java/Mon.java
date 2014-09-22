@@ -11,6 +11,7 @@ public class Mon {
 
 	static public long num_crawled_tweets = 0;
 	static public long num_crawled_tweets_new = 0;
+	static public long num_crawled_tweets_new_imported = 0;
 	static public long num_crawled_users = 0;
 
 	static public long current_uid = 0;

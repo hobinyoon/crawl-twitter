@@ -65,6 +65,9 @@ public class CrawlTweets {
 			Thread.sleep(1000);
 		}
 
+		if (DB.ImportFromTwitter1(uid))
+			return;
+
 		// one on Sep 2. Not the best tight bound.
 		long max_id = 506827318132629504L;
 

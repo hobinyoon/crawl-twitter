@@ -41,7 +41,7 @@ public class StdoutWriter {
 		_lock.lock();
 		try {
 			Util.ClearLine();
-			System.out.print(String.format("%s users_to_crawl: s=%d sn=%d sd=%d pn=%d pd=%d cn=%d cd=%d crawl: tc=%d tn=%d uc=%d cur_uid=%d cred: used=%d",
+			System.out.print(String.format("%s users_to_crawl: s=%d sn=%d sd=%d pn=%d pd=%d cn=%d cd=%d crawl: tc=%d tn=%d tni=%d uc=%d cur_uid=%d cred: used=%d",
 						new SimpleDateFormat("HH:mm:ss").format(Calendar.getInstance().getTime()),
 						Mon.num_users_to_crawl_streamed,
 						Mon.num_users_to_crawl_streamed_new,
@@ -52,6 +52,7 @@ public class StdoutWriter {
 						Mon.num_users_to_crawl_child_dup,
 						Mon.num_crawled_tweets,
 						Mon.num_crawled_tweets_new,
+						Mon.num_crawled_tweets_new_imported,
 						Mon.num_crawled_users,
 						Mon.current_uid,
 						Mon.num_credentials_used));

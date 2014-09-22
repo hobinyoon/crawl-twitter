@@ -18,7 +18,7 @@ public class DB {
 	static private Connection _conn_stream_seed_users = null;
 	static private Connection _conn_crawl_tweets = null;
 	static private PreparedStatement _ps_insert_seed_user = null;
-	static private PreparedStatement _ps_mark_seed_user_done = null;
+	static private PreparedStatement _ps_mark_user_crawled = null;
 	static private PreparedStatement _ps_insert_tweet = null;
 	static private PreparedStatement _ps_credential_rate_limited = null;
 
@@ -34,7 +34,7 @@ public class DB {
 
 			_ps_insert_seed_user = _conn_stream_seed_users.prepareStatement(
 					"INSERT INTO uids_to_crawl (id, added_at, status) VALUES (?, NOW(), ?)");
-			_ps_mark_seed_user_done = _conn_crawl_tweets.prepareStatement("UPDATE uids_to_crawl SET status='C', crawled_at=NOW() WHERE id=(?)");
+			_ps_mark_user_crawled = _conn_crawl_tweets.prepareStatement("UPDATE uids_to_crawl SET status='C', crawled_at=NOW() WHERE id=(?)");
 			_ps_insert_tweet = _conn_crawl_tweets.prepareStatement(
 					"INSERT INTO tweets "
 					+ "(id, uid, created_at, geo_lati, geo_longi, youtube_video_id, hashtags, rt_id, rt_uid, text, child_uids) "
@@ -51,7 +51,7 @@ public class DB {
 	static void Close() {
 		try {
 			if (_ps_insert_seed_user != null) _ps_insert_seed_user.close();
-			if (_ps_mark_seed_user_done != null) _ps_mark_seed_user_done.close();
+			if (_ps_mark_user_crawled != null) _ps_mark_user_crawled.close();
 			if (_ps_insert_tweet != null) _ps_insert_tweet.close();
 			if (_ps_credential_rate_limited != null) _ps_credential_rate_limited.close();
 
@@ -270,17 +270,18 @@ public class DB {
 				stmt.executeUpdate(q);
 				_conn_crawl_tweets.commit();
 				Mon.num_users_to_crawl_parent_new ++;
-			} else if (status.equals("UC") || status.equals("C") || status.equals("P") || status.equals("NF")) {
-				// The uid is already crawled or marked as uncrawlable. We don't change
-				// 'UC' to 'UP', but do the other way around.
+			} else if (status.equals("UC") || status.equals("UP") || status.equals("C")
+					|| status.equals("P") || status.equals("NF")) {
+				// The uid is already crawled or marked as uncrawlable.
 				Mon.num_users_to_crawl_parent_dup ++;
-			} else {
+			} else if (status.equals("U")) {
 				// update status to 'UP' and added_at to NOW().
 				final String q = String.format("UPDATE uids_to_crawl SET status='UP', added_at=NOW() WHERE id=%d", uid);
 				stmt.executeUpdate(q);
 				_conn_crawl_tweets.commit();
 				Mon.num_users_to_crawl_parent_dup ++;
-			}
+			} else
+				throw new RuntimeException(String.format("Unexpected status=%s, uid=%d", status, uid));
 		} finally {
 			if (stmt != null) stmt.close();
 		}
@@ -304,16 +305,18 @@ public class DB {
 					stmt.executeUpdate(q);
 					_conn_crawl_tweets.commit();
 					Mon.num_users_to_crawl_child_new ++;
-				} else if (status.equals("C") || status.equals("P") || status.equals("NF")) {
+				} else if (status.equals("UC") || status.equals("UP") || status.equals("C")
+						|| status.equals("P") || status.equals("NF")) {
 					// The uid is already crawled or marked as uncrawlable.
 					Mon.num_users_to_crawl_child_dup ++;
-				} else {
+				} else if (status.equals("U")) {
 					// update status to 'UC' and added_at to NOW().
 					final String q = String.format("UPDATE uids_to_crawl SET status='UC', added_at=NOW() WHERE id=%d", uid);
 					stmt.executeUpdate(q);
 					_conn_crawl_tweets.commit();
 					Mon.num_users_to_crawl_child_dup ++;
-				}
+				} else
+					throw new RuntimeException(String.format("Unexpected status=%s, uid=%d", status, uid));
 			}
 		} finally {
 			if (stmt != null) stmt.close();
@@ -321,22 +324,14 @@ public class DB {
 	}
 
 	static long GetUserToCrawl() throws SQLException {
-		// returns uid with status UC (uncrawled child), UP(uncrawled parent), or
-		// U(uncrawled seeded), in the repective order. If none exists, return -1.
-		// I prioritize children, which will help build big fan-out faster, I
-		// guess. "ORDER BY crawled at DESC" makes depth-first like graph
-		// traversal.
+		// returns uid with status UC (uncrawled child) or UP(uncrawled parent),
+		// and U(uncrawled seeded), in the repective order. If none exists, return
+		// -1. breath-first search.
 		Statement stmt = null;
 		try {
 			stmt = _conn_crawl_tweets.createStatement();
 			{
-				final String q = "SELECT * FROM uids_to_crawl WHERE status='UC' ORDER BY added_at DESC LIMIT 1";
-				ResultSet rs = stmt.executeQuery(q);
-				if (rs.next())
-					return rs.getLong("id");
-			}
-			{
-				final String q = "SELECT * FROM uids_to_crawl WHERE status='UP' ORDER BY added_at DESC LIMIT 1";
+				final String q = "SELECT * FROM uids_to_crawl WHERE status IN('UC', 'UP') ORDER BY added_at LIMIT 1";
 				ResultSet rs = stmt.executeQuery(q);
 				if (rs.next())
 					return rs.getLong("id");
@@ -354,8 +349,8 @@ public class DB {
 	}
 
 	static void MarkUserCrawled(long uid) throws SQLException {
-		_ps_mark_seed_user_done.setLong(1, uid);
-		_ps_mark_seed_user_done.executeUpdate();
+		_ps_mark_user_crawled.setLong(1, uid);
+		_ps_mark_user_crawled.executeUpdate();
 		_conn_crawl_tweets.commit();
 		Mon.num_crawled_users ++;
 		//StdoutWriter.W(String.format("crawled all tweets of user %d", uid));
@@ -409,6 +404,33 @@ public class DB {
 				StdoutWriter.W(String.format("Dup tweet: %d", id));
 			} else
 				throw e;
+		}
+	}
+
+	static boolean ImportFromTwitter1(long uid) throws SQLException {
+		Statement stmt = null;
+		try {
+			stmt = _conn_crawl_tweets.createStatement();
+			{
+				String q = String.format("SELECT id FROM twitter.uids_to_crawl "
+						+ "WHERE crawled_at >= '2014-09-21 12:13:02' AND status='C' AND id=%d", uid);
+				ResultSet rs = stmt.executeQuery(q);
+				if (! rs.next())
+					return false;
+			}
+			{
+				String q = String.format("INSERT INTO twitter2.tweets "
+						+ "SELECT * FROM twitter.tweets WHERE uid=%d", uid);
+				int rows_updated = stmt.executeUpdate(q);
+				Mon.num_crawled_tweets_new += rows_updated;
+				Mon.num_crawled_tweets_new_imported += rows_updated;
+			}
+			// commit is in this function
+			MarkUserCrawled(uid);
+			return true;
+		} finally {
+			if (stmt != null)
+				stmt.close();
 		}
 	}
 }

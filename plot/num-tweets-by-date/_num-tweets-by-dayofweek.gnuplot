@@ -9,7 +9,7 @@ set output FN_OUT
 set grid lc rgb "#808080"
 set border 3 lc rgb "#808080"
 
-set xtics nomirror scale 0.5,0 font ",9" rotate by -30 ( \
+set xtics nomirror scale 0.5,0 font ",9" ( \
 	"Sun" 1, \
 	"Mon" 2, \
 	"Tue" 3, \

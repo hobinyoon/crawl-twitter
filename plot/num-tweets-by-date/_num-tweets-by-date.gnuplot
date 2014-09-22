@@ -14,6 +14,7 @@ set timefmt "%Y-%m-%d"
 
 set xtics nomirror scale 0.5,0 font ",9" rotate by -30
 set ytics nomirror scale 0.5,0 font ",9"
+set yrange [0:]
 
 plot \
 FN_IN u 1:2 w linespoints pointsize 0.2 pointtype 7 not

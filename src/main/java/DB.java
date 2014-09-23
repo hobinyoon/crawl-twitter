@@ -203,6 +203,11 @@ public class DB {
 					_conn_crawl_tweets.commit();
 					return;
 				}
+			} catch (SQLException e) {
+				if (e.getErrorCode() == MysqlErrorNumbers.ER_LOCK_WAIT_TIMEOUT)
+					;
+				else
+					throw e;
 			} finally {
 				if (stmt != null)
 					stmt.close();

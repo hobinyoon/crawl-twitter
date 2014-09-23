@@ -33,6 +33,8 @@ public final class Conf {
 
 	public static long cred_auth_fail_retry_wait_sec = 3600;	// 1 hour
 
+	public static int NEXT_CHECK_OUT_AFTER_SEC = 600;
+
 	static {
 		Calendar cal = Calendar.getInstance();
 		cal.set(2013, 8, 1, 0, 0, 0);	// 8 is September

@@ -323,25 +323,50 @@ public class DB {
 		}
 	}
 
-	static long GetUserToCrawl() throws SQLException {
+	static long GetUserToCrawl() throws SQLException, InterruptedException {
 		// returns uid with status UC (uncrawled child) or UP(uncrawled parent),
-		// and U(uncrawled seeded), in the repective order. If none exists, return
-		// -1. breath-first search.
+		// and U(uncrawled seeded), in the repective order. If none exists, wait a
+		// bit and try again.  breath-first search.
 		Statement stmt = null;
 		try {
 			stmt = _conn_crawl_tweets.createStatement();
-			{
-				final String q = "SELECT * FROM uids_to_crawl WHERE status IN('UC', 'UP') ORDER BY added_at LIMIT 1";
-				ResultSet rs = stmt.executeQuery(q);
-				if (rs.next())
-					return rs.getLong("id");
-			}
-			{
-				final String q = "SELECT * FROM uids_to_crawl WHERE status='U' LIMIT 1";
-				ResultSet rs = stmt.executeQuery(q);
-				if (! rs.next())
-					return -1;
-				return rs.getLong("id");
+			while (true) {
+				long id = -1;
+				{
+					final String q = String.format("SELECT * FROM uids_to_crawl "
+							+ "WHERE status IN('UC', 'UP') AND "
+							+ "(check_out_at is null OR TIMESTAMPDIFF(second, check_out_at, NOW())>%d) "
+							+ "ORDER BY added_at LIMIT 1",
+							Conf.NEXT_CHECK_OUT_AFTER_SEC);
+					ResultSet rs = stmt.executeQuery(q);
+					if (rs.next())
+						id = rs.getLong("id");
+				}
+				if (id == -1) {
+					final String q = String.format("SELECT * FROM uids_to_crawl "
+							+ "WHERE status='U' AND "
+							+ "(check_out_at is null OR TIMESTAMPDIFF(second, check_out_at, NOW())>%d) "
+							+ "ORDER BY added_at LIMIT 1",
+							Conf.NEXT_CHECK_OUT_AFTER_SEC);
+					ResultSet rs = stmt.executeQuery(q);
+					if (rs.next())
+						id = rs.getLong("id");
+				}
+				if (id == -1) {
+					// StdoutWriter.W("No user to crawl. will try again in 1 sec.");
+					Thread.sleep(1000);
+					continue;
+				}
+				{
+					final String q = String.format("UPDATE uids_to_crawl "
+							+ "SET check_out_at=NOW(), check_out_ip='%s' "
+							+ "WHERE id=%d AND "
+							+ "(check_out_at IS NULL OR TIMESTAMPDIFF(SECOND, check_out_at, NOW())>%d)",
+							Conf.ip, id, Conf.NEXT_CHECK_OUT_AFTER_SEC);
+					int affected_rows = stmt.executeUpdate(q);
+					if (affected_rows == 1)
+						return id;
+				}
 			}
 		} finally {
 			if (stmt != null) stmt.close();

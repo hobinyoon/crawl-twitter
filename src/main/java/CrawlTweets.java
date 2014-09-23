@@ -55,15 +55,8 @@ public class CrawlTweets {
 	static TwitterPool.T _tpt = null;
 
 	static void _CrawlUserTweets() throws Exception {
-		long uid = -1;
-		while (true) {
-			uid = DB.GetUserToCrawl();
-			Mon.current_uid = uid;
-			if (uid != -1)
-				break;
-			//StdoutWriter.W("No user to crawl. will try again in 1 sec.");
-			Thread.sleep(1000);
-		}
+		long uid = DB.GetUserToCrawl();
+		Mon.current_uid = uid;
 
 		if (DB.ImportFromTwitter1(uid))
 			return;

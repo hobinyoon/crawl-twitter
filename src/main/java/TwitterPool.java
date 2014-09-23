@@ -31,6 +31,10 @@ public class TwitterPool {
 		public void AuthFailed() throws SQLException {
 			DB.CredAuthFailed(tc.token);
 		}
+
+		public String GetTokenLast4() {
+			return tc.token.substring(tc.token.length() - 4, tc.token.length());
+		}
 	}
 
 	public static T GetTwitter() throws Exception {

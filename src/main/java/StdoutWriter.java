@@ -48,24 +48,15 @@ public class StdoutWriter {
 		try {
 			Util.ClearLine();
 
-			long cur_ts = (new Date()).getTime();
-			if (Mon.ts_begin_sleep != -1) {
-				_ts_last_sleep_amount = cur_ts - Mon.ts_begin_sleep;
-			} else {
-				_ts_sleep_amount += _ts_last_sleep_amount;
-				_ts_last_sleep_amount = 0;
-			}
-			long ts_sleep_amount = _ts_sleep_amount + _ts_last_sleep_amount;
-			long ts_runtime = cur_ts - Conf.ts_start;
-
 			if (Conf.stream_seed_users) {
 				System.out.print(String.format("%s "
-							+ "r=%d s=%d %.1f%% "
+							+ "%s %s "
 							+ "to_crawl: s=%d sn=%d sd=%d pn=%d pd=%d cn=%d cd=%d "
 							+ "crawled: tc=%d tn=%d tni=%d uc=%d "
-							+ "cur_uid=%d cred_used=%d",
+							+ "cur_uid=%d "
+							+ "cred: u=%d %s",
 							new SimpleDateFormat("HH:mm:ss").format(Calendar.getInstance().getTime()),
-							ts_runtime / 1000, ts_sleep_amount / 1000, 100.0 * (ts_runtime - ts_sleep_amount) / ts_runtime,
+							Mon.Status(), Mon.RuntimeSleeptimeStr(),
 							Mon.num_users_to_crawl_streamed,
 							Mon.num_users_to_crawl_streamed_new,
 							Mon.num_users_to_crawl_streamed_dup,
@@ -78,15 +69,17 @@ public class StdoutWriter {
 							Mon.num_crawled_tweets_new_imported,
 							Mon.num_crawled_users,
 							Mon.current_uid,
-							Mon.num_credentials_used));
+							Mon.num_credentials_used,
+							CrawlTweets._tpt.GetTokenLast4()));
 			} else {
 				System.out.print(String.format("%s "
-							+ "r=%d s=%d %.1f%% "
+							+ "%s %s "
 							+ "to_crawl: pn=%d pd=%d cn=%d cd=%d "
 							+ "crawled: tc=%d tn=%d tni=%d uc=%d "
-							+ "cur_uid=%d cred_used=%d",
+							+ "cur_uid=%d "
+							+ "cred: u=%d %s",
 							new SimpleDateFormat("HH:mm:ss").format(Calendar.getInstance().getTime()),
-							ts_runtime / 1000, ts_sleep_amount / 1000, 100.0 * (ts_runtime - ts_sleep_amount) / ts_runtime,
+							Mon.Status(), Mon.RuntimeSleeptimeStr(),
 							Mon.num_users_to_crawl_parent_new,
 							Mon.num_users_to_crawl_parent_dup,
 							Mon.num_users_to_crawl_child_new,
@@ -96,7 +89,8 @@ public class StdoutWriter {
 							Mon.num_crawled_tweets_new_imported,
 							Mon.num_crawled_users,
 							Mon.current_uid,
-							Mon.num_credentials_used));
+							Mon.num_credentials_used,
+							CrawlTweets.GetCredTokenLast4()));
 			}
 			System.out.flush();
 			_status_written = true;

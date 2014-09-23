@@ -54,6 +54,13 @@ public class CrawlTweets {
 
 	static TwitterPool.T _tpt = null;
 
+	static public String GetCredTokenLast4() {
+		if (_tpt == null)
+			return null;
+		else
+			return _tpt.GetTokenLast4();
+	}
+
 	static void _CrawlUserTweets() throws Exception {
 		long uid = DB.GetUserToCrawl();
 		Mon.current_uid = uid;
@@ -105,7 +112,7 @@ public class CrawlTweets {
 						StdoutWriter.W(String.format("uid=%d token=%s TwitterException=[%s]\n"
 									+ "Waiting %d ms and retrying ...",
 									uid, _tpt.tc.token, e, sleep_time));
-						Thread.sleep(sleep_time);
+						Mon.Sleep(sleep_time);
 						sleep_time *= 2;
 					}
 				}
@@ -220,7 +227,7 @@ public class CrawlTweets {
 								StdoutWriter.W(String.format("uid=%d token=%s TwitterException=[%s]\n"
 											+ "Waiting %d ms and retrying ...",
 											uid, _tpt.tc.token, e, sleep_time1));
-								Thread.sleep(sleep_time1);
+								Mon.Sleep(sleep_time1);
 								sleep_time1 *= 2;
 							}
 						}

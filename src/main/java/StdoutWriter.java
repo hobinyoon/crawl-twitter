@@ -5,6 +5,7 @@ import java.text.SimpleDateFormat;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.Calendar;
+import java.util.Date;
 
 public class StdoutWriter {
 	private static volatile boolean _started = false;
@@ -37,25 +38,67 @@ public class StdoutWriter {
 		_started = true;
 	}
 
+	static long _ts_sleep_amount = 0;
+	static long _ts_last_sleep_amount = 0;
+
+	static long _ts_cur_sleep_amount = 0;
+
 	static void _UpdateStatus() {
 		_lock.lock();
 		try {
 			Util.ClearLine();
-			System.out.print(String.format("%s users_to_crawl: s=%d sn=%d sd=%d pn=%d pd=%d cn=%d cd=%d crawl: tc=%d tn=%d tni=%d uc=%d cur_uid=%d cred: used=%d",
-						new SimpleDateFormat("HH:mm:ss").format(Calendar.getInstance().getTime()),
-						Mon.num_users_to_crawl_streamed,
-						Mon.num_users_to_crawl_streamed_new,
-						Mon.num_users_to_crawl_streamed_dup,
-						Mon.num_users_to_crawl_parent_new,
-						Mon.num_users_to_crawl_parent_dup,
-						Mon.num_users_to_crawl_child_new,
-						Mon.num_users_to_crawl_child_dup,
-						Mon.num_crawled_tweets,
-						Mon.num_crawled_tweets_new,
-						Mon.num_crawled_tweets_new_imported,
-						Mon.num_crawled_users,
-						Mon.current_uid,
-						Mon.num_credentials_used));
+
+			long cur_ts = (new Date()).getTime();
+			if (Mon.ts_begin_sleep != -1) {
+				_ts_last_sleep_amount = cur_ts - Mon.ts_begin_sleep;
+			} else {
+				_ts_sleep_amount += _ts_last_sleep_amount;
+				_ts_last_sleep_amount = 0;
+			}
+			long ts_sleep_amount = _ts_sleep_amount + _ts_last_sleep_amount;
+			long ts_runtime = cur_ts - Conf.ts_start;
+
+			if (Conf.stream_seed_users) {
+				System.out.print(String.format("%s "
+							+ "r=%d s=%d %.1f%% "
+							+ "to_crawl: s=%d sn=%d sd=%d pn=%d pd=%d cn=%d cd=%d "
+							+ "crawled: tc=%d tn=%d tni=%d uc=%d "
+							+ "cur_uid=%d cred_used=%d",
+							new SimpleDateFormat("HH:mm:ss").format(Calendar.getInstance().getTime()),
+							ts_runtime / 1000, ts_sleep_amount / 1000, 100.0 * (ts_runtime - ts_sleep_amount) / ts_runtime,
+							Mon.num_users_to_crawl_streamed,
+							Mon.num_users_to_crawl_streamed_new,
+							Mon.num_users_to_crawl_streamed_dup,
+							Mon.num_users_to_crawl_parent_new,
+							Mon.num_users_to_crawl_parent_dup,
+							Mon.num_users_to_crawl_child_new,
+							Mon.num_users_to_crawl_child_dup,
+							Mon.num_crawled_tweets,
+							Mon.num_crawled_tweets_new,
+							Mon.num_crawled_tweets_new_imported,
+							Mon.num_crawled_users,
+							Mon.current_uid,
+							Mon.num_credentials_used));
+			} else {
+
+				System.out.print(String.format("%s "
+							+ "r=%d s=%d %.1f%% "
+							+ "to_crawl: pn=%d pd=%d cn=%d cd=%d "
+							+ "crawled: tc=%d tn=%d tni=%d uc=%d "
+							+ "cur_uid=%d cred_used=%d",
+							new SimpleDateFormat("HH:mm:ss").format(Calendar.getInstance().getTime()),
+							ts_runtime / 1000, ts_sleep_amount / 1000, 100.0 * (ts_runtime - ts_sleep_amount) / ts_runtime,
+							Mon.num_users_to_crawl_parent_new,
+							Mon.num_users_to_crawl_parent_dup,
+							Mon.num_users_to_crawl_child_new,
+							Mon.num_users_to_crawl_child_dup,
+							Mon.num_crawled_tweets,
+							Mon.num_crawled_tweets_new,
+							Mon.num_crawled_tweets_new_imported,
+							Mon.num_crawled_users,
+							Mon.current_uid,
+							Mon.num_credentials_used));
+			}
 			System.out.flush();
 			_status_written = true;
 		} finally {

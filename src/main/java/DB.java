@@ -132,6 +132,7 @@ public class DB {
 						if (wait_milli > 0) {
 							StdoutWriter.W(String.format("%d auth failures from IP %s in the last 3600 secs. waiting for %d sec and retrying ...",
 										fail_cnt, Conf.ip, wait_milli / 1000));
+							Mon.ts_begin_sleep = (new Date()).getTime();
 							Thread.sleep(wait_milli);
 						}
 						continue;
@@ -152,13 +153,15 @@ public class DB {
 					long id = -1;
 					if (! rs.next()) {
 						StdoutWriter.W("No available credentials at this time. retrying in 10 mins ...");
+						Mon.ts_begin_sleep = (new Date()).getTime();
 						Thread.sleep(600000);
 						continue;
 					}
 					if (rs.getTimestamp("retry_after") != null) {
 						long wait_milli = rs.getTimestamp("retry_after").getTime() + Conf.cred_rate_limit_wait_cushion_in_milli - (new Date()).getTime();
 						if (wait_milli > 0) {
-							StdoutWriter.W(String.format("All credentials are rate-limited. waiting for %d ms and retrying ...", wait_milli));
+							// StdoutWriter.W(String.format("All credentials are rate-limited. waiting for %d ms and retrying ...", wait_milli));
+							Mon.ts_begin_sleep = (new Date()).getTime();
 							Thread.sleep(wait_milli);
 							continue;
 						}
@@ -178,6 +181,7 @@ public class DB {
 					int rows_updated = stmt.executeUpdate(q);
 					if (rows_updated == 1) {
 						_conn_crawl_tweets.commit();
+						Mon.ts_begin_sleep = -1;
 						return new TC(token, token_secret, consumer_key, consumer_secret);
 					}
 				}
@@ -359,6 +363,7 @@ public class DB {
 				}
 				if (id == -1) {
 					// StdoutWriter.W("No user to crawl. will try again in 1 sec.");
+					Mon.ts_begin_sleep = (new Date()).getTime();
 					Thread.sleep(1000);
 					continue;
 				}
@@ -371,6 +376,7 @@ public class DB {
 					int affected_rows = stmt.executeUpdate(q);
 					if (affected_rows == 1) {
 						_conn_crawl_tweets.commit();
+						Mon.ts_begin_sleep = -1;
 						return id;
 					}
 				}

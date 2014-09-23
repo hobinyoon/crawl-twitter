@@ -23,6 +23,8 @@ public final class Conf {
 	public static String fn_twitter_credential_stream = System.getProperty("user.home") + "/private/.twitter_auth/crawl-seed-users";
 	public static String fn_twitter_credentials = System.getProperty("user.home") + "/private/.twitter_auth/credentials";
 
+	public static long ts_start;
+
 	public static Date user_ca_oldest_date = null;
 	public static Date tweet_oldest_date = null;
 	public static Date tweet_youngest_date = null;
@@ -36,6 +38,8 @@ public final class Conf {
 	public static int NEXT_CHECK_OUT_AFTER_SEC = 600;
 
 	static {
+		ts_start = (new Date()).getTime();
+
 		Calendar cal = Calendar.getInstance();
 		cal.set(2013, 8, 1, 0, 0, 0);	// 8 is September
 		user_ca_oldest_date = cal.getTime();

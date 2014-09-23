@@ -344,9 +344,9 @@ public class DB {
 				{
 					final String q = String.format("SELECT * FROM uids_to_crawl "
 							+ "WHERE status IN('UC', 'UP') AND "
-							+ "(check_out_at is null OR TIMESTAMPDIFF(second, check_out_at, NOW())>%d) "
+							+ "(check_out_at IS NULL OR check_out_ip='%s' OR TIMESTAMPDIFF(SECOND, check_out_at, NOW())>%d) "
 							+ "ORDER BY added_at LIMIT 1",
-							Conf.NEXT_CHECK_OUT_AFTER_SEC);
+							Conf.ip, Conf.NEXT_CHECK_OUT_AFTER_SEC);
 					ResultSet rs = stmt.executeQuery(q);
 					if (rs.next())
 						id = rs.getLong("id");
@@ -354,9 +354,9 @@ public class DB {
 				if (id == -1) {
 					final String q = String.format("SELECT * FROM uids_to_crawl "
 							+ "WHERE status='U' AND "
-							+ "(check_out_at is null OR TIMESTAMPDIFF(second, check_out_at, NOW())>%d) "
+							+ "(check_out_at IS NULL OR check_out_ip='%s' OR TIMESTAMPDIFF(SECOND, check_out_at, NOW())>%d) "
 							+ "ORDER BY added_at LIMIT 1",
-							Conf.NEXT_CHECK_OUT_AFTER_SEC);
+							Conf.ip, Conf.NEXT_CHECK_OUT_AFTER_SEC);
 					ResultSet rs = stmt.executeQuery(q);
 					if (rs.next())
 						id = rs.getLong("id");
@@ -371,8 +371,8 @@ public class DB {
 					final String q = String.format("UPDATE uids_to_crawl "
 							+ "SET check_out_at=NOW(), check_out_ip='%s' "
 							+ "WHERE id=%d AND "
-							+ "(check_out_at IS NULL OR TIMESTAMPDIFF(SECOND, check_out_at, NOW())>%d)",
-							Conf.ip, id, Conf.NEXT_CHECK_OUT_AFTER_SEC);
+							+ "(check_out_at IS NULL OR check_out_ip='%s' OR TIMESTAMPDIFF(SECOND, check_out_at, NOW())>%d) ",
+							Conf.ip, id, Conf.ip, Conf.NEXT_CHECK_OUT_AFTER_SEC);
 					int affected_rows = stmt.executeUpdate(q);
 					if (affected_rows == 1) {
 						_conn_crawl_tweets.commit();

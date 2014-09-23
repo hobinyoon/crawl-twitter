@@ -80,7 +80,6 @@ public class StdoutWriter {
 							Mon.current_uid,
 							Mon.num_credentials_used));
 			} else {
-
 				System.out.print(String.format("%s "
 							+ "r=%d s=%d %.1f%% "
 							+ "to_crawl: pn=%d pd=%d cn=%d cd=%d "

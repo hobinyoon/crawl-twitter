@@ -18,8 +18,6 @@ public class DB {
 	static private Connection _conn_stream_seed_users = null;
 	static private Connection _conn_crawl_tweets = null;
 	static private PreparedStatement _ps_insert_seed_user = null;
-	// TODO: if exists. if not insert.
-	static private PreparedStatement _ps_mark_user_crawled = null;
 	static private PreparedStatement _ps_insert_tweet = null;
 	static private PreparedStatement _ps_credential_rate_limited = null;
 
@@ -35,7 +33,6 @@ public class DB {
 
 			_ps_insert_seed_user = _conn_stream_seed_users.prepareStatement(
 					"INSERT INTO uids_to_crawl (id, added_at, status) VALUES (?, NOW(), ?)");
-			_ps_mark_user_crawled = _conn_crawl_tweets.prepareStatement("UPDATE uids_to_crawl SET status='C', crawled_at=NOW() WHERE id=(?)");
 			_ps_insert_tweet = _conn_crawl_tweets.prepareStatement(
 					"INSERT INTO tweets "
 					+ "(id, uid, created_at, geo_lati, geo_longi, youtube_video_id, hashtags, rt_id, rt_uid, text, child_uids) "
@@ -52,7 +49,6 @@ public class DB {
 	static void Close() {
 		try {
 			if (_ps_insert_seed_user != null) _ps_insert_seed_user.close();
-			if (_ps_mark_user_crawled != null) _ps_mark_user_crawled.close();
 			if (_ps_insert_tweet != null) _ps_insert_tweet.close();
 			if (_ps_credential_rate_limited != null) _ps_credential_rate_limited.close();
 
@@ -383,9 +379,15 @@ public class DB {
 		}
 	}
 
+	// TODO: uids_to_crawl to users
 	static void MarkUserCrawled(long uid) throws SQLException {
-		_ps_mark_user_crawled.setLong(1, uid);
-		_ps_mark_user_crawled.executeUpdate();
+		PreparedStatement ps = _conn_crawl_tweets.prepareStatement(
+				"INSERT INTO uids_to_crawl (id, added_at, crawled_at, status, check_out_at, check_out_ip) "
+				+ "VALUES (?, NOW(), NOW(), 'C', NOW(), ?) "
+				+ "ON DUPLICATE KEY UPDATE crawled_at=NOW(), status='C'");
+		ps.setLong(1, uid);
+		ps.setString(2, Conf.ip);
+		ps.executeUpdate();
 		_conn_crawl_tweets.commit();
 		Mon.num_crawled_users ++;
 		//StdoutWriter.W(String.format("crawled all tweets of user %d", uid));

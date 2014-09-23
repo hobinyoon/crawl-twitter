@@ -364,8 +364,10 @@ public class DB {
 							+ "(check_out_at IS NULL OR TIMESTAMPDIFF(SECOND, check_out_at, NOW())>%d)",
 							Conf.ip, id, Conf.NEXT_CHECK_OUT_AFTER_SEC);
 					int affected_rows = stmt.executeUpdate(q);
-					if (affected_rows == 1)
+					if (affected_rows == 1) {
+						_conn_crawl_tweets.commit();
 						return id;
+					}
 				}
 			}
 		} finally {

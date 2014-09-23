@@ -190,17 +190,22 @@ public class DB {
 
 	static void CredIncReqMade(String token) throws SQLException {
 		Statement stmt = null;
-		try {
-			stmt = _conn_crawl_tweets.createStatement();
-			final String q = String.format(
-					"UPDATE credentials "
-					+ "SET num_reqs_before_rate_limited = num_reqs_before_rate_limited + 1 "
-					+ "WHERE token='%s'", token);
-			stmt.executeUpdate(q);
-			_conn_crawl_tweets.commit();
-		} finally {
-			if (stmt != null)
-				stmt.close();
+		while (true) {
+			try {
+				stmt = _conn_crawl_tweets.createStatement();
+				final String q = String.format(
+						"UPDATE credentials "
+						+ "SET num_reqs_before_rate_limited = num_reqs_before_rate_limited + 1 "
+						+ "WHERE token='%s'", token);
+				int rows_affected = stmt.executeUpdate(q);
+				if (rows_affected == 1) {
+					_conn_crawl_tweets.commit();
+					return;
+				}
+			} finally {
+				if (stmt != null)
+					stmt.close();
+			}
 		}
 	}
 

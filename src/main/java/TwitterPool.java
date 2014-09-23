@@ -17,11 +17,11 @@ public class TwitterPool {
 
 		public void SetRateLimitedAndWait(int sec_until_reset) throws SQLException, InterruptedException {
 			DB.CredSetRateLimited(tc.token, sec_until_reset);
-			int num_reqs_before_rate_limited = DB.CredGetNumReqsBeforeRateLimited(tc.token);
-			if (num_reqs_before_rate_limited < 3) {
-				StdoutWriter.W(String.format("IP %s may be rate-limited. wait for %s ms ...", Conf.ip, sec_until_reset));
-				Thread.sleep(sec_until_reset * 1000);
-			}
+			//int num_reqs_before_rate_limited = DB.CredGetNumReqsBeforeRateLimited(tc.token);
+			//if (num_reqs_before_rate_limited < 3) {
+			//	StdoutWriter.W(String.format("IP %s may be rate-limited. wait for %s sec ...", Conf.ip, sec_until_reset));
+			//	Thread.sleep(sec_until_reset * 1000);
+			//}
 		}
 
 		public void IncReqMade() throws SQLException {

@@ -13,11 +13,11 @@ CREATE TABLE IF NOT EXISTS twitter2.credentials (
 	consumer_secret VARCHAR(100) NOT NULL,
 	for_stream BOOL NOT NULL,
 	status CHAR(1),	-- V: valid, I: invalid, null: unknown
-	last_check_out TIMESTAMP NULL DEFAULT NULL,	-- permit null, no autoupdate
+	check_out_at TIMESTAMP NULL DEFAULT NULL,	-- permit null, no autoupdate
+	check_out_ip VARCHAR(20) DEFAULT NULL,
 	num_reqs_before_rate_limited INT DEFAULT 0,
-	last_rate_limited TIMESTAMP NULL DEFAULT NULL,
+	rate_limited_at TIMESTAMP NULL DEFAULT NULL,
 	sec_until_retry INT DEFAULT NULL,
-	rate_limited_ip VARCHAR(20) DEFAULT NULL,
 	PRIMARY KEY (token));
 
 /*

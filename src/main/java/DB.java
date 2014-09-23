@@ -41,7 +41,7 @@ public class DB {
 					+ "(id, uid, created_at, geo_lati, geo_longi, youtube_video_id, hashtags, rt_id, rt_uid, text, child_uids) "
 					+ "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 			_ps_credential_rate_limited = _conn_crawl_tweets.prepareStatement(
-					"UPDATE credentials SET last_rate_limited=NOW(), sec_until_retry=(?), rate_limited_ip=(?)  WHERE token=(?)");
+					"UPDATE credentials SET rate_limited_at=NOW(), sec_until_retry=(?) WHERE token=(?)");
 		} catch (Exception e) {
 			e.printStackTrace();
 			System.out.println("Exception caught: " + e);
@@ -141,11 +141,11 @@ public class DB {
 				{
 					// pick the oldest rate-limited credential
 					final String q = String.format(
-							"SELECT *, ADDDATE(last_rate_limited, INTERVAL sec_until_retry SECOND) as retry_after "
+							"SELECT *, ADDDATE(rate_limited_at, INTERVAL sec_until_retry SECOND) as retry_after "
 							+ "FROM credentials "
 							+ "WHERE for_stream=false "
 							+ "and (status is null or status != 'I') "	// valid one
-							+ "and (last_check_out is null or TIMESTAMPDIFF(SECOND, last_check_out, NOW()) > 60) "	// not checked-out in the last 60 secs
+							+ "and (check_out_at is null or TIMESTAMPDIFF(SECOND, check_out_at, NOW()) > 60) "	// not checked-out in the last 60 secs
 							+ "and token not in (select distinct(token) from cred_auth_history where status='F' and TIMESTAMPDIFF(SECOND, time_, NOW()) < %d) "
 							+ "order by retry_after "
 							+ "LIMIT 1", Conf.cred_auth_fail_retry_wait_sec);
@@ -173,9 +173,10 @@ public class DB {
 					// Check out the credential
 					final String q = String.format(
 							"UPDATE credentials "
-							+ "SET last_check_out=NOW(), num_reqs_before_rate_limited=0 "
+							+ "SET check_out_at=NOW(), check_out_ip='%s', num_reqs_before_rate_limited=0 "
 							+ "WHERE token='%s' "
-							+ "and (last_check_out is null or TIMESTAMPDIFF(SECOND, last_check_out, NOW()) > 60)", token);
+							+ "and (check_out_at is null or TIMESTAMPDIFF(SECOND, check_out_at, NOW()) > 60)",
+							Conf.ip, token);
 					int rows_updated = stmt.executeUpdate(q);
 					if (rows_updated == 1) {
 						_conn_crawl_tweets.commit();
@@ -217,8 +218,7 @@ public class DB {
 
 	static void CredSetRateLimited(String token, int sec_until_reset) throws SQLException {
 		_ps_credential_rate_limited.setInt(1, sec_until_reset);
-		_ps_credential_rate_limited.setString(2, Conf.ip);
-		_ps_credential_rate_limited.setString(3, token);
+		_ps_credential_rate_limited.setString(2, token);
 		_ps_credential_rate_limited.executeUpdate();
 		_conn_crawl_tweets.commit();
 	}

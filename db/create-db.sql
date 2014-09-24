@@ -47,7 +47,7 @@ CREATE TABLE IF NOT EXISTS twitter2.cred_auth_history (
 
 -- When selecting, rows with 'UP' and 'UC' has priority over those with 'U',
 -- which helps build bigger fan-out.
-CREATE TABLE IF NOT EXISTS twitter2.uids_to_crawl (
+CREATE TABLE IF NOT EXISTS twitter2.users (
 	id BIGINT,
 	added_at TIMESTAMP NULL DEFAULT NULL,
 	crawled_at TIMESTAMP NULL DEFAULT NULL,

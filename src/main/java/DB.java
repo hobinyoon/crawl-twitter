@@ -32,7 +32,7 @@ public class DB {
 			_conn_crawl_tweets.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
 
 			_ps_insert_seed_user = _conn_stream_seed_users.prepareStatement(
-					"INSERT INTO uids_to_crawl (id, added_at, status) VALUES (?, NOW(), ?)");
+					"INSERT INTO users (id, added_at, status) VALUES (?, NOW(), ?)");
 			_ps_insert_tweet = _conn_crawl_tweets.prepareStatement(
 					"INSERT INTO tweets "
 					+ "(id, uid, created_at, geo_lati, geo_longi, youtube_video_id, hashtags, rt_id, rt_uid, text, child_uids) "
@@ -263,14 +263,14 @@ public class DB {
 			String status = null;
 			stmt = _conn_crawl_tweets.createStatement();
 			{
-				final String q = String.format("SELECT status FROM uids_to_crawl WHERE id=%d", uid);
+				final String q = String.format("SELECT status FROM users WHERE id=%d", uid);
 				ResultSet rs = stmt.executeQuery(q);
 				if (rs.next())
 					status = rs.getString("status");
 			}
 			if (status == null) {
 				// insert new parent uid
-				final String q = String.format("INSERT INTO uids_to_crawl (id, added_at, status) VALUES (%d, NOW(), 'UP')", uid);
+				final String q = String.format("INSERT INTO users (id, added_at, status) VALUES (%d, NOW(), 'UP')", uid);
 				stmt.executeUpdate(q);
 				_conn_crawl_tweets.commit();
 				Mon.num_users_to_crawl_parent_new ++;
@@ -280,7 +280,7 @@ public class DB {
 				Mon.num_users_to_crawl_parent_dup ++;
 			} else if (status.equals("U")) {
 				// update status to 'UP' and added_at to NOW().
-				final String q = String.format("UPDATE uids_to_crawl SET status='UP', added_at=NOW() WHERE id=%d", uid);
+				final String q = String.format("UPDATE users SET status='UP', added_at=NOW() WHERE id=%d", uid);
 				stmt.executeUpdate(q);
 				_conn_crawl_tweets.commit();
 				Mon.num_users_to_crawl_parent_dup ++;
@@ -298,14 +298,14 @@ public class DB {
 			for (long uid: uids) {
 				String status = null;
 				{
-					final String q = String.format("SELECT status FROM uids_to_crawl WHERE id=%d", uid);
+					final String q = String.format("SELECT status FROM users WHERE id=%d", uid);
 					ResultSet rs = stmt.executeQuery(q);
 					if (rs.next())
 						status = rs.getString("status");
 				}
 				if (status == null) {
 					// insert new child uid
-					final String q = String.format("INSERT INTO uids_to_crawl (id, added_at, status) VALUES (%d, NOW(), 'UC')", uid);
+					final String q = String.format("INSERT INTO users (id, added_at, status) VALUES (%d, NOW(), 'UC')", uid);
 					stmt.executeUpdate(q);
 					_conn_crawl_tweets.commit();
 					Mon.num_users_to_crawl_child_new ++;
@@ -315,7 +315,7 @@ public class DB {
 					Mon.num_users_to_crawl_child_dup ++;
 				} else if (status.equals("U")) {
 					// update status to 'UC' and added_at to NOW().
-					final String q = String.format("UPDATE uids_to_crawl SET status='UC', added_at=NOW() WHERE id=%d", uid);
+					final String q = String.format("UPDATE users SET status='UC', added_at=NOW() WHERE id=%d", uid);
 					stmt.executeUpdate(q);
 					_conn_crawl_tweets.commit();
 					Mon.num_users_to_crawl_child_dup ++;
@@ -337,7 +337,7 @@ public class DB {
 			while (true) {
 				long id = -1;
 				{
-					final String q = String.format("SELECT * FROM uids_to_crawl "
+					final String q = String.format("SELECT * FROM users "
 							+ "WHERE status IN('UC', 'UP') AND "
 							+ "(check_out_at IS NULL OR check_out_ip='%s' OR TIMESTAMPDIFF(SECOND, check_out_at, NOW())>%d) "
 							+ "ORDER BY added_at LIMIT 1",
@@ -347,7 +347,7 @@ public class DB {
 						id = rs.getLong("id");
 				}
 				if (id == -1) {
-					final String q = String.format("SELECT * FROM uids_to_crawl "
+					final String q = String.format("SELECT * FROM users "
 							+ "WHERE status='U' AND "
 							+ "(check_out_at IS NULL OR check_out_ip='%s' OR TIMESTAMPDIFF(SECOND, check_out_at, NOW())>%d) "
 							+ "ORDER BY added_at LIMIT 1",
@@ -362,7 +362,7 @@ public class DB {
 					continue;
 				}
 				{
-					final String q = String.format("UPDATE uids_to_crawl "
+					final String q = String.format("UPDATE users "
 							+ "SET check_out_at=NOW(), check_out_ip='%s' "
 							+ "WHERE id=%d AND "
 							+ "(check_out_at IS NULL OR check_out_ip='%s' OR TIMESTAMPDIFF(SECOND, check_out_at, NOW())>%d) ",
@@ -379,10 +379,9 @@ public class DB {
 		}
 	}
 
-	// TODO: uids_to_crawl to users
 	static void MarkUserCrawled(long uid) throws SQLException {
 		PreparedStatement ps = _conn_crawl_tweets.prepareStatement(
-				"INSERT INTO uids_to_crawl (id, added_at, crawled_at, status, check_out_at, check_out_ip) "
+				"INSERT INTO users (id, added_at, crawled_at, status, check_out_at, check_out_ip) "
 				+ "VALUES (?, NOW(), NOW(), 'C', NOW(), ?) "
 				+ "ON DUPLICATE KEY UPDATE crawled_at=NOW(), status='C'");
 		ps.setLong(1, uid);
@@ -397,7 +396,7 @@ public class DB {
 		Statement stmt = null;
 		try {
 			stmt = _conn_crawl_tweets.createStatement();
-			final String q = String.format("UPDATE uids_to_crawl SET status='P', crawled_at=NOW() WHERE id=%d", uid);
+			final String q = String.format("UPDATE users SET status='P', crawled_at=NOW() WHERE id=%d", uid);
 			stmt.executeUpdate(q);
 			_conn_crawl_tweets.commit();
 		} finally {
@@ -409,7 +408,7 @@ public class DB {
 		Statement stmt = null;
 		try {
 			stmt = _conn_crawl_tweets.createStatement();
-			final String q = String.format("UPDATE uids_to_crawl SET status='NF', crawled_at=NOW() WHERE id=%d", uid);
+			final String q = String.format("UPDATE users SET status='NF', crawled_at=NOW() WHERE id=%d", uid);
 			stmt.executeUpdate(q);
 			_conn_crawl_tweets.commit();
 		} finally {

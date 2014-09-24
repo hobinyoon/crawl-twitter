@@ -521,7 +521,7 @@ public class DB {
 				if (! rs.next())
 					throw new RuntimeException("Unexpected");
 				long gen = rs.getLong("cnt");
-				StdoutWriter.W(String.format("meta.gen increased to %d", gen));
+				StdoutWriter.W(String.format("Increase meta.gen to %d", gen));
 			}
 		} finally {
 			if (stmt != null) stmt.close();

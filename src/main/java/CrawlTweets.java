@@ -62,10 +62,11 @@ public class CrawlTweets {
 	}
 
 	static void _CrawlUserTweets() throws Exception {
-		long uid = DB.GetUserToCrawl();
-		Mon.current_uid = uid;
+		DB.UserToCrawl u = DB.GetUserToCrawl();
+		Mon.current_uid = u.id;
+		// TODO: display current gen on the status line
 
-		if (DB.ImportFromTwitter1(uid))
+		if (DB.ImportFromTwitter1(u))
 			return;
 
 		// one on Sep 2. Not the best tight bound.
@@ -85,7 +86,7 @@ public class CrawlTweets {
 			do {
 				try {
 					if (_stop_requested) return;
-					statuses = _tpt.twitter.getUserTimeline(uid, p);
+					statuses = _tpt.twitter.getUserTimeline(u.id, p);
 					_tpt.IncReqMade();
 					break;
 				} catch (TwitterException e) {
@@ -99,19 +100,20 @@ public class CrawlTweets {
 						if (e.getErrorCode() == 89) {
 							// "Invalid or expired token"
 							StdoutWriter.W(String.format("uid=%d token=%s TwitterException: [%s]",
-										uid, _tpt.tc.token, e));
+										u.id, _tpt.tc.token, e));
 							System.exit(0);
 						}
-						DB.MarkUserUnauthorized(uid);
+						// TODO: these ones need to be updated too. insert or modify
+						DB.SetUserUnauthorized(u);
 						return;
 					} else if (e.getStatusCode() == HttpResponseCode.NOT_FOUND) {
-						DB.MarkUserNotFound(uid);
+						DB.SetUserNotFound(u);
 						return;
 					} else {
 						// It can be 130(Over capacity), 131(Internal error), or anything.
 						StdoutWriter.W(String.format("uid=%d token=%s TwitterException=[%s]\n"
 									+ "Waiting %d ms and retrying ...",
-									uid, _tpt.tc.token, e, sleep_time));
+									u.id, _tpt.tc.token, e, sleep_time));
 						Mon.Sleep(sleep_time);
 						sleep_time *= 2;
 					}
@@ -130,7 +132,7 @@ public class CrawlTweets {
 					min_id = Math.min(min_id, id);
 
 				Mon.num_crawled_tweets ++;
-				//StdoutWriter.W(String.format(" %s %d %s", uid, id, s.getCreatedAt()));
+				//StdoutWriter.W(String.format(" %d %d %s", u.id, id, s.getCreatedAt()));
 
 				// locations; for the current tweet and for interpolation of others
 				GeoLocation gl = s.getGeoLocation();
@@ -189,7 +191,7 @@ public class CrawlTweets {
 				if (s.isRetweet()) {
 					rt_id = s.getRetweetedStatus().getId();
 					rt_uid = s.getRetweetedStatus().getUser().getId();
-					DB.AddParentUserToCrawl(rt_uid);
+					DB.AddParentUserToCrawl(rt_uid, u.gen);
 				}
 
 				// s.isRetweeted() doesn't seem to work. use getRetweetCount() instead.
@@ -214,32 +216,32 @@ public class CrawlTweets {
 								if (e.getErrorCode() == 89) {
 									// "Invalid or expired token"
 									StdoutWriter.W(String.format("uid=%d token=%s TwitterException: [%s]",
-												uid, _tpt.tc.token, e));
+												u.id, _tpt.tc.token, e));
 									System.exit(0);
 								}
-								DB.MarkUserUnauthorized(uid);
+								DB.SetUserUnauthorized(u);
 								return;
 							} else if (e.getStatusCode() == HttpResponseCode.NOT_FOUND) {
-								DB.MarkUserNotFound(uid);
+								DB.SetUserNotFound(u);
 								return;
 							} else {
 								// It can be 130(Over capacity), 131(Internal error), or anything.
 								StdoutWriter.W(String.format("uid=%d token=%s TwitterException=[%s]\n"
 											+ "Waiting %d ms and retrying ...",
-											uid, _tpt.tc.token, e, sleep_time1));
+											u.id, _tpt.tc.token, e, sleep_time1));
 								Mon.Sleep(sleep_time1);
 								sleep_time1 *= 2;
 							}
 						}
 					} while (true);
-					DB.AddChildUsersToCrawl(c_uids.getIDs());
+					DB.AddChildUsersToCrawl(c_uids.getIDs(), u.gen);
 					//StdoutWriter.W(String.format("The tweet is retweeted. Need to get children: id=%d rt_cnt=%d", id, rt_cnt));
 				}
 
-				DB.AddTweet(id, uid, ca, known_gl, youtube_video_id, ht_string.toString(), rt_id, rt_uid, s.getText(), _IDsToStr(c_uids));
+				DB.AddTweet(id, u.id, ca, known_gl, youtube_video_id, ht_string.toString(), rt_id, rt_uid, s.getText(), _IDsToStr(c_uids));
 			}
 			if (statuses.size() == 0 || min_id == -1 || hit_oldest_date) {
-				DB.MarkUserCrawled(uid);
+				DB.SetUserCrawled(u);
 				break;
 			}
 			//StdoutWriter.W(String.format("min_id=%d", min_id));

@@ -41,19 +41,18 @@ public class StreamSeedUsers {
 						if (status.getRetweetedStatus().getGeoLocation() == null)
 							break;
 
-						String youtube_link = null;
+						String youtube_video_id = null;
 						for (URLEntity e: status.getURLEntities()) {
-							if (e.getExpandedURL().toLowerCase().contains("youtube")) {
-								youtube_link = e.getExpandedURL();
+							youtube_video_id = Filter.YouTubeLink(e.getExpandedURL());
+							if (youtube_video_id != null)
 								break;
-							}
 						}
-						if (youtube_link == null)
-							break;
+						if (youtube_video_id == null)
+							continue;
 
 						User u = status.getUser();
 						long uid = u.getId();
-						//StdoutWriter.W(String.format("%d %s %d %s", uid, u.getScreenName(), status.getId(), youtube_link));
+						//StdoutWriter.W(String.format("%d %s %d %s", uid, u.getScreenName(), status.getId(), youtube_video_id));
 						DB.AddSeedUserToCrawl(uid);
 
 						//System.out.println(DataObjectFactory.getRawJSON(status));

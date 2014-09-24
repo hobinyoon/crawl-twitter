@@ -70,7 +70,7 @@ public class StdoutWriter {
 							Mon.num_crawled_users,
 							Mon.current_uid,
 							Mon.num_credentials_used,
-							CrawlTweets._tpt.GetTokenLast4()));
+							CrawlTweets.GetCredTokenLast4()));
 			} else {
 				System.out.print(String.format("%s "
 							+ "%s %s "

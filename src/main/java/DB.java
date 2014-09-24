@@ -356,7 +356,9 @@ public class DB {
 			int gen = -1;
 			while (true) {
 				id = -1;
+				_conn_crawl_tweets.commit();
 				{
+					// TODO: specify current gen
 					final String q = String.format("SELECT * FROM users "
 							+ "WHERE status IN('UC', 'UP') AND "
 							+ "(check_out_at IS NULL OR check_out_ip='%s' OR TIMESTAMPDIFF(SECOND, check_out_at, NOW())>%d) "
@@ -377,7 +379,6 @@ public class DB {
 					ResultSet rs = stmt.executeQuery(q);
 					if (rs.next()) {
 						id = rs.getLong("id");
-						gen = rs.getInt("gen");
 					}
 				}
 				if (id == -1) {

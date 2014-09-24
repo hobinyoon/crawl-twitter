@@ -380,10 +380,10 @@ public class DB {
 				id = -1;
 				_conn_crawl_tweets.commit();
 				{
-					// TODO: specify current gen
 					final String q = String.format("SELECT * FROM users "
-							+ "WHERE status IN('UC', 'UP') AND "
-							+ "(check_out_at IS NULL OR check_out_ip='%s' OR TIMESTAMPDIFF(SECOND, check_out_at, NOW())>%d) "
+							+ "WHERE status IN('UC', 'UP') "
+								+ "AND gen=(select v_int FROM meta WHERE k='gen') "
+								+ "AND (check_out_at IS NULL OR check_out_ip='%s' OR TIMESTAMPDIFF(SECOND, check_out_at, NOW())>%d) "
 							+ "ORDER BY added_at LIMIT 1",
 							Conf.ip, Conf.NEXT_CHECK_OUT_AFTER_SEC);
 					ResultSet rs = stmt.executeQuery(q);
@@ -394,8 +394,8 @@ public class DB {
 				}
 				if (id == -1) {
 					final String q = String.format("SELECT * FROM users "
-							+ "WHERE status='U' AND "
-							+ "(check_out_at IS NULL OR check_out_ip='%s' OR TIMESTAMPDIFF(SECOND, check_out_at, NOW())>%d) "
+							+ "WHERE status='U' "
+								+ "AND (check_out_at IS NULL OR check_out_ip='%s' OR TIMESTAMPDIFF(SECOND, check_out_at, NOW())>%d) "
 							+ "ORDER BY added_at LIMIT 1",
 							Conf.ip, Conf.NEXT_CHECK_OUT_AFTER_SEC);
 					ResultSet rs = stmt.executeQuery(q);

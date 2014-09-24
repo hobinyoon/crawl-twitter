@@ -65,7 +65,8 @@ public class StreamSeedUsers {
 						return;
 					} while (false);
 				} catch (SQLException e) {
-					System.out.println("Got an exception: " + e);
+					StdoutWriter.W(e.toString());
+					e.printStackTrace();
 					System.exit(1);
 				}
 			}

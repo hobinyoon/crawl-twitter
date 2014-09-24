@@ -46,51 +46,50 @@ public class StdoutWriter {
 	static void _UpdateStatus() {
 		_lock.lock();
 		try {
-			Util.ClearLine();
+			if (_status_written)
+				Util.ClearLine(2);
 
 			if (Conf.stream_seed_users) {
-				System.out.print(String.format("%s "
+				System.out.printf("%s "
 							+ "%s %s "
-							+ "to_crawl: s=%d sn=%d sd=%d pn=%d pd=%d cn=%d cd=%d "
 							+ "crawled: tc=%d tn=%d tni=%d uc=%d "
-							+ "cur_uid=%d "
-							+ "cred: u=%d %s",
+							+ "crawling: usr=%s cred=%d,%s\n",
 							new SimpleDateFormat("HH:mm:ss").format(Calendar.getInstance().getTime()),
 							Mon.Status(), Mon.RuntimeSleeptimeStr(),
+							Mon.num_crawled_tweets,
+							Mon.num_crawled_tweets_new,
+							Mon.num_crawled_tweets_new_imported,
+							Mon.num_crawled_users,
+							Mon.user_being_crawled,
+							Mon.num_credentials_used,
+							CrawlTweets.GetCredTokenLast4());
+				System.out.printf("         to_crawl: s=%d sn=%d sd=%d pn=%d pd=%d cn=%d cd=%d ",
 							Mon.num_users_to_crawl_streamed,
 							Mon.num_users_to_crawl_streamed_new,
 							Mon.num_users_to_crawl_streamed_dup,
 							Mon.num_users_to_crawl_parent_new,
 							Mon.num_users_to_crawl_parent_dup,
 							Mon.num_users_to_crawl_child_new,
-							Mon.num_users_to_crawl_child_dup,
+							Mon.num_users_to_crawl_child_dup);
+			} else {
+				System.out.printf("%s "
+							+ "%s %s "
+							+ "crawled: tc=%d tn=%d tni=%d uc=%d "
+							+ "crawling: usr=%s cred=%d,%s\n",
+							new SimpleDateFormat("HH:mm:ss").format(Calendar.getInstance().getTime()),
+							Mon.Status(), Mon.RuntimeSleeptimeStr(),
 							Mon.num_crawled_tweets,
 							Mon.num_crawled_tweets_new,
 							Mon.num_crawled_tweets_new_imported,
 							Mon.num_crawled_users,
-							Mon.current_uid,
+							Mon.user_being_crawled,
 							Mon.num_credentials_used,
-							CrawlTweets.GetCredTokenLast4()));
-			} else {
-				System.out.print(String.format("%s "
-							+ "%s %s "
-							+ "to_crawl: pn=%d pd=%d cn=%d cd=%d "
-							+ "crawled: tc=%d tn=%d tni=%d uc=%d "
-							+ "cur_uid=%d "
-							+ "cred: u=%d %s",
-							new SimpleDateFormat("HH:mm:ss").format(Calendar.getInstance().getTime()),
-							Mon.Status(), Mon.RuntimeSleeptimeStr(),
+							CrawlTweets.GetCredTokenLast4());
+				System.out.printf("         to_crawl: pn=%d pd=%d cn=%d cd=%d ",
 							Mon.num_users_to_crawl_parent_new,
 							Mon.num_users_to_crawl_parent_dup,
 							Mon.num_users_to_crawl_child_new,
-							Mon.num_users_to_crawl_child_dup,
-							Mon.num_crawled_tweets,
-							Mon.num_crawled_tweets_new,
-							Mon.num_crawled_tweets_new_imported,
-							Mon.num_crawled_users,
-							Mon.current_uid,
-							Mon.num_credentials_used,
-							CrawlTweets.GetCredTokenLast4()));
+							Mon.num_users_to_crawl_child_dup);
 			}
 			System.out.flush();
 			_status_written = true;

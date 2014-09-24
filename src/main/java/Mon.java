@@ -16,7 +16,7 @@ public class Mon {
 	static public long num_crawled_tweets_new_imported = 0;
 	static public long num_crawled_users = 0;
 
-	static public long current_uid = 0;
+	static public DB.UserToCrawl user_being_crawled = null;
 
 	static public long num_credentials_used = 0;
 

@@ -343,6 +343,10 @@ public class DB {
 			id = id_;
 			gen = gen_;
 		}
+
+		public String toString() {
+			return String.format("%d,%d", id, gen);
+		}
 	}
 
 	static UserToCrawl GetUserToCrawl() throws SQLException, InterruptedException {

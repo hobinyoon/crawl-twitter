@@ -63,8 +63,7 @@ public class CrawlTweets {
 
 	static void _CrawlUserTweets() throws Exception {
 		DB.UserToCrawl u = DB.GetUserToCrawl();
-		Mon.current_uid = u.id;
-		// TODO: display current gen on the status line
+		Mon.user_being_crawled = u;
 
 		if (DB.ImportFromTwitter1(u))
 			return;

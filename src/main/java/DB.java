@@ -288,7 +288,7 @@ public class DB {
 			if (status.equals("U") || status.equals("C") || status.equals("P") || status.equals("NF")) {
 				Mon.num_users_to_crawl_streamed_dup ++;
 			} else if (status.equals("UC") || status.equals("UP")) {
-				final String q1 = String.format("UPDATE user SET status='U', added_at=NOW(), gen=-1 WHERE id=%d", uid);
+				final String q1 = String.format("UPDATE users SET status='U', added_at=NOW(), gen=-1 WHERE id=%d", uid);
 				int affected_rows = stmt.executeUpdate(q1);
 				if (affected_rows != 1)
 					throw new RuntimeException(String.format("Unexpected. user id %d", uid));
@@ -459,6 +459,73 @@ public class DB {
 		_conn_crawl_tweets.commit();
 		Mon.num_crawled_users ++;
 		//StdoutWriter.W(String.format("crawled all tweets of user %d", u.id));
+
+		_IncGen();
+	}
+
+	static void _IncGen() throws SQLException {
+		if (Mon.num_crawled_users % 100 != 0)
+			return;
+
+		Statement stmt = null;
+		try {
+			stmt = _conn_crawl_tweets.createStatement();
+			{
+				final String q = "SELECT COUNT(*) AS CNT FROM users WHERE status='U'";
+				ResultSet rs = stmt.executeQuery(q);
+				if (! rs.next())
+					throw new RuntimeException("Unexpected");
+				if (rs.getLong("cnt") < 1000)
+					return;
+			}
+
+			long prev_c_cnt = -1;
+			long c_cnt = -1;
+			{
+				final String q = "SELECT v_int AS CNT FROM meta WHERE k='users_C_cnt_when_gen_inc'";
+				ResultSet rs = stmt.executeQuery(q);
+				if (! rs.next())
+					throw new RuntimeException("Unexpected");
+				prev_c_cnt = rs.getLong("cnt");
+			}
+			{
+				final String q = "SELECT COUNT(*) AS cnt FROM users WHERE status='C'";
+				ResultSet rs = stmt.executeQuery(q);
+				if (! rs.next())
+					throw new RuntimeException("Unexpected");
+				c_cnt = rs.getLong("cnt");
+			}
+
+			if ((prev_c_cnt / 1000) == (c_cnt / 1000))
+				return;
+
+			{
+				// this prevents race condition
+				final String q = String.format("UPDATE meta SET v_int=%d "
+						+ "WHERE k='users_C_cnt_when_gen_inc' AND v_int=%d ",
+						c_cnt, prev_c_cnt);
+				int affected_rows = stmt.executeUpdate(q);
+				if (affected_rows != 1)
+					return;
+			}
+			{
+				final String q = "UPDATE meta SET v_int=v_int+1 WHERE k='gen'";
+				int affected_rows = stmt.executeUpdate(q);
+				if (affected_rows != 1)
+					throw new RuntimeException("Unexpected");
+				_conn_crawl_tweets.commit();
+			}
+			{
+				final String q = "SELECT v_int AS CNT FROM meta WHERE k='gen'";
+				ResultSet rs = stmt.executeQuery(q);
+				if (! rs.next())
+					throw new RuntimeException("Unexpected");
+				long gen = rs.getLong("cnt");
+				StdoutWriter.W(String.format("meta.gen increased to %d", gen));
+			}
+		} finally {
+			if (stmt != null) stmt.close();
+		}
 	}
 
 	static void SetUserUnauthorized(UserToCrawl u) throws SQLException {

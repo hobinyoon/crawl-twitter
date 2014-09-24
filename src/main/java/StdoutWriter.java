@@ -47,22 +47,20 @@ public class StdoutWriter {
 		_lock.lock();
 		try {
 			if (_status_written)
-				Util.ClearLine(2);
-
+				Util.ClearLine(4);
+			System.out.printf("%s %s %s\n",
+						new SimpleDateFormat("HH:mm:ss").format(Calendar.getInstance().getTime()),
+						Mon.Status(), Mon.RuntimeSleeptimeStr());
+			System.out.printf("         crawled: tc=%d tn=%d tni=%d uc=%d\n",
+						Mon.num_crawled_tweets,
+						Mon.num_crawled_tweets_new,
+						Mon.num_crawled_tweets_new_imported,
+						Mon.num_crawled_users);
+			System.out.printf("         crawling: usr=%s cred=%d,%s\n",
+						Mon.user_being_crawled,
+						Mon.num_credentials_used,
+						CrawlTweets.GetCredTokenLast4());
 			if (Conf.stream_seed_users) {
-				System.out.printf("%s "
-							+ "%s %s "
-							+ "crawled: tc=%d tn=%d tni=%d uc=%d "
-							+ "crawling: usr=%s cred=%d,%s\n",
-							new SimpleDateFormat("HH:mm:ss").format(Calendar.getInstance().getTime()),
-							Mon.Status(), Mon.RuntimeSleeptimeStr(),
-							Mon.num_crawled_tweets,
-							Mon.num_crawled_tweets_new,
-							Mon.num_crawled_tweets_new_imported,
-							Mon.num_crawled_users,
-							Mon.user_being_crawled,
-							Mon.num_credentials_used,
-							CrawlTweets.GetCredTokenLast4());
 				System.out.printf("         to_crawl: s=%d sn=%d sd=%d pn=%d pd=%d cn=%d cd=%d ",
 							Mon.num_users_to_crawl_streamed,
 							Mon.num_users_to_crawl_streamed_new,
@@ -72,19 +70,6 @@ public class StdoutWriter {
 							Mon.num_users_to_crawl_child_new,
 							Mon.num_users_to_crawl_child_dup);
 			} else {
-				System.out.printf("%s "
-							+ "%s %s "
-							+ "crawled: tc=%d tn=%d tni=%d uc=%d "
-							+ "crawling: usr=%s cred=%d,%s\n",
-							new SimpleDateFormat("HH:mm:ss").format(Calendar.getInstance().getTime()),
-							Mon.Status(), Mon.RuntimeSleeptimeStr(),
-							Mon.num_crawled_tweets,
-							Mon.num_crawled_tweets_new,
-							Mon.num_crawled_tweets_new_imported,
-							Mon.num_crawled_users,
-							Mon.user_being_crawled,
-							Mon.num_credentials_used,
-							CrawlTweets.GetCredTokenLast4());
 				System.out.printf("         to_crawl: pn=%d pd=%d cn=%d cd=%d ",
 							Mon.num_users_to_crawl_parent_new,
 							Mon.num_users_to_crawl_parent_dup,

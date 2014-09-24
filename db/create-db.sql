@@ -49,6 +49,7 @@ CREATE TABLE IF NOT EXISTS twitter2.cred_auth_history (
 -- which helps build bigger fan-out.
 CREATE TABLE IF NOT EXISTS twitter2.users (
 	id BIGINT,
+	gen INT NOT NULL,	-- generation
 	added_at TIMESTAMP NULL DEFAULT NULL,
 	crawled_at TIMESTAMP NULL DEFAULT NULL,
 	status VARCHAR(2) NOT NULL, -- U(uncrawled seeded)
@@ -63,6 +64,7 @@ CREATE TABLE IF NOT EXISTS twitter2.users (
 	INDEX (crawled_at),
 	INDEX (status, crawled_at),
 	INDEX (status, added_at),
+	INDEX (status, gen, added_at),
 	INDEX (check_out_at),
 	INDEX (check_out_at, check_out_ip));
 
@@ -89,6 +91,10 @@ CREATE TABLE IF NOT EXISTS twitter2.tweets (
 	INDEX (youtube_video_id),
 	INDEX (child_uids));
 
+CREATE TABLE IF NOT EXISTS twitter2.meta (
+	k VARCHAR(20) NOT NULL,
+	v_int INT,
+	PRIMARY KEY (k));
 
 -- case sensitive: http://stackoverflow.com/questions/4879846/how-to-configure-mysql-to-be-case-sensitive
 CREATE DATABASE IF NOT EXISTS twitter CHARACTER SET utf8 COLLATE utf8_bin;

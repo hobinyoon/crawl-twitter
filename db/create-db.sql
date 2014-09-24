@@ -92,7 +92,7 @@ CREATE TABLE IF NOT EXISTS twitter2.tweets (
 	INDEX (child_uids));
 
 CREATE TABLE IF NOT EXISTS twitter2.meta (
-	k VARCHAR(20) NOT NULL,
+	k VARCHAR(30) NOT NULL,
 	v_int INT,
 	PRIMARY KEY (k));
 

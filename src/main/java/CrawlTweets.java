@@ -102,7 +102,6 @@ public class CrawlTweets {
 										u.id, _tpt.tc.token, e));
 							System.exit(0);
 						}
-						// TODO: these ones need to be updated too. insert or modify
 						DB.SetUserUnauthorized(u);
 						return;
 					} else if (e.getStatusCode() == HttpResponseCode.NOT_FOUND) {

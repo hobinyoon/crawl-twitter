@@ -20,6 +20,8 @@ public class DB {
 	static private PreparedStatement _ps_insert_seed_user = null;
 	static private PreparedStatement _ps_insert_tweet = null;
 	static private PreparedStatement _ps_set_user_crawled = null;
+	static private PreparedStatement _ps_set_user_unauthorized = null;
+	static private PreparedStatement _ps_set_user_notfound = null;
 	static private PreparedStatement _ps_credential_rate_limited = null;
 
 	static public void Init () {
@@ -34,14 +36,27 @@ public class DB {
 
 			_ps_insert_seed_user = _conn_stream_seed_users.prepareStatement(
 					"INSERT INTO users (id, gen, added_at, status) VALUES (?, -1, NOW(), ?)");
+
 			_ps_insert_tweet = _conn_crawl_tweets.prepareStatement(
 					"INSERT INTO tweets "
 					+ "(id, uid, created_at, geo_lati, geo_longi, youtube_video_id, hashtags, rt_id, rt_uid, text, child_uids) "
 					+ "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+
 			_ps_set_user_crawled = _conn_crawl_tweets.prepareStatement(
 					"INSERT INTO users (id, gen, added_at, crawled_at, status, check_out_at, check_out_ip) "
 					+ "VALUES (?, ?, NOW(), NOW(), 'C', NOW(), ?) "
 					+ "ON DUPLICATE KEY UPDATE crawled_at=NOW(), gen=VALUES(gen), status='C'");
+
+			_ps_set_user_unauthorized = _conn_crawl_tweets.prepareStatement(
+					"INSERT INTO users (id, gen, added_at, crawled_at, status, check_out_at, check_out_ip) "
+					+ "VALUES (?, ?, NOW(), NOW(), 'P', NOW(), ?) "
+					+ "ON DUPLICATE KEY UPDATE crawled_at=NOW(), gen=VALUES(gen), status='P'");
+
+			_ps_set_user_notfound = _conn_crawl_tweets.prepareStatement(
+					"INSERT INTO users (id, gen, added_at, crawled_at, status, check_out_at, check_out_ip) "
+					+ "VALUES (?, ?, NOW(), NOW(), 'NF', NOW(), ?) "
+					+ "ON DUPLICATE KEY UPDATE crawled_at=NOW(), gen=VALUES(gen), status='NF'");
+
 			_ps_credential_rate_limited = _conn_crawl_tweets.prepareStatement(
 					"UPDATE credentials SET rate_limited_at=NOW(), sec_until_retry=(?) WHERE token=(?)");
 		} catch (Exception e) {
@@ -55,6 +70,9 @@ public class DB {
 		try {
 			if (_ps_insert_seed_user != null) _ps_insert_seed_user.close();
 			if (_ps_insert_tweet != null) _ps_insert_tweet.close();
+			if (_ps_set_user_crawled != null) _ps_set_user_crawled.close();
+			if (_ps_set_user_unauthorized != null) _ps_set_user_unauthorized.close();
+			if (_ps_set_user_notfound != null) _ps_set_user_notfound.close();
 			if (_ps_credential_rate_limited != null) _ps_credential_rate_limited.close();
 
 			if (_conn_stream_seed_users != null) _conn_stream_seed_users.close();
@@ -427,29 +445,19 @@ public class DB {
 	}
 
 	static void SetUserUnauthorized(UserToCrawl u) throws SQLException {
-		Statement stmt = null;
-		try {
-			stmt = _conn_crawl_tweets.createStatement();
-			final String q = String.format("UPDATE users SET status='P', gen=%d, crawled_at=NOW() WHERE id=%d",
-					u.gen, u.id);
-			stmt.executeUpdate(q);
-			_conn_crawl_tweets.commit();
-		} finally {
-			if (stmt != null) stmt.close();
-		}
+		_ps_set_user_unauthorized.setLong(1, u.id);
+		_ps_set_user_unauthorized.setInt(2, u.gen);
+		_ps_set_user_unauthorized.setString(3, Conf.ip);
+		_ps_set_user_unauthorized.executeUpdate();
+		_conn_crawl_tweets.commit();
 	}
 
 	static void SetUserNotFound(UserToCrawl u) throws SQLException {
-		Statement stmt = null;
-		try {
-			stmt = _conn_crawl_tweets.createStatement();
-			final String q = String.format("UPDATE users SET status='NF', gen=%d, crawled_at=NOW() WHERE id=%d",
-					u.gen, u.id);
-			stmt.executeUpdate(q);
-			_conn_crawl_tweets.commit();
-		} finally {
-			if (stmt != null) stmt.close();
-		}
+		_ps_set_user_notfound.setLong(1, u.id);
+		_ps_set_user_notfound.setInt(2, u.gen);
+		_ps_set_user_notfound.setString(3, Conf.ip);
+		_ps_set_user_notfound.executeUpdate();
+		_conn_crawl_tweets.commit();
 	}
 
 	static void AddTweet(long id, long uid, Date created_at, GeoLocation location,

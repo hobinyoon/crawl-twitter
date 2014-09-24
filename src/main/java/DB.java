@@ -17,7 +17,6 @@ import twitter4j.GeoLocation;
 public class DB {
 	static private Connection _conn_stream_seed_users = null;
 	static private Connection _conn_crawl_tweets = null;
-	static private PreparedStatement _ps_insert_seed_user = null;
 	static private PreparedStatement _ps_insert_tweet = null;
 	static private PreparedStatement _ps_set_user_crawled = null;
 	static private PreparedStatement _ps_set_user_unauthorized = null;
@@ -33,9 +32,6 @@ public class DB {
 			_conn_crawl_tweets = DriverManager.getConnection(Conf.db_url, Conf.db_user, Conf.db_pass);
 			_conn_crawl_tweets.setAutoCommit(false);
 			_conn_crawl_tweets.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
-
-			_ps_insert_seed_user = _conn_stream_seed_users.prepareStatement(
-					"INSERT INTO users (id, gen, added_at, status) VALUES (?, -1, NOW(), ?)");
 
 			_ps_insert_tweet = _conn_crawl_tweets.prepareStatement(
 					"INSERT INTO tweets "
@@ -68,7 +64,6 @@ public class DB {
 
 	static void Close() {
 		try {
-			if (_ps_insert_seed_user != null) _ps_insert_seed_user.close();
 			if (_ps_insert_tweet != null) _ps_insert_tweet.close();
 			if (_ps_set_user_crawled != null) _ps_set_user_crawled.close();
 			if (_ps_set_user_unauthorized != null) _ps_set_user_unauthorized.close();
@@ -265,18 +260,45 @@ public class DB {
 	}
 
 	static void AddSeedUserToCrawl(long uid) throws SQLException {
+		Statement stmt = null;
 		try {
-			_ps_insert_seed_user.setLong(1, uid);
-			_ps_insert_seed_user.setString(2, "U");	// U: uncrawled
-			_ps_insert_seed_user.executeUpdate();
-			_conn_stream_seed_users.commit();
-			Mon.num_users_to_crawl_streamed_new ++;
-		} catch (SQLException e) {
-			if (e.getErrorCode() == MysqlErrorNumbers.ER_DUP_ENTRY) {
-				StdoutWriter.W(String.format("Dup user: %d", uid));
+			stmt = _conn_stream_seed_users.createStatement();
+			try {
+				final String q = String.format("INSERT INTO users (id, gen, added_at, status) VALUES (%d, -1, NOW(), 'U')", uid);
+				int affected_rows = stmt.executeUpdate(q);
+				if (affected_rows == 1) {
+					_conn_stream_seed_users.commit();
+					Mon.num_users_to_crawl_streamed_new ++;
+					return;
+				}
+			} catch (SQLException e) {
+				if (e.getErrorCode() == MysqlErrorNumbers.ER_DUP_ENTRY)
+					;
+				else
+					throw e;
+			}
+
+			final String q = String.format("SELECT gen, status from users where id=%d", uid);
+			ResultSet rs = stmt.executeQuery(q);
+			if (! rs.next())
+				throw new RuntimeException(String.format("Unexpected. no user with id %d", uid));
+			int gen = rs.getInt("gen");
+			String status = rs.getString("status");
+
+			if (status.equals("U") || status.equals("C") || status.equals("P") || status.equals("NF")) {
 				Mon.num_users_to_crawl_streamed_dup ++;
+			} else if (status.equals("UC") || status.equals("UP")) {
+				final String q1 = String.format("UPDATE user SET status='U', added_at=NOW(), gen=-1 WHERE id=%d", uid);
+				int affected_rows = stmt.executeUpdate(q1);
+				if (affected_rows != 1)
+					throw new RuntimeException(String.format("Unexpected. user id %d", uid));
+				Mon.num_users_to_crawl_streamed_dup ++;
+				_conn_stream_seed_users.commit();
+				return;
 			} else
-				throw e;
+				throw new RuntimeException(String.format("Unexpected user. id=%d status=%s", uid, status));
+		} finally {
+			if (stmt != null) stmt.close();
 		}
 	}
 
@@ -298,11 +320,9 @@ public class DB {
 				stmt.executeUpdate(q);
 				_conn_crawl_tweets.commit();
 				Mon.num_users_to_crawl_parent_new ++;
-			} else if (status.equals("C") || status.equals("P") || status.equals("NF")) {
-				// The uid is already crawled or marked as uncrawlable.
+			} else if (status.equals("C") || status.equals("U") || status.equals("P") || status.equals("NF")) {
 				Mon.num_users_to_crawl_parent_dup ++;
-			} else if (status.equals("UC") || status.equals("UP") || status.equals("U")) {
-				// update status to 'UP' and added_at to NOW().
+			} else if (status.equals("UC") || status.equals("UP")) {
 				final String q = String.format("UPDATE users SET status='UP', gen=%d, added_at=NOW() WHERE id=%d",
 						gen, uid);
 				stmt.executeUpdate(q);
@@ -334,12 +354,9 @@ public class DB {
 					stmt.executeUpdate(q);
 					_conn_crawl_tweets.commit();
 					Mon.num_users_to_crawl_child_new ++;
-				} else if (status.equals("C") || status.equals("P") || status.equals("NF")) {
-					// The uid is already crawled or marked as uncrawlable.
+				} else if (status.equals("C") || status.equals("U") || status.equals("P") || status.equals("NF")) {
 					Mon.num_users_to_crawl_child_dup ++;
-				} else if (status.equals("UC") || status.equals("UP") || status.equals("U")) {
-					// update status to 'UC' and added_at to NOW(). This steals user from
-					// 'U', but won't be a issue, since we supply 'U' continuously.
+				} else if (status.equals("UC") || status.equals("UP")) {
 					final String q = String.format("UPDATE users SET status='UC', gen=%d, added_at=NOW() WHERE id=%d",
 							gen, uid);
 					stmt.executeUpdate(q);

@@ -112,7 +112,7 @@ public class StreamSeedUsers {
 		if (_ts != null) {
 			_ts.cleanUp();
 			_ts.shutdown();
-			StdoutWriter.W("CrawlTweets stopped.");
+			StdoutWriter.W("StreamSeedUsers stopped.");
 		}
 	}
 }

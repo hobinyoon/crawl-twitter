@@ -23,17 +23,17 @@ CREATE TABLE IF NOT EXISTS twitter2.credentials (
 /*
 -- credential insert template
 INSERT INTO twitter2.credentials
-(email, email_pw, twitter_pw, twitter_username, twitter_app_name, token, token_secret, consumer_key)
-VALUE
-('',  -- email
-	'', -- email_pw
-	'', -- twitter_pw
-	'', -- twitter_username
-	'', -- twitter_app_name
-	'', -- consumer_key
-	'', -- consumer_secret
-	'', -- token
-	''  -- token_secret
+(email, email_pw, twitter_pw, twitter_username, twitter_app_name, token, token_secret, consumer_key, consumer_secret)
+VALUE (
+'', -- email
+'', -- email_pw
+'', -- twitter_pw
+'', -- twitter_username
+'', -- twitter_app_name
+'', -- token
+'', -- token_secret
+'', -- consumer_key
+'' -- consumer_secret
 );
 */
 

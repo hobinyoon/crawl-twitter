@@ -118,23 +118,6 @@ CREATE TABLE IF NOT EXISTS twitter.credentials (
 	rate_limited_ip VARCHAR(20) DEFAULT NULL,
 	PRIMARY KEY (token));
 
-/*
--- credential insert template
-INSERT INTO twitter.credentials
-(email, email_pw, twitter_pw, twitter_username, twitter_app_name, token, token_secret, consumer_key)
-VALUE
-('',  -- email
-	'', -- email_pw
-	'', -- twitter_pw
-	'', -- twitter_username
-	'', -- twitter_app_name
-	'', -- consumer_key
-	'', -- consumer_secret
-	'', -- token
-	''  -- token_secret
-);
-*/
-
 CREATE TABLE IF NOT EXISTS twitter.cred_auth_history (
 	time_ TIMESTAMP NULL DEFAULT NULL,
 	status CHAR(1) NOT NULL,	-- S: auth succeeded, F: auth failed

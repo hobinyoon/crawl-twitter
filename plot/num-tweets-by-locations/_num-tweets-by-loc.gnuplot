@@ -14,4 +14,6 @@ set ytics nomirror scale 0.5,0 font ",9" autofreq -90,10
 set xrange[-180:180]
 set yrange[-90:90]
 
-plot FN_IN u 1:2:($3*0.1) with points pt 6 ps variable t "# of tweets"
+plot \
+'world_10m.txt' with filledcurves ls 1 lc rgb "#F0F0F0" not, \
+FN_IN u 1:2:($3*0.1) with points pt 6 ps variable lc rgb "#FF0000" t "# of tweets"

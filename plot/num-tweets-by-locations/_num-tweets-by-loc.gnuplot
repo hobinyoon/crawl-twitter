@@ -14,4 +14,4 @@ set ytics nomirror scale 0.5,0 font ",9" autofreq -90,10
 set xrange[-180:180]
 set yrange[-90:90]
 
-plot FN_IN u 1:2:($3*0.1) with points pt 6 ps variable t "# of tweets in 1/10th of longi, lati area"
+plot FN_IN u 1:2:($3*0.1) with points pt 6 ps variable t "# of tweets"

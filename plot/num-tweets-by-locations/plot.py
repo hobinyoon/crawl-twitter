@@ -20,7 +20,7 @@ def _ByLocGenData():
 	conn = mysql.connector.connect(user="twitter", password="twitterpass", host="localhost", database="twitter")
 	cursor = conn.cursor()
 	#query = ("select geo_longi, geo_lati from tweets")
-	query = ("select round(geo_longi, 1) as longi, round(geo_lati, 1) as lati, count(*) as cnt from tweets group by longi, lati order by longi, lati")
+	query = ("select (round(geo_longi/5, 1)*5) as longi, (round(geo_lati/5, 1)*5) as lati, count(*) as cnt from tweets group by longi, lati order by longi, lati")
 	cursor.execute(query)
 	print "  execute query: %0.3f sec" % (time.time() - tmr1)
 

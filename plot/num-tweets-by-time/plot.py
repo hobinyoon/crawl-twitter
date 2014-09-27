@@ -14,9 +14,14 @@ FN_PLOT_BY_MONTH = "num-tweets-by-month.pdf"
 FN_PLOT_BY_DAYOFWEEK = "num-tweets-by-dayofweek.pdf"
 CUR_DIR = os.path.dirname(os.path.abspath(__file__))
 
+DB_USER="twitter"
+DB_PW="twitterpass"
+DB_HOST="localhost"
+DB_NAME="twitter2"
+
 
 def _ByDateGenData():
-	conn = mysql.connector.connect(user="twitter", password="twitterpass", host="localhost", database="twitter")
+	conn = mysql.connector.connect(user=DB_USER, password=DB_PW, host=DB_HOST, database=DB_NAME)
 	cursor = conn.cursor()
 	query = ("select date(created_at) as d, count(*) as cnt from tweets group by d")
 	cursor.execute(query)
@@ -44,7 +49,7 @@ def _ByDate():
 
 
 def _ByMonthGenData():
-	conn = mysql.connector.connect(user="twitter", password="twitterpass", host="localhost", database="twitter")
+	conn = mysql.connector.connect(user=DB_USER, password=DB_PW, host=DB_HOST, database=DB_NAME)
 	cursor = conn.cursor()
 	query = ("select year(created_at) * 100 + month(created_at) as d, count(*) as cnt from tweets group by d")
 	cursor.execute(query)
@@ -74,7 +79,7 @@ def _ByMonth():
 
 
 def _ByDayofweekGenData():
-	conn = mysql.connector.connect(user="twitter", password="twitterpass", host="localhost", database="twitter")
+	conn = mysql.connector.connect(user=DB_USER, password=DB_PW, host=DB_HOST, database=DB_NAME)
 	cursor = conn.cursor()
 	query = ("select dayofweek(created_at) as d, count(*) as cnt from tweets group by d")
 	cursor.execute(query)

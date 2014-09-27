@@ -12,12 +12,17 @@ FN_DATA_BY_LOC = "num-tweets-by-loc"
 FN_PLOT_BY_LOC = "num-tweets-by-loc.png"
 CUR_DIR = os.path.dirname(os.path.abspath(__file__))
 
+DB_USER="twitter"
+DB_PW="twitterpass"
+DB_HOST="localhost"
+DB_NAME="twitter2"
+
 
 def _ByLocGenData():
 	tmr = time.time()
 	tmr1 = time.time()
 	print "Generating data ..."
-	conn = mysql.connector.connect(user="twitter", password="twitterpass", host="localhost", database="twitter")
+	conn = mysql.connector.connect(user=DB_USER, password=DB_PW, host=DB_HOST, database=DB_NAME)
 	cursor = conn.cursor()
 	#query = ("select geo_longi, geo_lati from tweets")
 	query = ("select (round(geo_longi/5, 1)*5) as longi, (round(geo_lati/5, 1)*5) as lati, count(*) as cnt from tweets group by longi, lati order by longi, lati")

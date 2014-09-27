@@ -9,7 +9,7 @@ import time
 
 
 FN_DATA_BY_LOC = "num-tweets-by-loc"
-FN_PLOT_BY_LOC = "num-tweets-by-loc.png"
+FN_PLOT_BY_LOC = "num-tweets-by-loc.pdf"
 CUR_DIR = os.path.dirname(os.path.abspath(__file__))
 
 DB_USER="twitter"
@@ -18,23 +18,37 @@ DB_HOST="localhost"
 DB_NAME="twitter2"
 
 
+def _CircleSize(n):
+	return math.sqrt(n)/50.0
+
+
 def _ByLocGenData():
 	tmr = time.time()
 	tmr1 = time.time()
 	print "Generating data ..."
 	conn = mysql.connector.connect(user=DB_USER, password=DB_PW, host=DB_HOST, database=DB_NAME)
 	cursor = conn.cursor()
-	#query = ("select geo_longi, geo_lati from tweets")
-	query = ("select (round(geo_longi/5, 1)*5) as longi, (round(geo_lati/5, 1)*5) as lati, count(*) as cnt from tweets group by longi, lati order by longi, lati")
+	query = ("select round(geo_longi) as longi, round(geo_lati) as lati, count(*) as cnt "
+			"from tweets group by longi, lati order by longi, lati")
 	cursor.execute(query)
 	print "  execute query: %0.3f sec" % (time.time() - tmr1)
 
 	fo = open(FN_DATA_BY_LOC, "w")
 	for (longi, lati, cnt) in cursor:
-		fo.write("%f %f %d\n" % (longi, lati, math.sqrt(cnt)))
+		fo.write("%f %f %f\n" % (longi, lati, _CircleSize(cnt)))
+	p = 0
+	for i in [
+			1, 5,
+			10, 50,
+			100, 500,
+			1000, 5000,
+			10000]:
+		fo.write("%f %f %f %d\n"
+				% (-80 + 20*p, -75, _CircleSize(i), i))
+		p += 1
+	fo.close()
 	cursor.close()
 	conn.close()
-	fo.close()
 	print "  %0.3f sec" % (time.time() - tmr)
 
 

@@ -28,8 +28,8 @@ def _ByLocGenData():
 	print "Generating data ..."
 	conn = mysql.connector.connect(user=DB_USER, password=DB_PW, host=DB_HOST, database=DB_NAME)
 	cursor = conn.cursor()
-	query = ("select round(geo_longi) as longi, round(geo_lati) as lati, count(*) as cnt "
-			"from tweets group by longi, lati order by longi, lati")
+	query = ("select round(geo_longi * 2)/2 as longi, round(geo_lati*2)/2 as lati, count(*) as cnt "
+			"from tweets group by longi, lati")
 	cursor.execute(query)
 	print "  execute query: %0.3f sec" % (time.time() - tmr1)
 

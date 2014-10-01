@@ -12,6 +12,7 @@
 #include <cppconn/resultset.h>
 #include <cppconn/statement.h>
 #include "conf.h"
+#include "dc.h"
 #include "op.h"
 #include "stat.h"
 #include "util.h"
@@ -24,12 +25,6 @@ namespace Ops {
 		ifs.read((char*)&s, sizeof(s));
 		str.resize(s);
 		ifs.read((char*)&str[0], s);
-	}
-
-	void _WriteStr(ofstream& ofs, const string& str) {
-		size_t s = str.size();
-		ofs.write((char*)&s, sizeof(s));
-		ofs.write(str.c_str(), str.size());
 	}
 
 	Entry::Entry(long id_,
@@ -59,6 +54,7 @@ namespace Ops {
 		ifs.read((char*)&geo_lati, sizeof(geo_lati));
 		ifs.read((char*)&geo_longi, sizeof(geo_longi));
 		_ReadStr(ifs, youtube_video_id);
+		ifs.read((char*)&youtube_video_uploader, sizeof(youtube_video_uploader));
 
 		size_t topic_cnt;
 		ifs.read((char*)&topic_cnt, sizeof(topic_cnt));
@@ -67,61 +63,20 @@ namespace Ops {
 			_ReadStr(ifs, t);
 			topics.push_back(t);
 		}
+		ifs.read((char*)&type, sizeof(type));
 	}
 
-	void Entry::Write(ofstream& ofs) {
-		ofs.write((char*)&id, sizeof(id));
-		ofs.write((char*)&uid, sizeof(uid));
-		_WriteStr(ofs, created_at_str);
-		ofs.write((char*)&geo_lati, sizeof(geo_lati));
-		ofs.write((char*)&geo_longi, sizeof(geo_longi));
-		_WriteStr(ofs, youtube_video_id);
-		{
-			size_t s = topics.size();
-			ofs.write((char*)&s, sizeof(s));
-		}
-		for (auto& t: topics)
-			_WriteStr(ofs, t);
-	}
-
-	static vector<Entry*> _entries;
-
-	const std::vector<Entry*> Entries() {
-		return _entries;
-	}
-
-	void _LoadTweetsFromDB() {
-		Util::CpuTimer _("Loading tweets from DB ...\n", 2);
-		unique_ptr<sql::Connection> conn(get_driver_instance()->
-				connect("tcp://" + Conf::db_host + ":3306", Conf::db_user, Conf::db_pass));
-		conn->setSchema(Conf::db_name);
-		unique_ptr<sql::Statement> stmt(conn->createStatement());
-		unique_ptr<sql::ResultSet> rs(stmt->executeQuery(
-					"SELECT id, uid, created_at, geo_lati, geo_longi, youtube_video_id, hashtags from tweets "
-					"ORDER BY created_at "));
-
-		while (rs->next()) {
-			//cout << boost::format("  %ld %10ld %s %10lf %11lf %s\n")
-			//	% rs->getInt64("id")
-			//	% rs->getInt64("uid")
-			//	% rs->getString("created_at")
-			//	% rs->getDouble("geo_lati")
-			//	% rs->getDouble("geo_longi")
-			//	% rs->getString("youtube_video_id");
-			_entries.push_back(new Entry(rs->getInt64("id"),
-					rs->getInt64("uid"),
-					rs->getString("created_at"),
-					rs->getDouble("geo_lati"),
-					rs->getDouble("geo_longi"),
-					rs->getString("youtube_video_id"),
-					rs->getString("hashtags")));
-		}
-	}
+	static list<Entry*> _entries;
 
 	void _LoadTweetsFromFile() {
-		Util::CpuTimer _("Loading tweets from file ...\n", 2);
+		string fn;
+		if (Conf::max_repeated_videos_per_user == 1) {
+			fn = Conf::fn_tweets_1rv_per_user;
+		} else {
+			fn = Conf::fn_tweets;
+		}
+		Util::CpuTimer _(str(boost::format("Loading tweets from file %s ...\n") % fn), 2);
 
-		const string& fn = Conf::fn_tweets;
 		ifstream ifs(fn.c_str(), ios::binary);
 		if (! ifs.is_open())
 			throw runtime_error(str(boost::format("unable to open file %1%") % fn));
@@ -130,31 +85,43 @@ namespace Ops {
 		ifs.read((char*)&e_size, sizeof(e_size));
 		for (size_t i = 0; i < e_size; i ++)
 			_entries.push_back(new Entry(ifs));
+		cout << "    _entries.size()=" << _entries.size() << "\n";
 	}
 
-	void GenDataFile() {
-		Util::CpuTimer _("Gen data file from DB ...\n");
-		_LoadTweetsFromDB();
-		cout << "  _entries.size()=" << _entries.size() << "\n";
+	void _FilterOutWrites() {
+		Util::CpuTimer _("Filter out writes ...\n", 2);
 
-		const string& fn = Conf::fn_tweets;
-		ofstream ofs(fn.c_str(), ios::binary);
-		if (! ofs.is_open())
-			throw runtime_error(str(boost::format("unable to open file %1%") % fn));
+		size_t before = _entries.size();
 
-		size_t e_size = _entries.size();
-		ofs.write((char*)&e_size, sizeof(size_t));
+		map<string, int> vids_cnt;
+		for (auto it = _entries.begin(); it != _entries.end(); ) {
+			int cnt = -1;
+			if (vids_cnt.find((*it)->youtube_video_id) == vids_cnt.end()) {
+				cnt = 1;
+			} else {
+				cnt = vids_cnt[(*it)->youtube_video_id] + 1;
+			}
+			vids_cnt[(*it)->youtube_video_id] = cnt;
 
-		for (auto o: _entries)
-			o->Write(ofs);
-		ofs.close();
+			if (cnt == 1) {
+				it = _entries.erase(it);
+			} else {
+				it ++;
+			}
+		}
 
-		cout << "  Generated file " << fn << " size=" << boost::filesystem::file_size(fn) << "\n";
+		cout << boost::format("    _entries.size()= before %d, after %d (%.2f%%)\n")
+			% before % _entries.size()
+			% (100.0 * _entries.size() / before);
 	}
 
 	void _FilterOutRepeatedAccessFromSameUser() {
 		if (Conf::max_repeated_videos_per_user == -1)
 			return;
+		if (Conf::max_repeated_videos_per_user == 1) {
+			// there is already input file for this
+			return;
+		}
 
 		Util::CpuTimer _(str(boost::format("Allow at most %d repeated access "
 						"to the same video from the same user ...\n") % Conf::max_repeated_videos_per_user), 2);
@@ -203,13 +170,8 @@ namespace Ops {
 	void Load() {
 		Util::CpuTimer _("Loading tweets ...\n");
 
-		if (Conf::load_from == "file") {
-			_LoadTweetsFromFile();
-		} else if (Conf::load_from == "db") {
-			_LoadTweetsFromDB();
-		}
-		cout << "  _entries.size()=" << _entries.size() << "\n";
-
+		_LoadTweetsFromFile();
+		_FilterOutWrites();
 		_FilterOutRepeatedAccessFromSameUser();
 	}
 
@@ -294,10 +256,131 @@ namespace Ops {
 		Stat::CDF(sizes, x, y, true, 2);
 	}
 
+	void _NumReadsByVideosByDCs() {
+		Util::CpuTimer _("Num reads by videos by DCs ...\n");
+
+		struct Key {
+			string vid;
+			DC* dc;
+
+			Key(const string vid_, DC* dc_)
+				: vid(vid_), dc(dc_)
+			{}
+
+			bool operator< (const Key& r) const {
+				int c = vid.compare(r.vid);
+				if (c < 0) return true;
+				else if (c > 0) return false;
+
+				return dc < r.dc;
+			}
+		};
+
+		map<Key, int> by_keys;
+		for (auto e: _entries) {
+			Key k(e->youtube_video_id, DCs::GetClosest(e->geo_lati, e->geo_longi));
+			auto it = by_keys.find(k);
+			if (it == by_keys.end()) {
+				by_keys[k] = 1;
+			} else {
+				it->second ++;
+			}
+		}
+
+		vector<size_t> sizes;
+		for (auto i: by_keys)
+			sizes.push_back(i.second);
+
+		double x[10];
+		double y[10];
+		Stat::CDF(sizes, x, y, true, 2);
+	}
+
+	void _NumReadsByUsersByDCs() {
+		Util::CpuTimer _("Num reads by users by DCs ...\n");
+
+		struct Key {
+			long uid;
+			DC* dc;
+
+			Key(const long uid_, DC* dc_)
+				: uid(uid_), dc(dc_)
+			{}
+
+			bool operator< (const Key& r) const {
+				if (uid < r.uid) return true;
+				else if (uid > r.uid) return false;
+
+				return dc < r.dc;
+			}
+		};
+
+		map<Key, int> by_keys;
+		for (auto e: _entries) {
+			Key k(e->youtube_video_uploader, DCs::GetClosest(e->geo_lati, e->geo_longi));
+			auto it = by_keys.find(k);
+			if (it == by_keys.end()) {
+				by_keys[k] = 1;
+			} else {
+				it->second ++;
+			}
+		}
+
+		vector<size_t> sizes;
+		for (auto i: by_keys)
+			sizes.push_back(i.second);
+
+		double x[10];
+		double y[10];
+		Stat::CDF(sizes, x, y, true, 2);
+	}
+
+	void _NumReadsByTopicsByDCs() {
+		Util::CpuTimer _("Num reads by topics by DCs ...\n");
+
+		struct Key {
+			string topic;
+			DC* dc;
+
+			Key(const string topic_, DC* dc_)
+				: topic(topic_), dc(dc_)
+			{}
+
+			bool operator< (const Key& r) const {
+				int c = topic.compare(r.topic);
+				if (c < 0) return true;
+				else if (c > 0) return false;
+
+				return dc < r.dc;
+			}
+		};
+
+		map<Key, int> by_keys;
+		for (auto e: _entries) {
+			for (auto& t: e->topics) {
+				Key k(t, DCs::GetClosest(e->geo_lati, e->geo_longi));
+				auto it = by_keys.find(k);
+				if (it == by_keys.end()) {
+					by_keys[k] = 1;
+				} else {
+					it->second ++;
+				}
+			}
+		}
+
+		vector<size_t> sizes;
+		for (auto i: by_keys)
+			sizes.push_back(i.second);
+
+		double x[10];
+		double y[10];
+		Stat::CDF(sizes, x, y, true, 2);
+	}
+
 	void NumReadsBy() {
-		_NumReadsByVideos();
-		_NumReadsByUsers();
-		_NumReadsByTopics();
+		_NumReadsByVideosByDCs();
+		_NumReadsByUsersByDCs();
+		_NumReadsByTopicsByDCs();
 	}
 
 	void FreeMem() {

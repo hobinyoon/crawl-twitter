@@ -33,15 +33,11 @@ namespace Ops {
 				const std::string& topics_);
 
 		Entry(std::ifstream& ifs);
-
-		void Write(std::ofstream& ofs);
 	};
 
-	void GenDataFile();
 	void Load();
 	void NumReadsBy();
 
-	const std::vector<Entry*> Entries();
 	void FreeMem();
 };
 

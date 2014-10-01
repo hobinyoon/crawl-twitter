@@ -4,6 +4,7 @@
 #include <iostream>
 #include <cppconn/exception.h>
 #include "conf.h"
+#include "dc.h"
 #include "op.h"
 
 using namespace std;
@@ -29,15 +30,13 @@ int main(int argc, char* argv[]) {
 		signal(SIGINT, on_signal);
 
 		Conf::Init(argc, argv);
-		if (Conf::gen_data_file) {
-			Ops::GenDataFile();
-			return 0;
-		}
+		DCs::LoadDCs();
 
 		Ops::Load();
 		Ops::NumReadsBy();
 
 		Ops::FreeMem();
+		DCs::FreeMem();
 		return 0;
 	} catch (sql::SQLException &e) {
 		cout << "SQLException: " << e.what();

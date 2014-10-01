@@ -14,9 +14,9 @@ namespace Conf {
 	extern size_t max_dcs;
 
 	extern bool gen_data_file;
-	extern std::string load_from;
 	extern int max_repeated_videos_per_user;
 	extern const std::string fn_tweets;
+	extern const std::string fn_tweets_1rv_per_user;
 
 	extern size_t num_checkins_in_timeline;
 

@@ -36,7 +36,7 @@ namespace Ops {
 	};
 
 	void Load();
-	void NumReadsBy();
+	void CntNumReadsBy();
 
 	void FreeMem();
 };

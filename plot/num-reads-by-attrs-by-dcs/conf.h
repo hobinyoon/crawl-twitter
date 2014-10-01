@@ -17,6 +17,9 @@ namespace Conf {
 	extern int max_repeated_videos_per_user;
 	extern const std::string fn_tweets;
 	extern const std::string fn_tweets_1rv_per_user;
+	extern const std::string fn_num_reads_by_vids;
+	extern const std::string fn_num_reads_by_uids;
+	extern const std::string fn_num_reads_by_topics;
 
 	extern size_t num_checkins_in_timeline;
 

@@ -26,6 +26,8 @@ namespace Stat {
 	void CDF(std::vector<boost::posix_time::time_duration>& tds,
 			boost::posix_time::time_duration* x,
 			double* y);
+
+	void GenCDFPlotData(std::vector<size_t>& values, const std::string& fn);
 };
 
 #endif

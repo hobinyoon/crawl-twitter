@@ -175,88 +175,7 @@ namespace Ops {
 		_FilterOutRepeatedAccessFromSameUser();
 	}
 
-	void _NumReadsByVideos() {
-		Util::CpuTimer _("Num reads by videos ...\n");
-
-		// map<youtube_video_id, vector<Entry*> >
-		map<string, vector<Entry*> > by_youtube_video_ids;
-		for (auto e: _entries) {
-			auto it = by_youtube_video_ids.find(e->youtube_video_id);
-			if (it == by_youtube_video_ids.end()) {
-				vector<Entry*> v;
-				v.push_back(e);
-				by_youtube_video_ids[e->youtube_video_id] = v;
-			} else {
-				it->second.push_back(e);
-			}
-		}
-
-		vector<size_t> sizes;
-		for (auto i: by_youtube_video_ids) {
-			if (i.second.size() > 1)
-				sizes.push_back(i.second.size() - 1);
-		}
-
-		double x[10];
-		double y[10];
-		Stat::CDF(sizes, x, y, true, 2);
-	}
-
-	void _NumReadsByUsers() {
-		Util::CpuTimer _("Num reads by users ...\n");
-
-		map<long, vector<Entry*> > by_uids;
-		for (auto e: _entries) {
-			auto it = by_uids.find(e->uid);
-			if (it == by_uids.end()) {
-				vector<Entry*> v;
-				v.push_back(e);
-				by_uids[e->uid] = v;
-			} else {
-				it->second.push_back(e);
-			}
-		}
-
-		vector<size_t> sizes;
-		for (auto i: by_uids) {
-			if (i.second.size() > 1)
-				sizes.push_back(i.second.size() - 1);
-		}
-
-		double x[10];
-		double y[10];
-		Stat::CDF(sizes, x, y, true, 2);
-	}
-
-	void _NumReadsByTopics() {
-		Util::CpuTimer _("Num reads by topics ...\n");
-
-		map<string, vector<Entry*> > by_topics;
-		for (auto e: _entries) {
-			for (auto& t: e->topics) {
-				auto it = by_topics.find(t);
-				if (it == by_topics.end()) {
-					vector<Entry*> v;
-					v.push_back(e);
-					by_topics[t] = v;
-				} else {
-					it->second.push_back(e);
-				}
-			}
-		}
-
-		vector<size_t> sizes;
-		for (auto i: by_topics) {
-			if (i.second.size() > 1)
-				sizes.push_back(i.second.size() - 1);
-		}
-
-		double x[10];
-		double y[10];
-		Stat::CDF(sizes, x, y, true, 2);
-	}
-
-	void _NumReadsByVideosByDCs() {
+	void _CntNumReadsByVideosByDCs() {
 		Util::CpuTimer _("Num reads by videos by DCs ...\n");
 
 		struct Key {
@@ -294,9 +213,13 @@ namespace Ops {
 		double x[10];
 		double y[10];
 		Stat::CDF(sizes, x, y, true, 2);
+
+		const string& fn = Conf::fn_num_reads_by_vids;
+		Stat::GenCDFPlotData(sizes, fn);
+		cout << "  created file " << fn << "\n";
 	}
 
-	void _NumReadsByUsersByDCs() {
+	void _CntNumReadsByUsersByDCs() {
 		Util::CpuTimer _("Num reads by users by DCs ...\n");
 
 		struct Key {
@@ -333,9 +256,13 @@ namespace Ops {
 		double x[10];
 		double y[10];
 		Stat::CDF(sizes, x, y, true, 2);
+
+		const string& fn = Conf::fn_num_reads_by_uids;
+		Stat::GenCDFPlotData(sizes, fn);
+		cout << "  created file " << fn << "\n";
 	}
 
-	void _NumReadsByTopicsByDCs() {
+	void _CntNumReadsByTopicsByDCs() {
 		Util::CpuTimer _("Num reads by topics by DCs ...\n");
 
 		struct Key {
@@ -375,12 +302,16 @@ namespace Ops {
 		double x[10];
 		double y[10];
 		Stat::CDF(sizes, x, y, true, 2);
+
+		const string& fn = Conf::fn_num_reads_by_topics;
+		Stat::GenCDFPlotData(sizes, fn);
+		cout << "  created file " << fn << "\n";
 	}
 
-	void NumReadsBy() {
-		_NumReadsByVideosByDCs();
-		_NumReadsByUsersByDCs();
-		_NumReadsByTopicsByDCs();
+	void CntNumReadsBy() {
+		_CntNumReadsByVideosByDCs();
+		_CntNumReadsByUsersByDCs();
+		_CntNumReadsByTopicsByDCs();
 	}
 
 	void FreeMem() {

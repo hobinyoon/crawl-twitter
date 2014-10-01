@@ -1,3 +1,4 @@
+#include <fstream>
 #include <boost/format.hpp>
 #include "stat.h"
 #include "util.h"
@@ -246,5 +247,23 @@ namespace Stat {
 		cout << "  stat:\n";
 		for (size_t i = 0; i < 10; i ++)
 			cout << (boost::format("  %17s %10f") % Util::ToYMD_HMS(x[i]) % y[i]) << "\n";
+	}
+
+	void GenCDFPlotData(vector<size_t>& values, const string& fn) {
+		ofstream ofs(fn);
+		if (! ofs.is_open())
+			throw runtime_error(str(boost::format("unable to open file %1%") % fn));
+		ofs << std::fixed;
+		size_t values_len = values.size();
+		bool first = true;
+		double prev_x;
+		for (size_t i = 0; i < values_len; i ++) {
+			double y = double(i + 1) / values_len;
+			if (first || (prev_x != values[i]))
+				ofs << values[i] << " " << y << "\n";
+			if (first)
+				first = false;
+			prev_x = values[i];
+		}
 	}
 };

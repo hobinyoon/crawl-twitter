@@ -33,7 +33,9 @@ int main(int argc, char* argv[]) {
 		DCs::LoadDCs();
 
 		Ops::Load();
-		Ops::NumReadsBy();
+		Ops::CntNumReadsBy();
+		// TODO
+		//Plot::NumReadsBy();
 
 		Ops::FreeMem();
 		DCs::FreeMem();

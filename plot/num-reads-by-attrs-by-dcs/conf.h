@@ -20,6 +20,7 @@ namespace Conf {
 	extern const std::string fn_num_reads_by_vids;
 	extern const std::string fn_num_reads_by_uids;
 	extern const std::string fn_num_reads_by_topics;
+	extern const std::string fn_plot;
 
 	extern size_t num_checkins_in_timeline;
 

@@ -23,9 +23,10 @@ namespace Conf {
 	const string dn_data_home = "/mnt/mdc-data/pgr/twitter";
 	const string fn_tweets = dn_data_home + "/tweets";
 	const string fn_tweets_1rv_per_user = dn_data_home + "/tweets-1rvpu";
-	const string fn_num_reads_by_vids = dn_data_home + "/stat/num-reads-by-vids-by-dcs";
-	const string fn_num_reads_by_uids = dn_data_home + "/stat/num-reads-by-uids-by-dcs";
+	const string fn_num_reads_by_vids   = dn_data_home + "/stat/num-reads-by-vids-by-dcs";
+	const string fn_num_reads_by_uids   = dn_data_home + "/stat/num-reads-by-uids-by-dcs";
 	const string fn_num_reads_by_topics = dn_data_home + "/stat/num-reads-by-topics-by-dcs";
+	const string fn_plot                = dn_data_home + "/stat/num-reads-by-attrs-by-dcs.pdf";
 
 	int max_repeated_videos_per_user;
 

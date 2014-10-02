@@ -2,6 +2,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <boost/algorithm/string.hpp>
+#include <boost/filesystem.hpp>
 #include <boost/format.hpp>
 
 #include "util.h"
@@ -17,6 +18,11 @@ namespace Util {
 			homedir = pw->pw_dir;
 		}
 		return homedir;
+	}
+
+	const string& SrcDir() {
+		static const string dn = boost::filesystem::path(__FILE__).parent_path().string();
+		return dn;
 	}
 
 	string ToYMD_HMS(const boost::posix_time::time_duration& td) {
@@ -97,6 +103,21 @@ namespace Util {
 		#define ESC "\033["
 		cout << ESC "1K"	// clear from cursor to beginning of the line
 			ESC "1G"; // move the cursor to column 1
+	}
+
+	// http://stackoverflow.com/questions/478898/how-to-execute-a-command-and-get-output-of-command-within-c
+	string ExecGetOutput(const string& cmd) {
+		FILE* pipe = popen(cmd.c_str(), "r");
+		if (!pipe)
+			throw runtime_error(str(boost::format("error executing: %1%") % cmd));
+		char buffer[1024];
+		string result = "";
+		while(!feof(pipe)) {
+			if(fgets(buffer, sizeof(buffer), pipe) != NULL)
+				result += buffer;
+		}
+		pclose(pipe);
+		return result;
 	}
 
 	CpuTimer::CpuTimer(const string& msg, int indent) {

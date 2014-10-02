@@ -17,6 +17,7 @@ ADD_EXECUTABLE ( cnt
 	dc.cpp
 	main.cpp
 	op.cpp
+	plot.cpp
 	stat.cpp
 	util.cpp )
 TARGET_LINK_LIBRARIES ( cnt ${Boost_LIBRARIES} mysqlcppconn )

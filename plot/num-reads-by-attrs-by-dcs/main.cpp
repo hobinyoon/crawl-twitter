@@ -6,6 +6,7 @@
 #include "conf.h"
 #include "dc.h"
 #include "op.h"
+#include "plot.h"
 
 using namespace std;
 
@@ -34,8 +35,7 @@ int main(int argc, char* argv[]) {
 
 		Ops::Load();
 		Ops::CntNumReadsBy();
-		// TODO
-		//Plot::NumReadsBy();
+		Plot::Plot();
 
 		Ops::FreeMem();
 		DCs::FreeMem();

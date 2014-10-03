@@ -18,8 +18,13 @@ set xtics nomirror scale 0.5,0 font ",9" ( \
 	"Fri" 6, \
 	"Sat" 7 \
 	)
-set ytics nomirror scale 0.5,0 font ",9"
+
+# thousand separator (comma)
+set decimal locale
+set ytics nomirror scale 0.5,0 font ",9" format "%'g"
 set yrange [0:]
 
+set style fill solid 0.4 noborder
+BOX_WIDTH=0.8
 plot \
-FN_IN u 1:2 w linespoints pointsize 0.2 pointtype 7 not
+FN_IN u 1:2:(BOX_WIDTH) w boxes not

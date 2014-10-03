@@ -15,7 +15,8 @@ set ytics nomirror scale 0.5,0 font ",9" format "%.0f{/Symbol \260}" autofreq -9
 set xrange[-180:180]
 set yrange[-90:90]
 
-set label 1 "Number of requests in 0.5{/Symbol \260}-longitude/latitude-wide unit area" at 0,-65 center font ",9" front
+#set label 1 "Number of requests in 0.5{/Symbol \260}-longitude/latitude-wide unit area" at 0,-65 center font ",9" front
+set label 1 "Number of requests in 1{/Symbol \260}-longitude/latitude-wide unit area" at 0,-65 center font ",9" front
 set object 2 rect from -110,-88 to 110,-62 fs empty border lc rgb "#D0D0D0" front
 
 plot \

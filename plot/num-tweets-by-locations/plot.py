@@ -7,9 +7,11 @@ import sys
 import subprocess
 import time
 
+DN_STAT="/mnt/mdc-data/pgr/twitter/stat"
 
-FN_DATA_BY_LOC = "num-tweets-by-loc"
-FN_PLOT_BY_LOC = "num-tweets-by-loc.pdf"
+FN_DATA_BY_LOC = DN_STAT + "/num-tweets-by-loc"
+FN_PLOT_BY_LOC = DN_STAT + "/num-tweets-by-loc.pdf"
+
 CUR_DIR = os.path.dirname(os.path.abspath(__file__))
 
 DB_USER="twitter"
@@ -19,7 +21,7 @@ DB_NAME="twitter2"
 
 
 def _CircleSize(n):
-	return math.sqrt(n)/50.0
+	return math.sqrt(n)/75.0
 
 
 def _ByLocGenData():
@@ -28,7 +30,8 @@ def _ByLocGenData():
 	print "Generating data ..."
 	conn = mysql.connector.connect(user=DB_USER, password=DB_PW, host=DB_HOST, database=DB_NAME)
 	cursor = conn.cursor()
-	query = ("select round(geo_longi * 2)/2 as longi, round(geo_lati*2)/2 as lati, count(*) as cnt "
+	#query = ("select round(geo_longi * 2)/2 as longi, round(geo_lati*2)/2 as lati, count(*) as cnt "
+	query = ("select round(geo_longi) as longi, round(geo_lati) as lati, count(*) as cnt "
 			"from tweets group by longi, lati")
 	cursor.execute(query)
 	print "  execute query: %0.3f sec" % (time.time() - tmr1)
@@ -38,13 +41,14 @@ def _ByLocGenData():
 		fo.write("%f %f %f\n" % (longi, lati, _CircleSize(cnt)))
 	p = 0
 	for i in [
-			1, 5,
-			10, 50,
-			100, 500,
-			1000, 5000,
-			10000]:
+			1,
+			10,
+			100,
+			1000,
+			10000,
+			20000]:
 		fo.write("%f %f %f %d\n"
-				% (-80 + 20*p, -75, _CircleSize(i), i))
+				% (-50 + 20*p, -75, _CircleSize(i), i))
 		p += 1
 	fo.close()
 	cursor.close()

@@ -479,6 +479,15 @@ public class DB {
 					return;
 			}
 
+			long cur_gen = -1;
+			{
+				final String q = "SELECT v_int AS CNT FROM meta WHERE k='gen'";
+				ResultSet rs = stmt.executeQuery(q);
+				if (! rs.next())
+					throw new RuntimeException("Unexpected");
+				cur_gen = rs.getLong("cnt");
+			}
+
 			long prev_c_cnt = -1;
 			long c_cnt = -1;
 			{
@@ -500,20 +509,22 @@ public class DB {
 				return;
 
 			{
-				// this prevents race condition
-				final String q = String.format("UPDATE meta SET v_int=%d "
-						+ "WHERE k='users_C_cnt_when_gen_inc' AND v_int=%d ",
-						c_cnt, prev_c_cnt);
+				// Increase gen. Having cur_gen prevents multiple crawlers incrementing
+				// gen at the same time.
+				final String q = String.format("UPDATE meta SET v_int=v_int+1 "
+						+ "WHERE k='gen' and v_int=%d", cur_gen);
 				int affected_rows = stmt.executeUpdate(q);
 				if (affected_rows != 1)
 					return;
 			}
 			{
-				final String q = "UPDATE meta SET v_int=v_int+1 WHERE k='gen'";
+				// Update users_C_cnt_when_gen_inc.
+				final String q = String.format("UPDATE meta SET v_int=%d "
+						+ "WHERE k='users_C_cnt_when_gen_inc' AND v_int=%d ",
+						c_cnt, prev_c_cnt);
 				int affected_rows = stmt.executeUpdate(q);
 				if (affected_rows != 1)
 					throw new RuntimeException("Unexpected");
-				_conn_crawl_tweets.commit();
 			}
 			{
 				final String q = "SELECT v_int AS CNT FROM meta WHERE k='gen'";
@@ -523,6 +534,8 @@ public class DB {
 				long gen = rs.getLong("cnt");
 				StdoutWriter.W(String.format("Increase meta.gen to %d", gen));
 			}
+
+			_conn_crawl_tweets.commit();
 		} finally {
 			if (stmt != null) stmt.close();
 		}

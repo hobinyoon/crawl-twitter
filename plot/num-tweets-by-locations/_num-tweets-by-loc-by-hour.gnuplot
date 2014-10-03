@@ -27,3 +27,16 @@ do for [i=0:23] {
 	fn_in_ u 1:2:3 with points pt 6 ps variable lc rgb "#FF0000" lw 0.4 not, \
 	fn_in_ u 1:($2-10):4 with labels tc rgb "#000000" font ",7" not
 }
+
+set terminal gif size 1200,800 animate delay 100
+set output FN_IN . ".gif"
+
+do for [i=0:23] {
+	set title sprintf("UTC %02dH", i) font ",9"
+	fn_in_ = sprintf("%s-%02d", FN_IN, i)
+
+	plot \
+	'world_110m.txt' with filledcurves ls 1 lc rgb "#F0F0F0" not, \
+	fn_in_ u 1:2:3 with points pt 6 ps variable lc rgb "#FF0000" lw 0.4 not, \
+	fn_in_ u 1:($2-10):4 with labels tc rgb "#000000" font ",7" not
+}

@@ -11,7 +11,7 @@ DN_STAT="/mnt/mdc-data/pgr/twitter/stat"
 
 FN_DATA_BY_LOC = DN_STAT + "/num-tweets-by-loc"
 FN_PLOT_BY_LOC = DN_STAT + "/num-tweets-by-loc.pdf"
-FN_DATA_BY_LOC_BY_HOUR = DN_STAT + "/num-tweets-by-loc"
+FN_DATA_BY_LOC_BY_HOUR = DN_STAT + "/num-tweets-by-loc-by-hour"
 
 CUR_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -129,16 +129,25 @@ def _ByLocByHourPlot():
 	cmd = "gnuplot %s/_num-tweets-by-loc-by-hour.gnuplot" % CUR_DIR
 	if subprocess.call(cmd, shell=True, env=env) != 0:
 		raise RuntimeError("Error running cmd: %s" % cmd)
+
+	# Not very satisfactory.
+	# cmd = "convert -layers Optimize -delay 200"
+	# for i in range(24):
+	# 	cmd += (" %s-%02d.pdf" % (FN_DATA_BY_LOC_BY_HOUR, i))
+	# cmd += (" %s.gif" % FN_DATA_BY_LOC_BY_HOUR)
+	# if subprocess.call(cmd, shell=True) != 0:
+	# 	raise RuntimeError("Error running cmd: %s" % cmd)
+
 	print "  %0.3f sec" % (time.time() - tmr)
 
 
 def _ByLocByHour():
-	_ByLocByHourGenData()
+	#_ByLocByHourGenData()
 	_ByLocByHourPlot()
 
 
 def main(argv):
-	_ByLoc()
+	#_ByLoc()
 	_ByLocByHour()
 
 

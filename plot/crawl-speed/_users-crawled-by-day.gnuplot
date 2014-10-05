@@ -9,16 +9,17 @@ set output FN_OUT
 set grid ytics front lc rgb "#000000"
 set border 3 lc rgb "#808080"
 
-set title "# of users crawled per hour"
+set title "# of users crawled by day"
 set xdata time
-set timefmt "%Y%m%d%H"
+set timefmt "%Y%m%d"
 set format x "%m/%d"
 
 set xtics nomirror scale 0.5,0 font ",9"
-set ytics nomirror scale 0.5,0 font ",9"
+# thousand separator (comma)
+set decimal locale
+set ytics nomirror scale 0.5,0 font ",9" format "%'g"
 
 set style fill solid 0.5 noborder
-BOX_WIDTH=3600
-BOX_SPACING=0.1
+BOX_WIDTH=24*3600*0.8
 plot \
 FN_IN u 1:2:(BOX_WIDTH) w boxes not

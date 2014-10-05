@@ -314,12 +314,20 @@ public class DB {
 					status = rs.getString("status");
 			}
 			if (status == null) {
-				// insert new parent uid
-				final String q = String.format("INSERT INTO users (id, gen, added_at, status) "
-						+ "VALUES (%d, %d, NOW(), 'UP')", uid, gen);
-				stmt.executeUpdate(q);
-				_conn_crawl_tweets.commit();
-				Mon.num_users_to_crawl_parent_new ++;
+				try {
+					// Insert a new parent uid.
+					final String q = String.format("INSERT INTO users (id, gen, added_at, status) "
+							+ "VALUES (%d, %d, NOW(), 'UP')", uid, gen);
+					stmt.executeUpdate(q);
+					_conn_crawl_tweets.commit();
+					Mon.num_users_to_crawl_parent_new ++;
+				} catch (SQLException e) {
+					// There can be a race here. It's okay to ignore.
+					if (e.getErrorCode() == MysqlErrorNumbers.ER_DUP_ENTRY)
+						Mon.num_users_to_crawl_parent_dup ++;
+					else
+						throw e;
+				}
 			} else if (status.equals("C") || status.equals("U") || status.equals("P") || status.equals("NF")) {
 				Mon.num_users_to_crawl_parent_dup ++;
 			} else if (status.equals("UC") || status.equals("UP")) {
@@ -348,12 +356,20 @@ public class DB {
 						status = rs.getString("status");
 				}
 				if (status == null) {
-					// insert new child uid
-					final String q = String.format("INSERT INTO users (id, gen, added_at, status) "
-							+ "VALUES (%d, %d, NOW(), 'UC')", uid, gen);
-					stmt.executeUpdate(q);
-					_conn_crawl_tweets.commit();
-					Mon.num_users_to_crawl_child_new ++;
+					try {
+						// Insert a new child uid
+						final String q = String.format("INSERT INTO users (id, gen, added_at, status) "
+								+ "VALUES (%d, %d, NOW(), 'UC')", uid, gen);
+						stmt.executeUpdate(q);
+						_conn_crawl_tweets.commit();
+						Mon.num_users_to_crawl_child_new ++;
+					} catch (SQLException e) {
+						// There can be a race here. It's okay to ignore.
+						if (e.getErrorCode() == MysqlErrorNumbers.ER_DUP_ENTRY)
+							Mon.num_users_to_crawl_child_dup ++;
+						else
+							throw e;
+					}
 				} else if (status.equals("C") || status.equals("U") || status.equals("P") || status.equals("NF")) {
 					Mon.num_users_to_crawl_child_dup ++;
 				} else if (status.equals("UC") || status.equals("UP")) {

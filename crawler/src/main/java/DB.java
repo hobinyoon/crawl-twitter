@@ -425,23 +425,43 @@ public class DB {
 						gen = rs.getInt("gen");
 					}
 				}
+
+				// Pick one from 'U's when you have more than 1000 of those.
+				// Otherwise, pick one randomly from 'UP's and 'UC's.
 				if (id == -1) {
-					final String q = String.format("SELECT * FROM users "
-							+ "WHERE status='U' "
-								+ "AND (check_out_at IS NULL OR check_out_ip='%s' OR TIMESTAMPDIFF(SECOND, check_out_at, NOW())>%d) "
-							+ "ORDER BY added_at LIMIT 1",
-							Conf.ip, Conf.NEXT_CHECK_OUT_AFTER_SEC);
+					final String q = "SELECT COUNT(*) as cnt FROM users WHERE status='U'";
 					ResultSet rs = stmt.executeQuery(q);
-					if (rs.next()) {
-						id = rs.getLong("id");
+					if (! rs.next())
+						throw new RuntimeException("Unexpected");
+					if (rs.getLong("cnt") > 1000) {
+						final String q1 = String.format("SELECT * FROM users "
+								+ "WHERE status='U' "
+									+ "AND (check_out_at IS NULL OR check_out_ip='%s' OR TIMESTAMPDIFF(SECOND, check_out_at, NOW())>%d) "
+								+ "ORDER BY added_at LIMIT 1",
+								Conf.ip, Conf.NEXT_CHECK_OUT_AFTER_SEC);
+						ResultSet rs1 = stmt.executeQuery(q1);
+						if (rs1.next()) {
+							id = rs1.getLong("id");
+						}
+					} else {
+						final String q1 = "SELECT MAX(id) FROM users "
+							+ "WHERE status IN ('UP', 'UC') "
+							+ "AND id < (RAND() * (SELECT MAX(id) FROM users))";
+						ResultSet rs1 = stmt.executeQuery(q1);
+						if (rs1.next()) {
+							id = rs1.getLong("id");
+						}
 					}
 				}
+
 				if (id == -1) {
-					// StdoutWriter.W("No user to crawl. will try again in 1 sec.");
+					StdoutWriter.W("No user to crawl. will try again in 1 sec.");
 					Mon.Sleep(1000);
 					continue;
 				}
+
 				{
+					// Check out. This prevents races between crawlers.
 					final String q = String.format("UPDATE users "
 							+ "SET check_out_at=NOW(), check_out_ip='%s' "
 							+ "WHERE id=%d AND "
@@ -480,20 +500,12 @@ public class DB {
 	}
 
 	static void _IncGen() throws SQLException {
-		if (Mon.num_crawled_users % 100 != 0)
+		if (Mon.num_crawled_users % 200 != 0)
 			return;
 
 		Statement stmt = null;
 		try {
 			stmt = _conn_crawl_tweets.createStatement();
-			{
-				final String q = "SELECT COUNT(*) AS CNT FROM users WHERE status='U'";
-				ResultSet rs = stmt.executeQuery(q);
-				if (! rs.next())
-					throw new RuntimeException("Unexpected");
-				if (rs.getLong("cnt") < 1000)
-					return;
-			}
 
 			long cur_gen = -1;
 			{
@@ -514,6 +526,8 @@ public class DB {
 				prev_c_cnt = rs.getLong("cnt");
 			}
 			{
+				// TODO: this one takes a long time. may want to keep a separate
+				// counter in the meta table.
 				final String q = "SELECT COUNT(*) AS cnt FROM users WHERE status='C'";
 				ResultSet rs = stmt.executeQuery(q);
 				if (! rs.next())

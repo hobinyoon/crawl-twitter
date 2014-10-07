@@ -273,30 +273,10 @@ public class DB {
 				}
 			} catch (SQLException e) {
 				if (e.getErrorCode() == MysqlErrorNumbers.ER_DUP_ENTRY)
-					;
+					Mon.num_users_to_crawl_streamed_dup ++;
 				else
 					throw e;
 			}
-
-			final String q = String.format("SELECT gen, status from users where id=%d", uid);
-			ResultSet rs = stmt.executeQuery(q);
-			if (! rs.next())
-				throw new RuntimeException(String.format("Unexpected. no user with id %d", uid));
-			int gen = rs.getInt("gen");
-			String status = rs.getString("status");
-
-			if (status.equals("U") || status.equals("C") || status.equals("P") || status.equals("NF")) {
-				Mon.num_users_to_crawl_streamed_dup ++;
-			} else if (status.equals("UC") || status.equals("UP")) {
-				final String q1 = String.format("UPDATE users SET status='U', added_at=NOW(), gen=-1 WHERE id=%d", uid);
-				int affected_rows = stmt.executeUpdate(q1);
-				if (affected_rows != 1)
-					throw new RuntimeException(String.format("Unexpected. user id %d", uid));
-				Mon.num_users_to_crawl_streamed_dup ++;
-				_conn_stream_seed_users.commit();
-				return;
-			} else
-				throw new RuntimeException(String.format("Unexpected user. id=%d status=%s", uid, status));
 		} finally {
 			if (stmt != null) stmt.close();
 		}

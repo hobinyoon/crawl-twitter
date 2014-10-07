@@ -444,12 +444,12 @@ public class DB {
 							id = rs1.getLong("id");
 						}
 					} else {
-						final String q1 = "SELECT MAX(id) FROM users "
+						final String q1 = "SELECT MAX(id) as max_id FROM users "
 							+ "WHERE status IN ('UP', 'UC') "
 							+ "AND id < (RAND() * (SELECT MAX(id) FROM users))";
 						ResultSet rs1 = stmt.executeQuery(q1);
 						if (rs1.next()) {
-							id = rs1.getLong("id");
+							id = rs1.getLong("max_id");
 						}
 					}
 				}

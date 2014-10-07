@@ -407,10 +407,9 @@ public class DB {
 		Statement stmt = null;
 		try {
 			stmt = _conn_crawl_tweets.createStatement();
-			long id = -1;
-			int gen = -1;
 			while (true) {
-				id = -1;
+				long id = -1;
+				int gen = -1;
 				_conn_crawl_tweets.commit();
 				{
 					final String q = String.format("SELECT * FROM users "

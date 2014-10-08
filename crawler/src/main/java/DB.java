@@ -450,10 +450,19 @@ public class DB {
 							+ "WHERE id=%d AND "
 							+ "(check_out_at IS NULL OR check_out_ip='%s' OR TIMESTAMPDIFF(SECOND, check_out_at, NOW())>%d) ",
 							Conf.ip, id, Conf.ip, Conf.NEXT_CHECK_OUT_AFTER_SEC);
-					int affected_rows = stmt.executeUpdate(q);
-					if (affected_rows == 0)
-						continue;
-					_conn_crawl_tweets.commit();
+					try {
+						int affected_rows = stmt.executeUpdate(q);
+						if (affected_rows == 0)
+							continue;
+						_conn_crawl_tweets.commit();
+					} catch (SQLException e) {
+						if (e.getErrorCode() == MysqlErrorNumbers.ER_LOCK_WAIT_TIMEOUT) {
+							StdoutWriter.W(String.format("Lock wait timeout while checking out uid=%d. rolling back and retrying ...", id));
+							_conn_crawl_tweets.rollback();
+							continue;
+						} else
+							throw e;
+					}
 
 					if (gen == -1) {
 						final String q1 = "SELECT v_int FROM meta WHERE k='gen'";

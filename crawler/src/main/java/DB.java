@@ -423,12 +423,16 @@ public class DB {
 							id = rs1.getLong("id");
 						}
 					} else {
-						final String q1 = "SELECT MAX(id) as max_id FROM users "
-							+ "WHERE status IN ('UP', 'UC') "
-							+ "AND id < (RAND() * (SELECT MAX(id) FROM users))";
+						// This doesn't seem to return random id. Maybe a MySQL bug. No idea.
+						//final String q1 = "SELECT MAX(id) as max_id FROM users "
+						//	+ "WHERE status IN ('UP', 'UC') "
+						//	+ "AND id < (RAND() * (SELECT MAX(id) FROM users))";
+
+						final String q1 = "SELECT id FROM users WHERE status IN ('UP', 'UC') "
+							+ "ORDER BY RAND() LIMIT 1";
 						ResultSet rs1 = stmt.executeQuery(q1);
 						if (rs1.next()) {
-							id = rs1.getLong("max_id");
+							id = rs1.getLong("id");
 						}
 					}
 				}

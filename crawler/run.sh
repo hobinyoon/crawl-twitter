@@ -14,12 +14,12 @@ function build_src {
 		need_build=true
 	else
 		# compare modification time of the class path file and src directory tree
-		MT_TJ=`find $TARGET_JAR -printf "%Ay%Am%Ad-%AH%AM%AS\n"`
-		MT_SRC=`find src -name "*.java" -printf "%Ay%Am%Ad-%AH%AM%AS\n" | sort | tail -n 1`
+		MT_TJ=`find $TARGET_JAR -printf "%Ty%Tm%Td-%TH%TM%TS\n"`
+		MT_SRC=`find src -name "*.java" -printf "%Ty%Tm%Td-%TH%TM%TS\n" | sort | tail -n 1`
 		if [[ "$MT_TJ" < "$MT_SRC" ]]; then
 			need_build=true
-			echo "Last modification time:     "$MT_SRC
-			echo "Last target jar build time: "$MT_TJ
+			echo "Src last modification time:        "$MT_SRC
+			echo "Target jar last modification time: "$MT_TJ
 		fi
 	fi
 

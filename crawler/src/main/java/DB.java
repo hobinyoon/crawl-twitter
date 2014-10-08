@@ -492,7 +492,7 @@ public class DB {
 	}
 
 	static void _IncGen() throws SQLException {
-		if (Mon.num_crawled_users % 200 != 0)
+		if (Mon.num_crawled_users % 400 != 0)
 			return;
 
 		Statement stmt = null;
@@ -527,7 +527,7 @@ public class DB {
 				c_cnt = rs.getLong("cnt");
 			}
 
-			if ((prev_c_cnt / 1000) == (c_cnt / 1000))
+			if ((prev_c_cnt / 2000) == (c_cnt / 2000))
 				return;
 
 			{

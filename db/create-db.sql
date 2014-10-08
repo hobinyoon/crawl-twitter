@@ -64,6 +64,8 @@ CREATE TABLE IF NOT EXISTS twitter2.users (
 	INDEX (crawled_at),
 	INDEX (status, crawled_at),
 	INDEX (status, added_at),
+	INDEX (gen),
+	INDEX (status, gen),
 	INDEX (status, gen, added_at),
 	INDEX (check_out_at),
 	INDEX (check_out_at, check_out_ip));

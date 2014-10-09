@@ -18,7 +18,8 @@ public class DB {
 	static private Connection _conn_stream_seed_users = null;
 	static private Connection _conn_crawl_tweets = null;
 	static private PreparedStatement _ps_insert_tweet = null;
-	static private PreparedStatement _ps_set_user_crawled = null;
+	static private PreparedStatement _ps_set_user_crawled1 = null;
+	static private PreparedStatement _ps_set_user_crawled2 = null;
 	static private PreparedStatement _ps_set_user_unauthorized = null;
 	static private PreparedStatement _ps_set_user_notfound = null;
 	static private PreparedStatement _ps_credential_rate_limited = null;
@@ -38,10 +39,13 @@ public class DB {
 					+ "(id, uid, created_at, geo_lati, geo_longi, youtube_video_id, hashtags, rt_id, rt_uid, text, child_uids) "
 					+ "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 
-			_ps_set_user_crawled = _conn_crawl_tweets.prepareStatement(
+			_ps_set_user_crawled1 = _conn_crawl_tweets.prepareStatement(
 					"INSERT INTO users (id, gen, added_at, crawled_at, status, check_out_at, check_out_ip) "
 					+ "VALUES (?, ?, NOW(), NOW(), 'C', NOW(), ?) "
 					+ "ON DUPLICATE KEY UPDATE crawled_at=NOW(), gen=VALUES(gen), status='C'");
+
+			_ps_set_user_crawled2 = _conn_crawl_tweets.prepareStatement(
+					"UPDATE meta SET v_int = v_int + 1 WHERE k = 'C_cnt'");
 
 			_ps_set_user_unauthorized = _conn_crawl_tweets.prepareStatement(
 					"INSERT INTO users (id, gen, added_at, crawled_at, status, check_out_at, check_out_ip) "
@@ -65,7 +69,8 @@ public class DB {
 	static void Close() {
 		try {
 			if (_ps_insert_tweet != null) _ps_insert_tweet.close();
-			if (_ps_set_user_crawled != null) _ps_set_user_crawled.close();
+			if (_ps_set_user_crawled1 != null) _ps_set_user_crawled1.close();
+			if (_ps_set_user_crawled2 != null) _ps_set_user_crawled2.close();
 			if (_ps_set_user_unauthorized != null) _ps_set_user_unauthorized.close();
 			if (_ps_set_user_notfound != null) _ps_set_user_notfound.close();
 			if (_ps_credential_rate_limited != null) _ps_credential_rate_limited.close();
@@ -480,10 +485,13 @@ public class DB {
 	}
 
 	static void SetUserCrawled(UserToCrawl u) throws SQLException {
-		_ps_set_user_crawled.setLong(1, u.id);
-		_ps_set_user_crawled.setInt(2, u.gen);
-		_ps_set_user_crawled.setString(3, Conf.ip);
-		_ps_set_user_crawled.executeUpdate();
+		_ps_set_user_crawled1.setLong(1, u.id);
+		_ps_set_user_crawled1.setInt(2, u.gen);
+		_ps_set_user_crawled1.setString(3, Conf.ip);
+		_ps_set_user_crawled1.executeUpdate();
+
+		_ps_set_user_crawled2.executeUpdate();
+
 		_conn_crawl_tweets.commit();
 		Mon.num_crawled_users ++;
 		//StdoutWriter.W(String.format("crawled all tweets of user %d", u.id));
@@ -511,16 +519,14 @@ public class DB {
 			long prev_c_cnt = -1;
 			long c_cnt = -1;
 			{
-				final String q = "SELECT v_int AS CNT FROM meta WHERE k='users_C_cnt_when_gen_inc'";
+				final String q = "SELECT v_int AS cnt FROM meta WHERE k='users_C_cnt_when_gen_inc'";
 				ResultSet rs = stmt.executeQuery(q);
 				if (! rs.next())
 					throw new RuntimeException("Unexpected");
 				prev_c_cnt = rs.getLong("cnt");
 			}
 			{
-				// TODO: this one takes a long time. may want to keep a separate
-				// counter in the meta table.
-				final String q = "SELECT COUNT(*) AS cnt FROM users WHERE status='C'";
+				final String q = "SELECT v_int as cnt FROM meta WHERE k = 'C_cnt'";
 				ResultSet rs = stmt.executeQuery(q);
 				if (! rs.next())
 					throw new RuntimeException("Unexpected");

@@ -26,7 +26,8 @@ namespace Conf {
 	const string fn_num_uniq_attrs_growth = dn_data_home + "/stat/num-uniq-attrs-growth";
 	const string fn_plot_num_uniq_attrs_growth = fn_num_uniq_attrs_growth + ".pdf";
 	const string fn_num_uniq_attrs_growth_by_dcs = dn_data_home + "/stat/num-uniq-attrs-growth-by-dcs";
-	const string fn_plot_num_uniq_attrs_growth_by_dcs = fn_num_uniq_attrs_growth_by_dcs + ".pdf";
+	const string fn_plot_num_uniq_topics_growth_by_dcs = dn_data_home + "/stat/num-uniq-topics-growth-by-dcs.pdf";
+	const string fn_plot_num_uniq_users_growth_by_dcs = dn_data_home + "/stat/num-uniq-users-growth-by-dcs.pdf";
 
 	int max_repeated_videos_per_user;
 

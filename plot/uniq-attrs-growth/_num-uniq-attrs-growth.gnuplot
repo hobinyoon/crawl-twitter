@@ -9,6 +9,7 @@ set terminal pdfcairo enhanced size 4.5in, 3in
 set output FN_PLOT
 
 set xlabel "# of uniq YouTube videos" font ",9"
+set ylabel "# of uniq attrs / # of uniq videos" font ",9"
 set grid lc rgb "#808080"
 set border 3 lc rgb "#808080"
 
@@ -16,6 +17,7 @@ set border 3 lc rgb "#808080"
 set decimal locale
 set xtics nomirror scale 0.5,0 font ",9" format "%'g"
 set ytics nomirror scale 0.5,0 font ",9" format "%.1f"
+set yrange [0:]
 
 set pointsize 0.2
 

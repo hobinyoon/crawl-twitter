@@ -267,8 +267,8 @@ namespace DataGen {
 		if (! ofs.is_open())
 			throw runtime_error(str(boost::format("unable to open file %1%") % fn));
 
-		size_t e_size = _tweets.size();
-		ofs.write((char*)&e_size, sizeof(size_t));
+		size_t s = _uids.size();
+		ofs.write((char*)&s, sizeof(size_t));
 		for (long uid: _uids)
 			ofs.write((char*)&uid, sizeof(uid));
 		ofs.close();

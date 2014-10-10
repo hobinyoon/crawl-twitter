@@ -120,6 +120,19 @@ namespace Util {
 		return result;
 	}
 
+	void ReadStr(ifstream& ifs, string& str) {
+		size_t s;
+		ifs.read((char*)&s, sizeof(s));
+		str.resize(s);
+		ifs.read((char*)&str[0], s);
+	}
+
+	void WriteStr(ofstream& ofs, const string& str) {
+		size_t s = str.size();
+		ofs.write((char*)&s, sizeof(s));
+		ofs.write(str.c_str(), str.size());
+	}
+
 	CpuTimer::CpuTimer(const string& msg, int indent) {
 		_tmr = new boost::timer::cpu_timer();
 		_indent = indent;

@@ -2,10 +2,8 @@
 #include <signal.h>
 #include <unistd.h>
 #include <iostream>
-#include <cppconn/exception.h>
 #include "cnt-attrs.h"
 #include "conf.h"
-#include "db.h"
 #include "dc.h"
 #include "plot.h"
 
@@ -33,7 +31,6 @@ int main(int argc, char* argv[]) {
 
 		Conf::Init(argc, argv);
 		DCs::LoadDCs();
-		DB::Init();
 
 		CntAttrs::Load();
 		CntAttrs::GetNumUniqAttrGrowth();
@@ -42,14 +39,9 @@ int main(int argc, char* argv[]) {
 
 		CntAttrs::FreeMem();
 
-		DB::Cleanup();
 		DCs::FreeMem();
 		return 0;
-	} catch (sql::SQLException &e) {
-		cout << "SQLException: " << e.what();
-		cout << " (MySQL error code: " << e.getErrorCode() << ", SQLState: " << e.getSQLState() << " )\n";
-	}
-	catch (const exception& e) {
+	} catch (const exception& e) {
 		cerr << e.what() << "\n";
 	}
 	return 1;

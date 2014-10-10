@@ -15,11 +15,11 @@ INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS})
 ADD_EXECUTABLE ( cnt
 	cnt-attrs.cpp
 	conf.cpp
-	db.cpp
+	data-file-reader.cpp
 	dc.cpp
 	main.cpp
 	plot.cpp
 	stat.cpp
 	tweet.cpp
 	util.cpp )
-TARGET_LINK_LIBRARIES ( cnt ${Boost_LIBRARIES} mysqlcppconn )
+TARGET_LINK_LIBRARIES ( cnt ${Boost_LIBRARIES} )

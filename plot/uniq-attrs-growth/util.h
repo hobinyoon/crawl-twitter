@@ -1,6 +1,7 @@
 #ifndef __UTIL_H__
 #define __UTIL_H__
 
+#include <fstream>
 #include <string>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/timer/timer.hpp>
@@ -17,6 +18,9 @@ namespace Util {
 	void ClearLine();
 
 	std::string ExecGetOutput(const std::string& cmd);
+
+	void ReadStr(std::ifstream& ifs, std::string& str);
+	void WriteStr(std::ofstream& ofs, const std::string& str);
 
 	struct CpuTimer {
 		boost::timer::cpu_timer* _tmr;

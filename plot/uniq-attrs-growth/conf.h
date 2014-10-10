@@ -15,6 +15,7 @@ namespace Conf {
 
 	extern bool gen_data_file;
 	extern int max_repeated_videos_per_user;
+	extern const std::string fn_users;
 	extern const std::string fn_tweets;
 	extern const std::string fn_tweets_1rv_per_user;
 

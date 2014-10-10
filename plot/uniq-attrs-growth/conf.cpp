@@ -21,6 +21,7 @@ namespace Conf {
 
 	bool gen_data_file;
 	const string dn_data_home = "/mnt/mdc-data/pgr/twitter";
+	const string fn_users = dn_data_home + "/users";
 	const string fn_tweets = dn_data_home + "/tweets";
 	const string fn_tweets_1rv_per_user = dn_data_home + "/tweets-1rvpu";
 	const string fn_num_uniq_attrs_growth = dn_data_home + "/stat/num-uniq-attrs-growth";
@@ -39,7 +40,6 @@ namespace Conf {
 			("gen_data_file", "Build data file from database")
 			("max_repeated_videos_per_user", po::value<int>()->default_value(1), "Maximum repeated videos per user. Unlimited when -1.")
 			("max_dcs", po::value<size_t>()->default_value(0), "Maximum # of DCs. 0 for unlimited.")
-			("load_partial_checkin_data", po::value<string>(), "1p, or 10p")
 			//("concurrency", po::value<int>()->default_value(8), "popularity calculation concurrency (number of threads)")
 			("help", "show help message")
 			;
@@ -60,16 +60,6 @@ namespace Conf {
 				throw runtime_error(str(boost::format("Invalid max_repeated_videos_per_user: %d") % max_repeated_videos_per_user));
 
 		max_dcs = vm["max_dcs"].as<size_t>();
-
-		// Note: this can be used when loading data from DB to save time when data
-		// gets big
-		if (vm.count("load_partial_checkin_data") == 0) {
-		} else {
-			string load_partial_checkin_data = vm["load_partial_checkin_data"].as<string>();
-			if (load_partial_checkin_data == "1p") {
-			} else if (load_partial_checkin_data == "10p") {
-			}
-		}
 
 		cout << "Conf:\n";
 		cout << std::boolalpha;

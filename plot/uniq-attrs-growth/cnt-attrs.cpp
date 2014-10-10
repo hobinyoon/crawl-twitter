@@ -4,7 +4,7 @@
 
 #include "cnt-attrs.h"
 #include "conf.h"
-#include "db.h"
+#include "data-file-reader.h"
 #include "dc.h"
 #include "util.h"
 
@@ -18,8 +18,8 @@ namespace CntAttrs {
 
 	void Load() {
 		Util::CpuTimer _("Loading ...\n");
-		DB::GetUsersByCrawledAt(_uids);
-		DB::GetTweets(_users_tweets);
+		DataFileReader::GetUsersByCrawledAt(_uids);
+		DataFileReader::GetTweets(_users_tweets);
 	}
 
 	void GetNumUniqAttrGrowth() {

@@ -22,11 +22,11 @@ DB_NAME="twitter2"
 
 
 def _CircleSize(n):
-	return math.sqrt(n)/75.0
+	return math.sqrt(n)/120.0
 
 
 def _CircleSizeByHour(n):
-	return math.sqrt(n)/20.0
+	return math.sqrt(n)/25.0
 
 
 def _ByLocGenData():
@@ -51,9 +51,10 @@ def _ByLocGenData():
 			100,
 			1000,
 			10000,
-			20000]:
+			20000,
+			35000]:
 		fo.write("%f %f %f %d\n"
-				% (-50 + 20*p, -75, _CircleSize(i), i))
+				% (-60 + 20*p, -75, _CircleSize(i), i))
 		p += 1
 	fo.close()
 	cursor.close()
@@ -110,9 +111,10 @@ def _ByLocByHourGenData():
 				10,
 				100,
 				1000,
-				1500]:
+				1500,
+				2000]:
 			fo.write("%.1f %.1f %.2f %d\n"
-					% (-40 + 20*p, -75, _CircleSizeByHour(i), i))
+					% (-50 + 20*p, -75, _CircleSizeByHour(i), i))
 			p += 1
 		fo.close()
 
@@ -142,12 +144,12 @@ def _ByLocByHourPlot():
 
 
 def _ByLocByHour():
-	#_ByLocByHourGenData()
+	_ByLocByHourGenData()
 	_ByLocByHourPlot()
 
 
 def main(argv):
-	#_ByLoc()
+	_ByLoc()
 	_ByLocByHour()
 
 

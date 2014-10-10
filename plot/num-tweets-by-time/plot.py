@@ -28,7 +28,7 @@ DB_NAME="twitter2"
 def _ByDateGenData():
 	conn = mysql.connector.connect(user=DB_USER, password=DB_PW, host=DB_HOST, database=DB_NAME)
 	cursor = conn.cursor()
-	query = ("select date(created_at) as d, count(*) as cnt from tweets group by d")
+	query = ("SELECT DATE(created_at) AS d, COUNT(*) AS cnt FROM tweets GROUP BY d")
 	cursor.execute(query)
 	fo = open(FN_DATA_BY_DATE, "w")
 	for (d, cnt) in cursor:

@@ -20,5 +20,5 @@ set ytics nomirror scale 0.5,0 font ",9" format "%.1f"
 set pointsize 0.2
 
 plot \
-FN_IN every 1000::1000 u 1:($3/$1) w linespoints pt 7 t "# of uniq users / # of uniq YouTube videos", \
-FN_IN every 1000::1000 u 1:($4/$1) w linespoints pt 7 t "# of uniq topics / # of uniq YouTube videos"
+FN_IN every 1000::1000 u 1:($4/$1) w linespoints pt 7 t "topics", \
+FN_IN every 1000::1000 u 1:($3/$1) w linespoints pt 7 t "users"

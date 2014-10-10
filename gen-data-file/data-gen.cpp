@@ -92,11 +92,7 @@ namespace DataGen {
 
 	void _LoadTweetsFromDB() {
 		Util::CpuTimer _("Loading tweets from DB ...\n");
-		unique_ptr<sql::Connection> conn(get_driver_instance()->
-				connect("tcp://" + Conf::db_host + ":3306", Conf::db_user, Conf::db_pass));
-		conn->setSchema(Conf::db_name);
-		unique_ptr<sql::Statement> stmt(conn->createStatement());
-		unique_ptr<sql::ResultSet> rs(stmt->executeQuery(
+		unique_ptr<sql::ResultSet> rs(_stmt->executeQuery(
 					"SELECT id, uid, created_at, geo_lati, geo_longi, youtube_video_id, hashtags FROM tweets "
 					// Useful while dev
 					//"WHERE id < 380000000000000000 "

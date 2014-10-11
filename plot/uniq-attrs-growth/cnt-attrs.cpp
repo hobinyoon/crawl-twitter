@@ -66,6 +66,7 @@ namespace CntAttrs {
 		cout << "  Created " << fn << "\n";
 	}
 
+	// get both the number of unique attrs by DCs and the growth of them by DCs
 	void GetNumUniqAttrGrowthByDCs() {
 		Util::CpuTimer _("Gen uniq attrs growth by DCs ...\n");
 
@@ -185,6 +186,34 @@ namespace CntAttrs {
 			}
 		}
 		cout << "  Created " << fn << "\n";
+
+		{
+			const string& fn = Conf::fn_num_uniq_attrs_by_dcs;
+			ofstream ofs(fn);
+			if (! ofs.is_open())
+				throw runtime_error(str(boost::format("unable to open file %1%") % fn));
+			ofs << "# dc       vids  uids  topics\n";
+			long sum_vids = 0;
+			long sum_uids = 0;
+			long sum_topics = 0;
+			for (DC* dc: DCs::GetAll()) {
+				ofs << boost::format("%-10s %d %d %d\n")
+					% dc->name
+					% dc_vids[dc].size()
+					% dc_uids[dc].size()
+					% dc_topics[dc].size();
+				sum_vids += dc_vids[dc].size();
+				sum_uids += dc_uids[dc].size();
+				sum_topics += dc_topics[dc].size();
+			}
+			size_t num_dcs = DCs::GetAll().size();
+			ofs << boost::format("%-10s %.0f %.0f %.0f\n")
+				% "Avg"
+				% (double(sum_vids) / num_dcs)
+				% (double(sum_uids) / num_dcs)
+				% (double(sum_topics) / num_dcs);
+			cout << "  Created " << fn << "\n";
+		}
 	}
 
 	void FreeMem() {

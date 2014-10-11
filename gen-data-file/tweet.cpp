@@ -14,24 +14,22 @@ Tweet::Tweet(long id_,
 		double geo_longi_,
 		const string& youtube_video_id_,
 		const string& topics_)
-: id(id_), uid(uid_), created_at_str(created_at_),
+: id(id_), uid(uid_), created_at(created_at_),
 	geo_lati(geo_lati_), geo_longi(geo_longi_),
 	youtube_video_id(youtube_video_id_)
 {
-	created_at = boost::posix_time::time_from_string(created_at_str);
-
 	static const auto sep = boost::is_any_of(" ");
-	boost::split(topics, topics_, sep);
+
+	string t = topics_;
+	boost::algorithm::to_lower(t);
+	boost::split(topics, t, sep);
 }
 
 
 Tweet::Tweet(ifstream& ifs) {
 	ifs.read((char*)&id, sizeof(id));
 	ifs.read((char*)&uid, sizeof(uid));
-
-	Util::ReadStr(ifs, created_at_str);
-	created_at = boost::posix_time::time_from_string(created_at_str);
-
+	Util::ReadStr(ifs, created_at);
 	ifs.read((char*)&geo_lati, sizeof(geo_lati));
 	ifs.read((char*)&geo_longi, sizeof(geo_longi));
 	Util::ReadStr(ifs, youtube_video_id);
@@ -51,7 +49,7 @@ Tweet::Tweet(ifstream& ifs) {
 void Tweet::Write(ofstream& ofs) {
 	ofs.write((char*)&id, sizeof(id));
 	ofs.write((char*)&uid, sizeof(uid));
-	Util::WriteStr(ofs, created_at_str);
+	Util::WriteStr(ofs, created_at);
 	ofs.write((char*)&geo_lati, sizeof(geo_lati));
 	ofs.write((char*)&geo_longi, sizeof(geo_longi));
 	Util::WriteStr(ofs, youtube_video_id);

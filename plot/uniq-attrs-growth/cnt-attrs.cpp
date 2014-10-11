@@ -45,9 +45,11 @@ namespace CntAttrs {
 			if (it == _users_tweets.end())
 				continue;
 
-			uids.insert(uid);
-
 			for (auto t: it->second) {
+				if (t->type == Tweet::Type::W)
+					continue;
+
+				uids.insert(uid);
 				vids.insert(t->youtube_video_id);
 				topics.insert(t->topics.begin(), t->topics.end());
 				t_cnt ++;
@@ -88,6 +90,9 @@ namespace CntAttrs {
 				continue;
 
 			for (auto t: it->second) {
+				if (t->type == Tweet::Type::W)
+					continue;
+
 				DC* dc = t->LocalDC();
 				{
 					auto it = dc_uids.find(dc);

@@ -3,7 +3,7 @@
 set -e
 set -u
 
-DB_NAME=twitter2
+DB_NAME=twitter3
 CUR_DATETIME=`date +%y%m%d-%H%M%S`
 echo $CUR_DATETIME
 

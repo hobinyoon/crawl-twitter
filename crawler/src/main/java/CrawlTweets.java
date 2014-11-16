@@ -65,9 +65,6 @@ public class CrawlTweets {
 		DB.UserToCrawl u = DB.GetUserToCrawl();
 		Mon.user_being_crawled = u;
 
-		if (DB.ImportFromTwitter1(u))
-			return;
-
 		// one on Sep 2. Not the best tight bound.
 		long max_id = 506827318132629504L;
 

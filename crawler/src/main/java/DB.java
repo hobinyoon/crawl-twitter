@@ -24,7 +24,20 @@ public class DB {
 	static private PreparedStatement _ps_set_user_notfound = null;
 	static private PreparedStatement _ps_credential_rate_limited = null;
 
-	static public void Init () {
+	static private void _InitUtf8mb4() throws SQLException {
+		Statement stmt = null;
+		try {
+			stmt = _conn_crawl_tweets.createStatement();
+			final String q = "SET NAMES 'utf8mb4'";
+			stmt.executeUpdate(q);
+			_conn_crawl_tweets.commit();
+		} finally {
+			if (stmt != null)
+				stmt.close();
+		}
+	}
+
+	static public void Init() {
 		try {
 			_conn_stream_seed_users = DriverManager.getConnection(Conf.db_url, Conf.db_user, Conf.db_pass);
 			_conn_stream_seed_users.setAutoCommit(false);
@@ -33,6 +46,8 @@ public class DB {
 			_conn_crawl_tweets = DriverManager.getConnection(Conf.db_url, Conf.db_user, Conf.db_pass);
 			_conn_crawl_tweets.setAutoCommit(false);
 			_conn_crawl_tweets.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
+
+			_InitUtf8mb4();
 
 			_ps_insert_tweet = _conn_crawl_tweets.prepareStatement(
 					"INSERT INTO tweets "
@@ -386,6 +401,14 @@ public class DB {
 	}
 
 	static UserToCrawl GetUserToCrawl() throws SQLException, InterruptedException {
+		//if (true) {
+		//	// java.sql.SQLException: Incorrect string value: '\xF0\x9F\x91\x86wi...' for column 'text' at row 1
+		//	return new UserToCrawl(84947814, -1);
+
+		//	// contains UTF8 strings
+		//	return new UserToCrawl(348878135, -1);
+		//}
+
 		// returns uid with status UC (uncrawled child) or UP(uncrawled parent),
 		// and U(uncrawled seeded), in the repective order. If none exists, wait a
 		// bit and try again.  breath-first search.
@@ -612,30 +635,30 @@ public class DB {
 		}
 	}
 
-	static boolean ImportFromTwitter1(UserToCrawl u) throws SQLException {
-		Statement stmt = null;
-		try {
-			stmt = _conn_crawl_tweets.createStatement();
-			{
-				String q = String.format("SELECT id FROM twitter.uids_to_crawl "
-						+ "WHERE crawled_at >= '2014-09-21 12:13:02' AND status='C' AND id=%d", u.id);
-				ResultSet rs = stmt.executeQuery(q);
-				if (! rs.next())
-					return false;
-			}
-			{
-				String q = String.format("INSERT INTO twitter2.tweets "
-						+ "SELECT * FROM twitter.tweets WHERE uid=%d", u.id);
-				int rows_updated = stmt.executeUpdate(q);
-				Mon.num_crawled_tweets_new += rows_updated;
-				Mon.num_crawled_tweets_new_imported += rows_updated;
-			}
-			// commit is in this function
-			SetUserCrawled(u);
-			return true;
-		} finally {
-			if (stmt != null)
-				stmt.close();
-		}
-	}
+	//static boolean ImportFromTwitter1(UserToCrawl u) throws SQLException {
+	//	Statement stmt = null;
+	//	try {
+	//		stmt = _conn_crawl_tweets.createStatement();
+	//		{
+	//			String q = String.format("SELECT id FROM twitter.uids_to_crawl "
+	//					+ "WHERE crawled_at >= '2014-09-21 12:13:02' AND status='C' AND id=%d", u.id);
+	//			ResultSet rs = stmt.executeQuery(q);
+	//			if (! rs.next())
+	//				return false;
+	//		}
+	//		{
+	//			String q = String.format("INSERT INTO twitter3.tweets "
+	//					+ "SELECT * FROM twitter.tweets WHERE uid=%d", u.id);
+	//			int rows_updated = stmt.executeUpdate(q);
+	//			Mon.num_crawled_tweets_new += rows_updated;
+	//			Mon.num_crawled_tweets_new_imported += rows_updated;
+	//		}
+	//		// commit is in this function
+	//		SetUserCrawled(u);
+	//		return true;
+	//	} finally {
+	//		if (stmt != null)
+	//			stmt.close();
+	//	}
+	//}
 }

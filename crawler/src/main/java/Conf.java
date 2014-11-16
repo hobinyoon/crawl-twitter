@@ -89,7 +89,7 @@ public final class Conf {
 
 		stream_seed_users = options.has("stream_seed_users");
 		db_ipaddr = (String) options.valueOf("db_ipaddr");
-		db_url = String.format("jdbc:mysql://%s:3306/twitter2", Conf.db_ipaddr);
+		db_url = String.format("jdbc:mysql://%s:3306/twitter2?useUnicode=true&characterEncoding=utf-8", Conf.db_ipaddr);
 
 		System.out.printf("Conf:\n");
 		System.out.printf("  my ip addr: %s\n", ip);

@@ -6,8 +6,9 @@
 
 struct Tweet {
 	enum Type {
-		W,
-		R,
+		NA = 0,	// Not assigned yet
+		W = 1,
+		R = 2,
 	};
 
 	long id;
@@ -27,8 +28,6 @@ struct Tweet {
 			double geo_longi_,
 			const std::string& youtube_video_id_,
 			const std::string& topics_);
-
-	Tweet(std::ifstream& ifs);
 
 	void Write(std::ofstream& ofs);
 };

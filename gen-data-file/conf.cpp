@@ -8,7 +8,7 @@ using namespace std;
 
 namespace Conf {
 	const string db_host = "localhost";
-	const string db_name = "twitter2";
+	const string db_name = "twitter3";
 	const string db_user = "twitter";
 	const string db_pass = "twitterpass";
 

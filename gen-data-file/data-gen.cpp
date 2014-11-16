@@ -116,8 +116,12 @@ namespace DataGen {
 		Util::ClearLine();
 
 		cout << "  _tweets.size()=" << _tweets.size() << "\n";
+
+		//for (auto t: _tweets)
+		//	cout << "  " << *t << "\n";
 	}
 
+	// This filters out half-crawled tweets from users.
 	void _FilterOutTweetsWoUser() {
 		Util::CpuTimer _("Filtering out tweets without user info (should be rare) ...\n");
 

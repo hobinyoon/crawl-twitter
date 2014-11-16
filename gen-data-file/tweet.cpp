@@ -16,33 +16,14 @@ Tweet::Tweet(long id_,
 		const string& topics_)
 : id(id_), uid(uid_), created_at(created_at_),
 	geo_lati(geo_lati_), geo_longi(geo_longi_),
-	youtube_video_id(youtube_video_id_)
+	youtube_video_id(youtube_video_id_),
+	type(Type::NA)
 {
 	static const auto sep = boost::is_any_of(" ");
 
 	string t = topics_;
 	boost::algorithm::to_lower(t);
 	boost::split(topics, t, sep);
-}
-
-
-Tweet::Tweet(ifstream& ifs) {
-	ifs.read((char*)&id, sizeof(id));
-	ifs.read((char*)&uid, sizeof(uid));
-	Util::ReadStr(ifs, created_at);
-	ifs.read((char*)&geo_lati, sizeof(geo_lati));
-	ifs.read((char*)&geo_longi, sizeof(geo_longi));
-	Util::ReadStr(ifs, youtube_video_id);
-	ifs.read((char*)&youtube_video_uploader, sizeof(youtube_video_uploader));
-
-	size_t topic_cnt;
-	ifs.read((char*)&topic_cnt, sizeof(topic_cnt));
-	for (size_t i = 0; i < topic_cnt; i ++) {
-		string t;
-		Util::ReadStr(ifs, t);
-		topics.push_back(t);
-	}
-	ifs.read((char*)&type, sizeof(type));
 }
 
 
@@ -73,12 +54,23 @@ std::ostream& operator<< (std::ostream& os, const Tweet& t) {
 		% t.geo_lati
 		% t.geo_longi
 		% t.youtube_video_id;
+
+	os << " [";
+	int cnt = 0;
+	for (auto topic: t.topics) {
+		if (cnt > 0)
+			os << " ";
+		os << topic;
+		cnt ++;
+	}
+	os << "]";
+
 	return os;
 }
 
 
 std::ostream& operator<< (std::ostream& os, const Tweet::Type& t) {
-	static const char* s[] = {"W", "R"};
+	static const char* s[] = {"NA", "W", "R"};
 	os << s[t];
 	return os;
 }

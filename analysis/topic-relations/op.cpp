@@ -217,6 +217,7 @@ namespace Ops {
 			}
 		}
 
+		cout << "# topic1             topic2             cnt_and  cnt1 cnt2  (1+2)/1 (1+2)/2\n";
 		int cnt = 0;
 		for (auto it = cnt_key.rbegin(); it != cnt_key.rend(); it ++ ) {
 			for (auto k: it->second) {

@@ -17,7 +17,6 @@ namespace Conf {
 	const string dn_data_home = "/mnt/mdc-data/pgr/twitter";
 	const string fn_tweets = dn_data_home + "/tweets-1rvpu";
 
-	int max_topics_per_dc;
 	int max_output_lines;
 
 	void _ParseArgs(int argc, char* argv[]) {
@@ -26,8 +25,7 @@ namespace Conf {
 		po::options_description od0("Allowed options");
 		od0.add_options()
 			("partial_load", po::value<size_t>()->default_value(0), "Load up to partial_load. 0 for unlimited.")
-			("max_topics_per_dc", po::value<int>()->default_value(20), "Print up to max_topics_per_dc. 0 for unlimited.")
-			("max_output_lines", po::value<int>()->default_value(0), "Maximum number of output lines. 0 for unlimited.")
+			("max_output_lines", po::value<int>()->default_value(1000), "Maximum number of output lines. 0 for unlimited.")
 			("help", "show help message")
 			;
 
@@ -41,13 +39,11 @@ namespace Conf {
 		}
 
 		partial_load = vm["partial_load"].as<size_t>();
-		max_topics_per_dc = vm["max_topics_per_dc"].as<int>();
 		max_output_lines = vm["max_output_lines"].as<int>();
 
 		cout << "Conf:\n";
 		cout << std::boolalpha;
 		cout << "  partial_load=" << partial_load << "\n";
-		cout << "  max_topics_per_dc=" << max_topics_per_dc << "\n";
 		cout << "  max_output_lines=" << max_output_lines << "\n";
 	}
 

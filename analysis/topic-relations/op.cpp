@@ -136,6 +136,20 @@ namespace Ops {
 	}
 
 	void TopicRelations() {
+		// count topics only once for the same videos
+		list<Entry*> entries;
+		{
+			set<string> vids;
+			for (auto& e: _entries) {
+				string& vid = e->youtube_video_id;
+				auto it = vids.find(vid);
+				if (it == vids.end()) {
+					entries.push_back(e);
+					vids.insert(vid);
+				}
+			}
+		}
+
 		struct Key {
 			string a;
 			string b;
@@ -155,7 +169,7 @@ namespace Ops {
 		map<Key, int> key_cnt;
 		map<string, int> topic_cnt;
 
-		for (auto& e: _entries) {
+		for (auto& e: entries) {
 			vector<string>& topics = e->topics;
 
 			for (auto& t: topics) {

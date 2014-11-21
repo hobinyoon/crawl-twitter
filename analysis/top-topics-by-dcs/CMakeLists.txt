@@ -12,10 +12,10 @@ FIND_PACKAGE( Boost
 	COMPONENTS date_time filesystem program_options system timer REQUIRED )
 
 INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS})
-ADD_EXECUTABLE ( rank
+ADD_EXECUTABLE ( ttdc
 	conf.cpp
 	dc.cpp
 	main.cpp
 	op.cpp
 	util.cpp )
-TARGET_LINK_LIBRARIES ( rank ${Boost_LIBRARIES} mysqlcppconn )
+TARGET_LINK_LIBRARIES ( ttdc ${Boost_LIBRARIES} mysqlcppconn )

@@ -36,8 +36,8 @@ namespace Ops {
 	};
 
 	void Load();
-	void CntTopicsByDCs();
 	void CntIBCByDCsByTime();
+	void CntFCKByDCsByLoc();
 
 	void FreeMem();
 };

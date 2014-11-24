@@ -4,6 +4,7 @@
 #include "conf.h"
 #include "dc.h"
 #include "op.h"
+#include "plot.h"
 
 using namespace std;
 
@@ -30,9 +31,14 @@ int main(int argc, char* argv[]) {
 		Conf::Init(argc, argv);
 		DCs::LoadDCs();
 
-		Ops::Load();
-		//Ops::CntTopicsByDCs();
-		Ops::CntIBCByDCsByTime();
+		if (Conf::gen_stat) {
+			Ops::Load();
+			Ops::CntIBCByDCsByTime();
+			Ops::CntFCKByDCsByLoc();
+		}
+
+		if (Conf::gen_plot)
+			Plot::Plot();
 
 		Ops::FreeMem();
 		DCs::FreeMem();

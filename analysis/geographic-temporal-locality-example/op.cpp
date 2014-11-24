@@ -113,71 +113,6 @@ namespace Ops {
 		//_FilterOutWrites();
 	}
 
-	// map<DC*, map<topic, cnt> >
-	map<DC*, map<string, int> > _dc_topic_cnt;
-
-	void _PrintTopTopics() {
-		struct TopicCnt {
-			string topic;
-			int cnt;
-
-			TopicCnt(const string& t, int c)
-			: topic(t), cnt(c)
-			{}
-
-			bool operator < (const TopicCnt& r) const {
-				if (cnt < r.cnt) return true;
-				if (cnt > r.cnt) return false;
-				return (topic < r.topic);
-			}
-		};
-
-		for (auto dtc: _dc_topic_cnt) {
-			cout << "  " << dtc.first->name << "\n";
-
-			set<TopicCnt> tc_set;
-			for (auto tc: dtc.second)
-				tc_set.insert(TopicCnt(tc.first, tc.second));
-
-			int c = 0;
-			for (auto i = tc_set.rbegin(); i != tc_set.rend(); ++ i) {
-				cout << "    " << i->topic << " " << i->cnt << "\n";
-				c ++;
-				if (c == Conf::max_topics_per_dc)
-					break;
-			}
-		}
-	}
-
-	void CntTopicsByDCs() {
-		Util::CpuTimer _("Counting topics by DCs ...\n");
-
-		for (auto& e: _entries) {
-			DC* dc = DCs::GetClosest(e->geo_lati, e->geo_longi);
-			
-			auto it = _dc_topic_cnt.find(dc);
-			if (it == _dc_topic_cnt.end()) {
-				map<string, int> m;
-				for (auto& t: e->topics) {
-					m[t] = 1;
-				}
-				_dc_topic_cnt[dc] = m;
-			} else {
-				map<string, int>& m = it->second;
-				for (auto& t: e->topics) {
-					auto it2 = m.find(t);
-					if (it2 == m.end()) {
-							m[t] = 1;
-					} else {
-						it2->second ++;
-					}
-				}
-			}
-		}
-
-		_PrintTopTopics();
-	}
-
 	// map<DC*, map<time, cnt> >
 	map<DC*, map<string, int> > _dc_time_cnt;
 
@@ -185,27 +120,40 @@ namespace Ops {
 		boost::posix_time::ptime ca_b = boost::posix_time::time_from_string("2014-06-29 00:00:00");
 		boost::posix_time::ptime ca_e = boost::posix_time::time_from_string("2014-08-31 00:00:00");
 
-		cout << boost::format("%10s") % "";
+		stringstream ss;
+
+		ss << "#        ";
 		for (auto dtc: _dc_time_cnt)
-			cout << boost::format(" %10s") % dtc.first->name;
-		cout << "\n";
+			ss << boost::format(" %10s") % dtc.first->name;
+		ss << boost::format(" %10s") % "Sum";
+		ss << "\n";
 
 		for (boost::posix_time::ptime ca = ca_b; ca <= ca_e; ca += boost::gregorian::days(1)) {
-			//cout << ca << "\n";
+			//ss << ca << "\n";
 			tm tm_ = to_tm(ca);
 			string date = str(boost::format("%d-%02d-%02d") % (tm_.tm_year + 1900) % (tm_.tm_mon + 1) % tm_.tm_mday);
-			//cout << date << "\n";
+			//ss << date << "\n";
 
-			cout << boost::format("%10s") % date;
+			ss << boost::format("%10s") % date;
+			int sum = 0;
 			for (auto dtc: _dc_time_cnt) {
 				int num = 0;
 				auto it = dtc.second.find(date);
 				if (it != dtc.second.end())
 					num = it->second;
-				cout << boost::format(" %10d") % num;
+				sum += num;
+				ss << boost::format(" %10d") % num;
 			}
-			cout << "\n";
+			ss << boost::format(" %10d") % sum;
+			ss << "\n";
 		}
+
+		const string& fn = Conf::fn_ibc_by_time_by_dcs;
+		ofstream ofs(fn);
+		if (! ofs.is_open())
+			throw runtime_error(str(boost::format("Unable to open file %1%") % fn));
+		ofs << ss.str();
+		cout << "  Created file " << fn << "\n";
 	}
 
 	void CntIBCByDCsByTime() {
@@ -213,12 +161,13 @@ namespace Ops {
 
 		for (auto& e: _entries) {
 			DC* dc = DCs::GetClosest(e->geo_lati, e->geo_longi);
-			
+
 			auto it = _dc_time_cnt.find(dc);
 			if (it == _dc_time_cnt.end()) {
 				map<string, int> m;
 				for (auto& t: e->topics) {
-					if (t != "icebucketchallenge")
+					if (t.find("icebucketchallenge") == string::npos
+							&& t.find("ibc") == string::npos )
 						continue;
 					m[e->created_at_str.substr(0, 10)] = 1;
 				}
@@ -226,7 +175,8 @@ namespace Ops {
 			} else {
 				map<string, int>& m = it->second;
 				for (auto& t: e->topics) {
-					if (t != "icebucketchallenge")
+					if (t.find("icebucketchallenge") == string::npos
+							&& t.find("ibc") == string::npos )
 						continue;
 					string key = e->created_at_str.substr(0, 10);
 					auto it2 = m.find(key);
@@ -240,6 +190,117 @@ namespace Ops {
 		}
 
 		_PrintIBCByDCsByTime();
+	}
+
+	// was working on
+	//struct LocCnt {
+	//	struct Loc {
+	//		static int granularity = 1;
+	//		double lati;
+	//		double longi;
+
+	//		Loc(double la, double lo) {
+	//			lati = la;
+	//			longi = lo;
+	//		}
+
+	//		bool operator < (const Loc& rhs) const {
+	//			if (lati < rhs.lati) return true;
+	//			if (lati > rhs.lati) return false;
+	//			return (longi > rhs.longi);
+	//		}
+	//	};
+
+	//	// map<center_int, cnt> loc_cnt;
+	//	map<Loc, int> loc_cnt;
+
+	//	void Add(double la, double lo) {
+	//		Log(la, lo);
+	//	}
+	//};
+
+	double _CircleSize(int i) {
+		return sqrt(i) / 5.0;
+	}
+
+
+	void CntFCKByDCsByLoc() {
+		Util::CpuTimer _("Counting icebucketchallenge by locations ...\n");
+
+		struct Loc {
+			double longi;
+			double lati;
+
+			Loc(double lo, double la) {
+				longi = nearbyint(lo);
+				lati = nearbyint(la);
+			}
+
+			bool operator < (const Loc& rhs) const {
+				if (longi < rhs.longi) return true;
+				if (longi > rhs.longi) return false;
+				return (lati > rhs.lati);
+			}
+		};
+
+		map<Loc, int> loc_cnt;
+
+		for (auto& e: _entries) {
+			//if (e->created_at_str < "2014-08-13 00:00:00")
+			//	continue;
+			if (e->created_at_str.substr(0, 4) != "2013")
+				continue;
+
+			for (auto& t: e->topics) {
+				//if (t.find("icebucketchallenge") == string::npos
+				//		&& t.find("ibc") == string::npos )
+				//	continue;
+				//if (t.find("fallontonight") == string::npos)
+				//	continue;
+				//if (t != "lfc")
+				//	continue;
+				//if (t != "tomorrowland")
+				//	continue;
+
+				// mysql> select created_at, geo_lati, geo_longi, hashtags from tweets where hashtags REGEXP '[[:<:]]fck[[:>:]]';
+				if (t == "fck") {
+					Loc loc(e->geo_longi, e->geo_lati);
+					auto it = loc_cnt.find(loc);
+					if (it == loc_cnt.end()) {
+						loc_cnt[loc] = 1;
+					} else {
+						it->second ++;
+					}
+					continue;
+				}
+			}
+		}
+
+		const string& fn = Conf::fn_fck_by_loc;
+		ofstream ofs(fn);
+		if (! ofs.is_open())
+			throw runtime_error(str(boost::format("Unable to open file %1%") % fn));
+		for (auto i: loc_cnt) {
+			ofs << boost::format("%5.1f %5.1f %f %d\n")
+				% i.first.longi
+				% i.first.lati
+				% _CircleSize(i.second)
+				% i.second;
+		}
+		int sizes[] = {1, 10, 20, 30};
+		size_t sizes_len = sizeof(sizes) / sizeof(int);
+		for (size_t i = 0; i < sizes_len; i ++) {
+			double longi = 2.5 + 5.0 * i;
+			double lati = 33.0;
+			ofs << boost::format("%5.1f %5.1f %f %d %d\n")
+				% longi
+				% lati
+				% _CircleSize(sizes[i])
+				% sizes[i]
+				% sizes[i];
+		}
+
+		cout << "  Created file " << fn << "\n";
 	}
 
 	void FreeMem() {

@@ -11,7 +11,7 @@ set output FN_PLOT
 set grid ytics lc rgb "#808080"
 set border 3 lc rgb "#808080"
 set xlabel "Date (Aug. 2014)"
-set ylabel "# of videos with topic IceBucketChallenge" offset 1.7,0
+#set ylabel "# of videos with topic IceBucketChallenge" offset 1.7,0
 set xtics nomirror scale 0.5,0 font ",9" autofreq 24*3600,2*24*3600
 set ytics nomirror scale 0.5,0 font ",9"
 

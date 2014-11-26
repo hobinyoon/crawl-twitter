@@ -10,6 +10,7 @@ namespace Conf {
 	extern const std::string db_pass;
 
 	extern const std::string fn_users;
+	extern const std::string fn_tweets_w_lonely;
 	extern const std::string fn_tweets;
 	extern const std::string fn_tweets_1rv_per_user;
 

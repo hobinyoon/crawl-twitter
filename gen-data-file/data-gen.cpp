@@ -17,57 +17,19 @@ using namespace std;
 namespace DataGen {
 	sql::Connection* _conn = NULL;
 	sql::Statement* _stmt = NULL;
-	list<Tweet*> _tweets;
+
+	// all tweets
+	list<Tweet*> _tweets0;
+
+	// after filtering out lonely tweets
+	list<Tweet*> _tweets1;
+
 
 	void Init() {
 		_conn = get_driver_instance()->
 			connect("tcp://" + Conf::db_host + ":3306", Conf::db_user, Conf::db_pass);
 		_conn->setSchema(Conf::db_name);
 		_stmt = _conn->createStatement();
-	}
-
-	void _FilterOutRepeatedAccessFromSameUser() {
-		Util::CpuTimer _("Filtering out repeated accesses from the same user ...\n", 2);
-
-		struct Key {
-			long uid;
-			string vid;	// youtube video id
-
-			Key(Tweet* e)
-				: uid(e->uid), vid(e->youtube_video_id)
-			{}
-
-			bool operator< (const Key& r) const {
-				if (uid < r.uid) return true;
-				if (uid > r.uid) return false;
-				return vid < r.vid;
-			}
-		};
-
-		size_t before = _tweets.size();
-
-		map<Key, int> uid_vids_cnt;
-		for (auto it = _tweets.begin(); it != _tweets.end(); ) {
-			Key k(*it);
-			int cnt = -1;
-			if (uid_vids_cnt.find(k) == uid_vids_cnt.end()) {
-				uid_vids_cnt[k] = 1;
-				cnt = 1;
-			} else {
-				cnt = uid_vids_cnt[k] + 1;
-				uid_vids_cnt[k] = cnt;
-			}
-
-			if (cnt > 1) {
-				it = _tweets.erase(it);
-			} else {
-				it ++;
-			}
-		}
-
-		cout << boost::format("    _tweets.size()= before %d, after %d (%.2f%%)\n")
-			% before % _tweets.size()
-			% (100.0 * _tweets.size() / before);
 	}
 
 	// uids by crawled_at
@@ -100,7 +62,7 @@ namespace DataGen {
 
 		int cnt = 0;
 		while (rs->next()) {
-			_tweets.push_back(new Tweet(rs->getInt64("id"),
+			_tweets0.push_back(new Tweet(rs->getInt64("id"),
 						rs->getInt64("uid"),
 						rs->getString("created_at"),
 						rs->getDouble("geo_lati"),
@@ -115,9 +77,9 @@ namespace DataGen {
 		}
 		Util::ClearLine();
 
-		cout << "  _tweets.size()=" << _tweets.size() << "\n";
+		cout << "  _tweets0.size()=" << _tweets0.size() << "\n";
 
-		//for (auto t: _tweets)
+		//for (auto t: _tweets0)
 		//	cout << "  " << *t << "\n";
 	}
 
@@ -125,31 +87,32 @@ namespace DataGen {
 	void _FilterOutTweetsWoUser() {
 		Util::CpuTimer _("Filtering out tweets without user info (should be rare) ...\n");
 
-		size_t before = _tweets.size();
+		size_t before = _tweets0.size();
 
 		set<long> uid_set;
 		for (auto uid: _uids)
 			uid_set.insert(uid);
 
-		for (auto it = _tweets.begin(); it != _tweets.end(); ) {
+		for (auto it = _tweets0.begin(); it != _tweets0.end(); ) {
 			if (uid_set.count((*it)->uid) == 1)
 				it ++;
 			else
-				it = _tweets.erase(it);
+				it = _tweets0.erase(it);
 		}
 
-		cout << boost::format("  _tweets.size()= before %d, after %d (%.2f%%)\n")
-			% before % _tweets.size()
-			% (100.0 * _tweets.size() / before);
+		cout << boost::format("  _tweets0.size()= before %d, after %d (%.2f%%)\n")
+			% before % _tweets0.size()
+			% (100.0 * _tweets0.size() / before);
 	}
 
 	// filter out tweets that are the only ones with the video_id
 	void _FilterOutLonelyTweetsSetUploaderTopics() {
 		Util::CpuTimer _("Filtering out lonely tweets and setting uploader and topics ...\n");
 
-		size_t before = _tweets.size();
+		size_t before = _tweets0.size();
+
 		map<string, vector<Tweet*> > by_youtube_video_ids;
-		for (auto e: _tweets) {
+		for (auto e: _tweets0) {
 			auto it = by_youtube_video_ids.find(e->youtube_video_id);
 			if (it == by_youtube_video_ids.end()) {
 				vector<Tweet*> v;
@@ -160,6 +123,7 @@ namespace DataGen {
 			}
 		}
 
+		_tweets1 = _tweets0;
 		{
 			Util::CpuTimer _("Filtering out lonely tweets ...\n", 2);
 			set<Tweet*> lonely_tweets;
@@ -168,16 +132,16 @@ namespace DataGen {
 					lonely_tweets.insert(*vi.second.begin());
 			}
 
-			for (auto it = _tweets.begin(); it != _tweets.end(); ) {
+			for (auto it = _tweets1.begin(); it != _tweets1.end(); ) {
 				if (lonely_tweets.find(*it) != lonely_tweets.end())
-					it = _tweets.erase(it);
+					it = _tweets1.erase(it);
 				else
 					it ++;
 			}
 
-			cout << boost::format("  _tweets.size()= before %d, after %d (%.2f%%)\n")
-				% before % _tweets.size()
-				% (100.0 * _tweets.size() / before);
+			cout << boost::format("  size: before %d, after %d (%.2f%%)\n")
+				% before % _tweets1.size()
+				% (100.0 * _tweets1.size() / before);
 		}
 
 		{
@@ -210,16 +174,72 @@ namespace DataGen {
 		}
 	}
 
+	void _FilterOutRepeatedAccessFromSameUser() {
+		Util::CpuTimer _("Filtering out repeated accesses from the same user ...\n", 2);
+
+		struct Key {
+			long uid;
+			string vid;	// youtube video id
+
+			Key(Tweet* e)
+				: uid(e->uid), vid(e->youtube_video_id)
+			{}
+
+			bool operator< (const Key& r) const {
+				if (uid < r.uid) return true;
+				if (uid > r.uid) return false;
+				return vid < r.vid;
+			}
+		};
+
+		size_t before = _tweets1.size();
+
+		map<Key, int> uid_vids_cnt;
+		for (auto it = _tweets1.begin(); it != _tweets1.end(); ) {
+			Key k(*it);
+			int cnt = -1;
+			if (uid_vids_cnt.find(k) == uid_vids_cnt.end()) {
+				uid_vids_cnt[k] = 1;
+				cnt = 1;
+			} else {
+				cnt = uid_vids_cnt[k] + 1;
+				uid_vids_cnt[k] = cnt;
+			}
+
+			if (cnt > 1) {
+				it = _tweets1.erase(it);
+			} else {
+				it ++;
+			}
+		}
+
+		cout << boost::format("    _tweets1.size()= before %d, after %d (%.2f%%)\n")
+			% before % _tweets1.size()
+			% (100.0 * _tweets1.size() / before);
+	}
+
 	void _WriteTweetsToFile() {
 		Util::CpuTimer _("Writing tweets to file ...\n");
+		{
+			const string& fn = Conf::fn_tweets_w_lonely;
+			ofstream ofs(fn.c_str(), ios::binary);
+			if (! ofs.is_open())
+				throw runtime_error(str(boost::format("unable to open file %1%") % fn));
+			size_t e_size = _tweets0.size();
+			ofs.write((char*)&e_size, sizeof(size_t));
+			for (auto o: _tweets0)
+				o->Write(ofs);
+			ofs.close();
+			cout << "  Generated file " << fn << " size=" << boost::filesystem::file_size(fn) << "\n";
+		}
 		{
 			const string& fn = Conf::fn_tweets;
 			ofstream ofs(fn.c_str(), ios::binary);
 			if (! ofs.is_open())
 				throw runtime_error(str(boost::format("unable to open file %1%") % fn));
-			size_t e_size = _tweets.size();
+			size_t e_size = _tweets1.size();
 			ofs.write((char*)&e_size, sizeof(size_t));
-			for (auto o: _tweets)
+			for (auto o: _tweets1)
 				o->Write(ofs);
 			ofs.close();
 			cout << "  Generated file " << fn << " size=" << boost::filesystem::file_size(fn) << "\n";
@@ -232,9 +252,9 @@ namespace DataGen {
 			ofstream ofs(fn.c_str(), ios::binary);
 			if (! ofs.is_open())
 				throw runtime_error(str(boost::format("unable to open file %1%") % fn));
-			size_t e_size = _tweets.size();
+			size_t e_size = _tweets1.size();
 			ofs.write((char*)&e_size, sizeof(size_t));
-			for (auto o: _tweets)
+			for (auto o: _tweets1)
 				o->Write(ofs);
 			ofs.close();
 			cout << "  Generated file " << fn << " size=" << boost::filesystem::file_size(fn) << "\n";
@@ -247,7 +267,7 @@ namespace DataGen {
 		size_t before = _uids.size();
 
 		set<long> users_with_tweets;
-		for (auto t: _tweets)
+		for (auto t: _tweets0)
 			users_with_tweets.insert(t->uid);
 
 		for (auto it = _uids.begin(); it != _uids.end(); ) {
@@ -284,6 +304,7 @@ namespace DataGen {
 		_LoadTweetsFromDB();
 
 		_FilterOutTweetsWoUser();
+
 		_FilterOutLonelyTweetsSetUploaderTopics();
 		_WriteTweetsToFile();
 
@@ -292,7 +313,7 @@ namespace DataGen {
 	}
 
 	void Cleanup() {
-		for (auto e: _tweets)
+		for (auto e: _tweets0)
 			delete e;
 
 		delete _conn;

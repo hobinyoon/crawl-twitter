@@ -16,6 +16,7 @@ namespace Conf {
 	const string dn_data_home = "/mnt/mdc-data/pgr/twitter";
 	const string fn_users = dn_data_home + "/users";
 
+	const string fn_tweets_w_lonely = dn_data_home + "/tweets-w-lonely";
 	const string fn_tweets = dn_data_home + "/tweets";
 	const string fn_tweets_1rv_per_user = dn_data_home + "/tweets-1rvpu";
 

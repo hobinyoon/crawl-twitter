@@ -7,6 +7,7 @@
 #include "conf.h"
 #include "dc.h"
 #include "op.h"
+#include "topic-filter.h"
 #include "util.h"
 
 using namespace std;
@@ -132,8 +133,10 @@ namespace Ops {
 			}
 		};
 
+		stringstream ss;
+
 		for (auto dtc: _dc_topic_cnt) {
-			cout << "  " << dtc.first->name << "\n";
+			ss << dtc.first->name << "\n";
 
 			set<TopicCnt> tc_set;
 			for (auto tc: dtc.second)
@@ -141,12 +144,19 @@ namespace Ops {
 
 			int c = 0;
 			for (auto i = tc_set.rbegin(); i != tc_set.rend(); ++ i) {
-				cout << "    " << i->topic << " " << i->cnt << "\n";
+				ss << "  " << i->topic << " " << i->cnt << "\n";
 				c ++;
 				if (c == Conf::max_topics_per_dc)
 					break;
 			}
 		}
+
+		const string& fn = Conf::fn_top_topics_by_dcs;
+		ofstream ofs(fn);
+		if (! ofs.is_open())
+			throw runtime_error(str(boost::format("Unable to open file %s") % fn));
+		ofs << ss.str();
+		cout << "  Created file " << fn << "\n";
 	}
 
 	void CntTopicsByDCs() {
@@ -159,15 +169,19 @@ namespace Ops {
 			if (it == _dc_topic_cnt.end()) {
 				map<string, int> m;
 				for (auto& t: e->topics) {
+					if (TopicFilter::IsBlackListed(t))
+						continue;
 					m[t] = 1;
 				}
 				_dc_topic_cnt[dc] = m;
 			} else {
 				map<string, int>& m = it->second;
 				for (auto& t: e->topics) {
+					if (TopicFilter::IsBlackListed(t))
+						continue;
 					auto it2 = m.find(t);
 					if (it2 == m.end()) {
-							m[t] = 1;
+						m[t] = 1;
 					} else {
 						it2->second ++;
 					}
@@ -176,70 +190,6 @@ namespace Ops {
 		}
 
 		_PrintTopTopics();
-	}
-
-	// map<DC*, map<time, cnt> >
-	map<DC*, map<string, int> > _dc_time_cnt;
-
-	void _PrintIBCByDCsByTime() {
-		boost::posix_time::ptime ca_b = boost::posix_time::time_from_string("2014-06-29 00:00:00");
-		boost::posix_time::ptime ca_e = boost::posix_time::time_from_string("2014-08-31 00:00:00");
-
-		cout << boost::format("%10s") % "";
-		for (auto dtc: _dc_time_cnt)
-			cout << boost::format(" %10s") % dtc.first->name;
-		cout << "\n";
-
-		for (boost::posix_time::ptime ca = ca_b; ca <= ca_e; ca += boost::gregorian::days(1)) {
-			//cout << ca << "\n";
-			tm tm_ = to_tm(ca);
-			string date = str(boost::format("%d-%02d-%02d") % (tm_.tm_year + 1900) % (tm_.tm_mon + 1) % tm_.tm_mday);
-			//cout << date << "\n";
-
-			cout << boost::format("%10s") % date;
-			for (auto dtc: _dc_time_cnt) {
-				int num = 0;
-				auto it = dtc.second.find(date);
-				if (it != dtc.second.end())
-					num = it->second;
-				cout << boost::format(" %10d") % num;
-			}
-			cout << "\n";
-		}
-	}
-
-	void CntIBCByDCsByTime() {
-		Util::CpuTimer _("Counting icebucketchallenge by DCs by time ...\n");
-
-		for (auto& e: _entries) {
-			DC* dc = DCs::GetClosest(e->geo_lati, e->geo_longi);
-			
-			auto it = _dc_time_cnt.find(dc);
-			if (it == _dc_time_cnt.end()) {
-				map<string, int> m;
-				for (auto& t: e->topics) {
-					if (t != "icebucketchallenge")
-						continue;
-					m[e->created_at_str.substr(0, 10)] = 1;
-				}
-				_dc_time_cnt[dc] = m;
-			} else {
-				map<string, int>& m = it->second;
-				for (auto& t: e->topics) {
-					if (t != "icebucketchallenge")
-						continue;
-					string key = e->created_at_str.substr(0, 10);
-					auto it2 = m.find(key);
-					if (it2 == m.end()) {
-						m[key] = 1;
-					} else {
-						it2->second ++;
-					}
-				}
-			}
-		}
-
-		_PrintIBCByDCsByTime();
 	}
 
 	void FreeMem() {

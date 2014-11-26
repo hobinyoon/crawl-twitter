@@ -4,6 +4,7 @@
 #include "conf.h"
 #include "dc.h"
 #include "op.h"
+#include "topic-filter.h"
 
 using namespace std;
 
@@ -29,6 +30,7 @@ int main(int argc, char* argv[]) {
 
 		Conf::Init(argc, argv);
 		DCs::LoadDCs();
+		TopicFilter::Load();
 
 		Ops::Load();
 		Ops::CntTopicsByDCs();

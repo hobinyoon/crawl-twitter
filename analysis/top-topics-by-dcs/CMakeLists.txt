@@ -17,5 +17,6 @@ ADD_EXECUTABLE ( ttdc
 	dc.cpp
 	main.cpp
 	op.cpp
+	topic-filter.cpp
 	util.cpp )
 TARGET_LINK_LIBRARIES ( ttdc ${Boost_LIBRARIES} mysqlcppconn )

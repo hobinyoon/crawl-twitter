@@ -16,6 +16,9 @@ namespace Conf {
 
 	const string dn_data_home = "/mnt/mdc-data/pgr/twitter";
 	const string fn_tweets = dn_data_home + "/tweets-1rvpu";
+	const string fn_topic_filter = dn_data_home + "/topic-filter";
+
+	const string fn_top_topics_by_dcs = dn_data_home + "/stat/top-topics-by-dcs";
 
 	int max_topics_per_dc;
 

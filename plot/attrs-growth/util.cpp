@@ -97,6 +97,22 @@ namespace Util {
 		return out;
 	}
 
+
+	string Prepend(const string& in, const string& p) {
+		static const auto sep = boost::is_any_of("\n");
+		vector<string> tokens;
+		boost::split(tokens, in, sep);
+		string out;
+
+		for (size_t i = 0; i < tokens.size(); i ++) {
+			if ((i == tokens.size() - 1) && tokens[i].size() == 0)
+				continue;
+			out += (p + tokens[i] + "\n");
+		}
+		return out;
+	}
+
+
 	void ClearLine() {
 		// http://en.wikipedia.org/wiki/ANSI_escape_code
 		//static const String ESC = "\033[";
@@ -104,6 +120,12 @@ namespace Util {
 		cout << ESC "1K"	// clear from cursor to beginning of the line
 			ESC "1G"; // move the cursor to column 1
 	}
+
+
+	void SetEnv(const string& k, const string& v) {
+		setenv(k.c_str(), v.c_str(), 1);
+	}
+
 
 	// http://stackoverflow.com/questions/478898/how-to-execute-a-command-and-get-output-of-command-within-c
 	string ExecGetOutput(const string& cmd) {

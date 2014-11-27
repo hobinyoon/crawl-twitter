@@ -14,9 +14,11 @@ namespace Util {
 	std::string ToYMD_HMS(const boost::posix_time::time_duration& td);
 
 	std::string Indent(const std::string& in, int indent);
+	std::string Prepend(const std::string& in, const std::string& p);
 
 	void ClearLine();
 
+	void SetEnv(const std::string& k, const std::string& v);
 	std::string ExecGetOutput(const std::string& cmd);
 
 	void ReadStr(std::ifstream& ifs, std::string& str);

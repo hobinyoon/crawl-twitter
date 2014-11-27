@@ -29,7 +29,12 @@ namespace DataFileReader {
 	}
 
 	void GetTweets(map<long, vector<Tweet*> >& users_tweets) {
-		const string& fn = Conf::fn_tweets;
+		string fn;
+		if (Conf::lonely)
+			fn = Conf::fn_tweets_w_lonely;
+		else
+			fn = Conf::fn_tweets;
+
 		Util::CpuTimer _(str(boost::format("Loading tweets from %s ...\n") % fn), 2);
 
 		ifstream ifs(fn.c_str(), ios::binary);

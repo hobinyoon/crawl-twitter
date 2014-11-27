@@ -61,7 +61,7 @@ std::ostream& operator<< (std::ostream& os, const Tweet& u) {
 
 
 std::ostream& operator<< (std::ostream& os, const Tweet::Type& t) {
-	static const char* s[] = {"W", "R"};
+	static const char* s[] = {"NA", "W", "R"};
 	os << s[t];
 	return os;
 }

@@ -3,8 +3,8 @@
 
 namespace CntAttrs {
 	void Load();
-	void GetNumUniqAttrGrowth();
-	void GetNumUniqAttrGrowthByDCs();
+	void CntNumUniqAttrGrowth();
+	void CntNumUniqAttrGrowthByDCs();
 	void FreeMem();
 };
 

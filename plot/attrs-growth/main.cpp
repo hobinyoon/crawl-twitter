@@ -32,10 +32,15 @@ int main(int argc, char* argv[]) {
 		Conf::Init(argc, argv);
 		DCs::LoadDCs();
 
-		CntAttrs::Load();
-		CntAttrs::GetNumUniqAttrGrowth();
-		CntAttrs::GetNumUniqAttrGrowthByDCs();
-		Plot::Plot();
+		if (Conf::cnt) {
+			CntAttrs::Load();
+			CntAttrs::CntNumUniqAttrGrowth();
+			CntAttrs::CntNumUniqAttrGrowthByDCs();
+		}
+
+		if (Conf::plot) {
+			Plot::Plot();
+		}
 
 		CntAttrs::FreeMem();
 

@@ -9,8 +9,9 @@ class DC;
 
 struct Tweet {
 	enum Type {
-		W,
-		R,
+		NA = 0,	// Not assigned yet
+		W = 1,
+		R = 2,
 	};
 
 	long id;

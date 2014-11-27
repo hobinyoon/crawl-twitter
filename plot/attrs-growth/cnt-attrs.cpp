@@ -1,5 +1,6 @@
 #include <fstream>
 #include <set>
+#include <boost/filesystem.hpp>
 #include <boost/format.hpp>
 
 #include "cnt-attrs.h"
@@ -22,7 +23,7 @@ namespace CntAttrs {
 		DataFileReader::GetTweets(_users_tweets);
 	}
 
-	void GetNumUniqAttrGrowth() {
+	void CntNumUniqAttrGrowth() {
 		Util::CpuTimer _("Gen uniq attrs growth ...\n");
 
 		// tweet count
@@ -36,7 +37,10 @@ namespace CntAttrs {
 		ofstream ofs(fn);
 		if (! ofs.is_open())
 			throw runtime_error(str(boost::format("unable to open file %1%") % fn));
-		ofs << "# vids tweets uids topics\n";
+
+		ofs << Util::Prepend(Conf::Desc(), "# ");
+		ofs << "#\n";
+		ofs << "#  vids  tweets            uids         topics\n";
 
 		size_t vids_size_prev = 0;
 
@@ -54,22 +58,34 @@ namespace CntAttrs {
 				topics.insert(t->topics.begin(), t->topics.end());
 				t_cnt ++;
 
-				if ((vids.size() % 10 == 0) && vids.size() != vids_size_prev) {
-					ofs << boost::format("%d %d %d %d\n")
-						% vids.size() % t_cnt % uids.size() % topics.size();
+				if ((vids.size() % 100 == 0) && vids.size() != vids_size_prev) {
+					ofs << boost::format("%7d"
+							" %7d %5.2f%%"
+							" %7d %5.2f%%"
+							" %7d %5.2f%%\n")
+						% vids.size()
+						% t_cnt % (100.0 * t_cnt / vids.size())
+						% uids.size() % (100.0 * uids.size() / vids.size())
+						% topics.size() % (100.0 * topics.size() / vids.size());
 					vids_size_prev = vids.size();
 				}
 			}
 		}
 		if (vids.size() != vids_size_prev) {
-			ofs << boost::format("%d %d %d %d\n")
-				% vids.size() % t_cnt % uids.size() % topics.size();
+			ofs << boost::format("%7d"
+					" %7d %5.2f%%"
+					" %7d %5.2f%%"
+					" %7d %5.2f%%\n")
+				% vids.size()
+				% t_cnt % (100.0 * t_cnt / vids.size())
+				% uids.size() % (100.0 * uids.size() / vids.size())
+				% topics.size() % (100.0 * topics.size() / vids.size());
 		}
-		cout << "  Created " << fn << "\n";
+		cout << "  Created " << fn << " " << boost::filesystem::file_size(fn) << "\n";
 	}
 
-	// get both the number of unique attrs by DCs and the growth of them by DCs
-	void GetNumUniqAttrGrowthByDCs() {
+
+	void CntNumUniqAttrGrowthByDCs() {
 		Util::CpuTimer _("Gen uniq attrs growth by DCs ...\n");
 
 		map<DC*, set<long> > dc_uids;
@@ -82,7 +98,7 @@ namespace CntAttrs {
 		ofstream ofs(fn);
 		if (! ofs.is_open())
 			throw runtime_error(str(boost::format("unable to open file %1%") % fn));
-		ofs << "# dc vids uids topics\n";
+		ofs << "# dc         vids   uids topics\n";
 
 		for (auto uid: _uids) {
 			auto it = _users_tweets.find(uid);
@@ -129,32 +145,29 @@ namespace CntAttrs {
 
 				if ((vids.size() % 100 == 0) && vids.size() != vids_size_prev) {
 					for (DC* dc: DCs::GetAll()) {
-						ofs << dc->name;
+						size_t num_vids = 0;
+						size_t num_uids = 0;
+						size_t num_topics = 0;
 						{
 							auto it = dc_vids.find(dc);
-							if (it == dc_vids.end()) {
-								ofs << " 0";
-							} else {
-								ofs << " " << it->second.size();
-							}
+							if (it != dc_vids.end())
+								num_vids = it->second.size();
 						}
 						{
 							auto it = dc_uids.find(dc);
-							if (it == dc_uids.end()) {
-								ofs << " 0";
-							} else {
-								ofs << " " << it->second.size();
-							}
+							if (it != dc_uids.end())
+								num_uids = it->second.size();
 						}
 						{
 							auto it = dc_topics.find(dc);
-							if (it == dc_topics.end()) {
-								ofs << " 0";
-							} else {
-								ofs << " " << it->second.size();
-							}
+							if (it != dc_topics.end())
+								num_topics = it->second.size();
 						}
-						ofs << "\n";
+						ofs << boost::format("%-10s %6d %6d %6d\n")
+							% dc->name
+							% num_vids
+							% num_uids
+							% num_topics;
 					}
 					vids_size_prev = vids.size();
 				}
@@ -162,63 +175,60 @@ namespace CntAttrs {
 		}
 		if (vids.size() != vids_size_prev) {
 			for (DC* dc: DCs::GetAll()) {
-				ofs << dc->name;
+				size_t num_vids = 0;
+				size_t num_uids = 0;
+				size_t num_topics = 0;
 				{
 					auto it = dc_vids.find(dc);
-					if (it == dc_vids.end()) {
-						ofs << " 0";
-					} else {
-						ofs << " " << it->second.size();
-					}
+					if (it != dc_vids.end())
+						num_vids = it->second.size();
 				}
 				{
 					auto it = dc_uids.find(dc);
-					if (it == dc_uids.end()) {
-						ofs << " 0";
-					} else {
-						ofs << " " << it->second.size();
-					}
+					if (it != dc_uids.end())
+						num_uids = it->second.size();
 				}
 				{
 					auto it = dc_topics.find(dc);
-					if (it == dc_topics.end()) {
-						ofs << " 0";
-					} else {
-						ofs << " " << it->second.size();
-					}
+					if (it != dc_topics.end())
+						num_topics = it->second.size();
 				}
-				ofs << "\n";
-			}
-		}
-		cout << "  Created " << fn << "\n";
-
-		{
-			const string& fn = Conf::fn_num_uniq_attrs_by_dcs;
-			ofstream ofs(fn);
-			if (! ofs.is_open())
-				throw runtime_error(str(boost::format("unable to open file %1%") % fn));
-			ofs << "# dc       vids  uids  topics\n";
-			long sum_vids = 0;
-			long sum_uids = 0;
-			long sum_topics = 0;
-			for (DC* dc: DCs::GetAll()) {
-				ofs << boost::format("%-10s %d %d %d\n")
+				ofs << boost::format("%-10s %6d %6d %6d\n")
 					% dc->name
-					% dc_vids[dc].size()
-					% dc_uids[dc].size()
-					% dc_topics[dc].size();
-				sum_vids += dc_vids[dc].size();
-				sum_uids += dc_uids[dc].size();
-				sum_topics += dc_topics[dc].size();
+					% num_vids
+					% num_uids
+					% num_topics;
 			}
-			size_t num_dcs = DCs::GetAll().size();
-			ofs << boost::format("%-10s %.0f %.0f %.0f\n")
-				% "Avg"
-				% (double(sum_vids) / num_dcs)
-				% (double(sum_uids) / num_dcs)
-				% (double(sum_topics) / num_dcs);
-			cout << "  Created " << fn << "\n";
 		}
+		cout << "  Created " << fn << " " << boost::filesystem::file_size(fn) << "\n";
+
+		//{
+		//	const string& fn = Conf::fn_num_uniq_attrs_by_dcs;
+		//	ofstream ofs(fn);
+		//	if (! ofs.is_open())
+		//		throw runtime_error(str(boost::format("unable to open file %1%") % fn));
+		//	ofs << "# dc       vids  uids  topics\n";
+		//	long sum_vids = 0;
+		//	long sum_uids = 0;
+		//	long sum_topics = 0;
+		//	for (DC* dc: DCs::GetAll()) {
+		//		ofs << boost::format("%-10s %d %d %d\n")
+		//			% dc->name
+		//			% dc_vids[dc].size()
+		//			% dc_uids[dc].size()
+		//			% dc_topics[dc].size();
+		//		sum_vids += dc_vids[dc].size();
+		//		sum_uids += dc_uids[dc].size();
+		//		sum_topics += dc_topics[dc].size();
+		//	}
+		//	size_t num_dcs = DCs::GetAll().size();
+		//	ofs << boost::format("%-10s %.0f %.0f %.0f\n")
+		//		% "Avg"
+		//		% (double(sum_vids) / num_dcs)
+		//		% (double(sum_uids) / num_dcs)
+		//		% (double(sum_topics) / num_dcs);
+		//	cout << "  Created " << fn << " " << boost::filesystem::file_size(fn) << "\n";
+		//}
 	}
 
 	void FreeMem() {

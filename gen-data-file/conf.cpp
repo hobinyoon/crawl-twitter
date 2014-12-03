@@ -25,7 +25,6 @@ namespace Conf {
 
 		po::options_description od0("Allowed options");
 		od0.add_options()
-			("load_partial_checkin_data", po::value<string>(), "1p, or 10p")
 			("help", "show help message")
 			;
 
@@ -36,16 +35,6 @@ namespace Conf {
 		if (vm.count("help") > 0) {
 			cout << od0 << "\n";
 			exit(0);
-		}
-
-		// Note: this can be used when loading data from DB to save time when data
-		// gets big
-		if (vm.count("load_partial_checkin_data") == 0) {
-		} else {
-			string load_partial_checkin_data = vm["load_partial_checkin_data"].as<string>();
-			if (load_partial_checkin_data == "1p") {
-			} else if (load_partial_checkin_data == "10p") {
-			}
 		}
 
 		cout << "Conf:\n";

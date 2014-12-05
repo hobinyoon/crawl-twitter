@@ -8,9 +8,9 @@ set terminal pdfcairo enhanced size 4.5in,3in
 set output FN_OUT
 
 set grid lc rgb "#C0C0C0"
-set border 3 lt 0 lc rgb "#C0C0C0"
-set xtics nomirror scale 0.5,0 font ",10" format "%.0f{/Symbol \260}" tc rgb "#808080" autofreq -180,60
-set ytics nomirror scale 0.5,0 font ",10" format "%.0f{/Symbol \260}" tc rgb "#808080" autofreq -90,30
+set noborder
+set xtics nomirror scale 0,0 font ",10" format "%.0f{/Symbol \260}" tc rgb "#808080" autofreq -180,60
+set ytics nomirror scale 0,0 font ",10" format "%.0f{/Symbol \260}" tc rgb "#808080" autofreq -90,30
 
 set xrange[-140:140]
 set yrange[-70:70]

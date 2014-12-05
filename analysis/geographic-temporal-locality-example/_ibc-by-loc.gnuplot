@@ -8,10 +8,10 @@ FN_PLOT = system("echo $FN_PLOT")
 set terminal pdfcairo enhanced size 4.5in, 3in
 set output FN_PLOT
 
-set grid lc rgb "#808080"
+set grid lc rgb "#C0C0C0"
 set noborder
-set xtics nomirror scale 0,0 font ",9" format "%.0f{/Symbol \260}" tc rgb "#808080" autofreq -180,20
-set ytics nomirror scale 0,0 font ",9" format "%.0f{/Symbol \260}" tc rgb "#808080" autofreq -90,10
+set xtics nomirror scale 0,0 font ",9" format "%.0f{/Symbol \260}" tc rgb "#808080" autofreq 0,20,20
+set ytics nomirror scale 0,0 font ",9" format "%.0f{/Symbol \260}" tc rgb "#808080" autofreq 40,10,50
 
 set xrange[-20:40]
 set yrange[30:60]

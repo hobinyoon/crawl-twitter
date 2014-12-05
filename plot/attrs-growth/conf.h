@@ -29,9 +29,6 @@ namespace Conf {
 	extern const std::string fn_plot_num_uniq_topics_growth_by_dcs;
 
 
-	extern const std::string fn_num_uniq_attrs_by_dcs;
-	extern const std::string fn_plot_num_uniq_attrs_by_dcs;
-
 	extern const std::string fn_num_uniq_attrs_growth_by_dcs;
 	extern const std::string fn_plot_num_uniq_attrs_growth_by_dcs;
 

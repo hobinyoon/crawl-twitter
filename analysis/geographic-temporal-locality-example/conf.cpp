@@ -25,8 +25,6 @@ namespace Conf {
 	const string fn_plot_by_time = dn_data_home + "/stat/ibc-by-time.pdf";
 	const string fn_plot_by_loc = dn_data_home + "/stat/fck-by-loc.pdf";
 
-	int max_topics_per_dc;
-
 	void _ParseArgs(int argc, char* argv[]) {
 		namespace po = boost::program_options;
 
@@ -35,7 +33,6 @@ namespace Conf {
 			("gen_stat", po::value<bool>()->default_value(true), "Generate stat.")
 			("gen_plot", po::value<bool>()->default_value(true), "Generate plot.")
 			("partial_load", po::value<size_t>()->default_value(0), "Load up to partial_load. 0 for unlimited.")
-			("max_topics_per_dc", po::value<int>()->default_value(20), "Print up to max_topics_per_dc. 0 for unlimited.")
 			("help", "show help message")
 			;
 
@@ -51,14 +48,13 @@ namespace Conf {
 		gen_stat = vm["gen_stat"].as<bool>();
 		gen_plot = vm["gen_plot"].as<bool>();
 		partial_load = vm["partial_load"].as<size_t>();
-		max_topics_per_dc = vm["max_topics_per_dc"].as<int>();
 
 		cout << "Conf:\n";
 		cout << std::boolalpha;
 		cout << "  gen_stat=" << gen_stat << "\n";
 		cout << "  gen_plot=" << gen_plot << "\n";
 		cout << "  partial_load=" << partial_load << "\n";
-		cout << "  max_topics_per_dc=" << max_topics_per_dc << "\n";
+		cout << "  fn_tweets=" << fn_tweets << "\n";
 	}
 
 	void Init(int argc, char* argv[]) {

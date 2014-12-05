@@ -192,59 +192,43 @@ namespace Ops {
 		_PrintIBCByDCsByTime();
 	}
 
-	// was working on
-	//struct LocCnt {
-	//	struct Loc {
-	//		static int granularity = 1;
-	//		double lati;
-	//		double longi;
-
-	//		Loc(double la, double lo) {
-	//			lati = la;
-	//			longi = lo;
-	//		}
-
-	//		bool operator < (const Loc& rhs) const {
-	//			if (lati < rhs.lati) return true;
-	//			if (lati > rhs.lati) return false;
-	//			return (longi > rhs.longi);
-	//		}
-	//	};
-
-	//	// map<center_int, cnt> loc_cnt;
-	//	map<Loc, int> loc_cnt;
-
-	//	void Add(double la, double lo) {
-	//		Log(la, lo);
-	//	}
-	//};
-
 	double _CircleSize(int i) {
-		return sqrt(i) / 5.0;
+		return pow(i / 20.0, (1.0/3));
 	}
 
 
 	void CntFCKByDCsByLoc() {
 		Util::CpuTimer _("Counting icebucketchallenge by locations ...\n");
 
-		struct Loc {
+		// rounded coord
+		struct RoCoord {
 			double longi;
 			double lati;
 
-			Loc(double lo, double la) {
+			RoCoord(double lo, double la)
+			// : longi(round(lo/5)*5), lati(round(la/5)*5)
+			{
 				longi = nearbyint(lo);
 				lati = nearbyint(la);
 			}
 
-			bool operator < (const Loc& rhs) const {
+			bool operator < (const RoCoord& rhs) const {
 				if (longi < rhs.longi) return true;
 				if (longi > rhs.longi) return false;
-				return (lati > rhs.lati);
+				return (lati < rhs.lati);
 			}
 		};
 
-		map<Loc, int> loc_cnt;
+		struct Coord {
+			double longi;
+			double lati;
 
+			Coord(double lo, double la)
+			: longi(lo), lati(la)
+			{ }
+		};
+
+		map<RoCoord, vector<Coord> > coord_group;
 		for (auto& e: _entries) {
 			//if (e->created_at_str < "2014-08-13 00:00:00")
 			//	continue;
@@ -264,12 +248,16 @@ namespace Ops {
 
 				// mysql> select created_at, geo_lati, geo_longi, hashtags from tweets where hashtags REGEXP '[[:<:]]fck[[:>:]]';
 				if (t == "fck") {
-					Loc loc(e->geo_longi, e->geo_lati);
-					auto it = loc_cnt.find(loc);
-					if (it == loc_cnt.end()) {
-						loc_cnt[loc] = 1;
+					RoCoord rc(e->geo_longi, e->geo_lati);
+					Coord c(e->geo_longi, e->geo_lati);
+
+					auto it = coord_group.find(rc);
+					if (it == coord_group.end()) {
+						vector<Coord> vc;
+						vc.push_back(c);
+						coord_group[rc] = vc;
 					} else {
-						it->second ++;
+						it->second.push_back(c);
 					}
 					continue;
 				}
@@ -280,24 +268,27 @@ namespace Ops {
 		ofstream ofs(fn);
 		if (! ofs.is_open())
 			throw runtime_error(str(boost::format("Unable to open file %1%") % fn));
-		for (auto i: loc_cnt) {
+		for (auto cg: coord_group) {
+
+			double lo = 0.0;
+			double la = 0.0;
+			for (auto& c: cg.second) {
+				lo += c.longi;
+				la += c.lati;
+			}
+			lo /= cg.second.size();
+			la /= cg.second.size();
+
 			ofs << boost::format("%5.1f %5.1f %f %d\n")
-				% i.first.longi
-				% i.first.lati
-				% _CircleSize(i.second)
-				% i.second;
+				% lo % la % _CircleSize(cg.second.size()) % cg.second.size();
 		}
 		int sizes[] = {1, 10, 20, 30};
 		size_t sizes_len = sizeof(sizes) / sizeof(int);
 		for (size_t i = 0; i < sizes_len; i ++) {
-			double longi = 2.5 + 5.0 * i;
+			double longi = 5.5 + 3.0 * i;
 			double lati = 33.0;
 			ofs << boost::format("%5.1f %5.1f %f %d %d\n")
-				% longi
-				% lati
-				% _CircleSize(sizes[i])
-				% sizes[i]
-				% sizes[i];
+				% longi % lati % _CircleSize(sizes[i]) % sizes[i] % sizes[i];
 		}
 
 		cout << "  Created file " << fn << "\n";

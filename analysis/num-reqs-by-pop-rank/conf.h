@@ -13,6 +13,9 @@ namespace Conf {
 	extern const std::string fn_num_reqs;
 	extern const std::string fn_plot_num_reqs;
 
+	extern const std::string fn_ccdf_num_reqs;
+	extern const std::string fn_plot_ccdf_num_reqs;
+
 	void Init(int argc, char* argv[]);
 	const std::string& Desc();
 };

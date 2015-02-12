@@ -112,8 +112,13 @@ namespace Ops {
 		//_FilterOutWrites();
 	}
 
-	void StatNumReqsByPop() {
-		Util::CpuTimer _("Counting num reqs by popularity ...\n");
+	// number of requests sorted.
+	vector<int> _num_reqs;
+
+	void _GenNumReqsStat() {
+		if (_num_reqs.size() != 0)
+			return;
+
 		// map<video_id, req_cnt>
 		map<string, int> req_cnt_by_vids;
 
@@ -130,27 +135,62 @@ namespace Ops {
 
 		// Whether to include writes or not does not affect the stat or chart much,
 		// especially when you are looking at videos with popularity rank < 10^4.
-		vector<int> num_reqs;
 		if (Conf::include_writes) {
 			for (auto i: req_cnt_by_vids)
-				num_reqs.push_back(i.second);
+				_num_reqs.push_back(i.second);
 		} else {
 			for (auto i: req_cnt_by_vids) {
 				if (i.second > 1)
-					num_reqs.push_back(i.second - 1);
+					_num_reqs.push_back(i.second - 1);
 			}
 		}
-		sort(num_reqs.begin(), num_reqs.end(), std::greater<int>());
+		sort(_num_reqs.begin(), _num_reqs.end(), std::greater<int>());
+	}
+
+	void _StatNumReqsByPop() {
+		Util::CpuTimer _("Stat number of reqs by popularity ...\n");
+
+		_GenNumReqsStat();
 
 		const string& fn = Conf::fn_num_reqs;
 		ofstream ofs(fn);
 		if (! ofs.is_open())
 			throw runtime_error(str(boost::format("Unable to open file %s") % fn));
 		ofs << Util::Prepend("# ", Conf::Desc());
-		for (auto n: num_reqs)
+		for (auto n: _num_reqs)
 			ofs << n << "\n";
 		ofs.close();
 		cout << "  created " << fn << " " << boost::filesystem::file_size(fn) << "\n";
+	}
+
+	// TODO: I can overlap the two charts; YAW and mine, Facebook and mine.
+	void _StatCCDFByNumReqs() {
+		Util::CpuTimer _("Stat CCDF by number of requests ...\n");
+		_GenNumReqsStat();
+
+		sort(_num_reqs.begin(), _num_reqs.end());
+		int i = 0;
+		double num_reqs_size = _num_reqs.size();
+
+		const string& fn = Conf::fn_ccdf_num_reqs;
+		ofstream ofs(fn);
+		int prev_x = -1;
+		for (auto it = _num_reqs.begin(); it != _num_reqs.end(); it ++, i ++) {
+			int x = *it;
+			if (prev_x == x)
+				continue;
+			double y = (i + 1) / num_reqs_size;
+			ofs << boost::format("%d %f\n") % x % y;
+			prev_x = x;
+		}
+		ofs.close();
+		cout << "  created " << fn << " " << boost::filesystem::file_size(fn) << "\n";
+
+	}
+
+	void Stat() {
+		_StatNumReqsByPop();
+		_StatCCDFByNumReqs();
 	}
 
 	void FreeMem() {

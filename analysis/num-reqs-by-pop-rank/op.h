@@ -35,7 +35,7 @@ namespace Ops {
 
 	void Load();
 
-	void StatNumReqsByPop();
+	void Stat();
 
 	void FreeMem();
 };

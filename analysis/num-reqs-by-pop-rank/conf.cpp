@@ -14,7 +14,8 @@ namespace Conf {
 
 	const string dn_data_home = "/mnt/mdc-data/twitter";
 	//const string fn_tweets = dn_data_home + "/tweets-1rvpu";
-	const string fn_tweets = dn_data_home + "/tweets";
+	//const string fn_tweets = dn_data_home + "/tweets";
+	const string fn_tweets = dn_data_home + "/tweets-w-lonely";
 
 	bool stat;
 	bool plot;
@@ -22,6 +23,9 @@ namespace Conf {
 
 	const string fn_num_reqs = dn_data_home + "/stat/num-reqs-by-popularity";
 	const string fn_plot_num_reqs = dn_data_home + "/plot/num-reqs-by-popularity.pdf";
+
+	const string fn_ccdf_num_reqs = dn_data_home + "/stat/ccdf-num-reqs";
+	const string fn_plot_ccdf_num_reqs = dn_data_home + "/plot/ccdf-num-reqs.pdf";
 
 	string _desc;
 

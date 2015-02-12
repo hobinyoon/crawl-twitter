@@ -31,7 +31,7 @@ int main(int argc, char* argv[]) {
 
 		if (Conf::stat) {
 			Ops::Load();
-			Ops::StatNumReqsByPop();
+			Ops::Stat();
 			Ops::FreeMem();
 		}
 

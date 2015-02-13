@@ -167,25 +167,39 @@ namespace Ops {
 	void _StatCCDFByNumReqs() {
 		Util::CpuTimer _("Stat CCDF by number of requests ...\n");
 		_GenNumReqsStat();
+		const int EXCLUDE_FIRST_N = 0;
+
+		if (_num_reqs.size() <= EXCLUDE_FIRST_N)
+			throw runtime_error(str(boost::format("unexpected. _num_reqs.size()=%d is too small") % _num_reqs.size()));
 
 		sort(_num_reqs.begin(), _num_reqs.end());
 		int i = 0;
-		double num_reqs_size = _num_reqs.size();
+		double num_reqs_size = _num_reqs.size() - EXCLUDE_FIRST_N;
 
 		const string& fn = Conf::fn_ccdf_num_reqs;
 		ofstream ofs(fn);
+
 		int prev_x = -1;
+		double prev_y = -1;
+		int x;
+		double y;
+
 		for (auto it = _num_reqs.begin(); it != _num_reqs.end(); it ++, i ++) {
-			int x = *it;
-			if (prev_x == x)
+			if (i < EXCLUDE_FIRST_N)
 				continue;
-			double y = (i + 1) / num_reqs_size;
-			ofs << boost::format("%d %f\n") % x % y;
+			x = *it;
+			y = ((i - EXCLUDE_FIRST_N) + 1) / num_reqs_size;
+
+			if (prev_x != -1 && prev_x != x)
+				ofs << boost::format("%d %f\n") % prev_x % prev_y;
+
 			prev_x = x;
+			prev_y = y;
 		}
+		ofs << boost::format("%d %f\n") % prev_x % prev_y;
+
 		ofs.close();
 		cout << "  created " << fn << " " << boost::filesystem::file_size(fn) << "\n";
-
 	}
 
 	void Stat() {

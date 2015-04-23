@@ -8,3 +8,19 @@ Restoring a backup
 	Edit the .sql file to contain only what's needed. While editing a big file
   with vim, you may want to disable syntax highlighting (:syn off)
   $ time mysql -utwitter -psomething twitter3 < twitter3-141203-000001.sql
+	real    25m41.591s (without tweets table)
+
+Resetting users to U (uncrawled)
+	mysql> update users set gen=-1, crawled_at=NULL, status='U', check_out_at=NULL, check_out_ip=NULL where status='C'; 
+	Query OK, 1385928 rows affected (1 hour 4 min 35.52 sec)
+	Rows matched: 1385928  Changed: 1385928  Warnings: 0
+
+	mysql> select status, count(*) from users group by status;
+	+--------+----------+
+	| status | count(*) |
+	+--------+----------+
+	| NF     |      178 |
+	| P      |     5037 |
+	| U      |  1386924 |
+	+--------+----------+
+	3 rows in set (14.80 sec)

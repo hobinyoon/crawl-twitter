@@ -1,2 +1,10 @@
 Creating a user
   $ mysql --user root -p < create-user.sql
+
+Creating DB schema
+  $ mysql -utwitter -p < create-db.sql
+
+Restoring a backup
+	Edit the .sql file to contain only what's needed. While editing a big file
+  with vim, you may want to disable syntax highlighting (:syn off)
+  $ time mysql -utwitter -psomething twitter3 < twitter3-141203-000001.sql

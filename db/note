@@ -1,0 +1,2 @@
+Creating a user
+  $ mysql --user root -p < create-user.sql

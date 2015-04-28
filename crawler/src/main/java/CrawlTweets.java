@@ -65,8 +65,8 @@ public class CrawlTweets {
 		DB.UserToCrawl u = DB.GetUserToCrawl();
 		Mon.user_being_crawled = u;
 
-		// one on Sep 2. Not the best tight bound.
-		long max_id = 506827318132629504L;
+		// A tweet on Apr 1, 2015. Althought not a tight bound, should be good enough.
+		long max_id = 583263500887191552L;
 
 		if (_tpt == null)
 			_tpt = TwitterPool.GetTwitter();
@@ -117,7 +117,7 @@ public class CrawlTweets {
 
 			//StdoutWriter.W(String.format("getUserTimeline: Got %d", statuses.size()));
 			long min_id = -1;
-			boolean hit_oldest_date = false;
+			//boolean hit_oldest_date = false;
 			for (Status s : statuses) {
 				//StdoutWriter.W(DataObjectFactory.getRawJSON(s));
 				long id = s.getId();
@@ -138,10 +138,10 @@ public class CrawlTweets {
 				Date ca = s.getCreatedAt();
 				if (ca.after(Conf.tweet_youngest_date))
 					continue;
-				if (ca.before(Conf.tweet_oldest_date)) {
-					hit_oldest_date = true;
-					break;
-				}
+				//if (ca.before(Conf.tweet_oldest_date)) {
+				//	hit_oldest_date = true;
+				//	break;
+				//}
 
 				if (known_gl == null)
 					continue;
@@ -235,7 +235,8 @@ public class CrawlTweets {
 
 				DB.AddTweet(id, u.id, ca, known_gl, youtube_video_id, ht_string.toString(), rt_id, rt_uid, s.getText(), _IDsToStr(c_uids));
 			}
-			if (statuses.size() == 0 || min_id == -1 || hit_oldest_date) {
+			//if (statuses.size() == 0 || min_id == -1 || hit_oldest_date) {
+			if (statuses.size() == 0 || min_id == -1) {
 				DB.SetUserCrawled(u);
 				break;
 			}

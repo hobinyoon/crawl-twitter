@@ -51,10 +51,9 @@ public class StdoutWriter {
 			System.out.printf("%s %s %s\n",
 						new SimpleDateFormat("HH:mm:ss").format(Calendar.getInstance().getTime()),
 						Mon.Status(), Mon.RuntimeSleeptimeStr());
-			System.out.printf("         crawled: tc=%d tn=%d tni=%d uc=%d\n",
+			System.out.printf("         crawled: tc=%d tn=%d uc=%d\n",
 						Mon.num_crawled_tweets,
 						Mon.num_crawled_tweets_new,
-						Mon.num_crawled_tweets_new_imported,
 						Mon.num_crawled_users);
 			System.out.printf("         crawling: usr=%s cred=%d,%s\n",
 						Mon.user_being_crawled,

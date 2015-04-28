@@ -29,9 +29,10 @@ public class StreamSeedUsers {
 					Mon.num_users_to_crawl_streamed ++;
 
 					do {
-						// skip young users
-						if (status.getUser().getCreatedAt().after(Conf.user_ca_oldest_date))
-							break;
+						// Do not skip young (recently joined) users. Used to skip.
+						//if (status.getUser().getCreatedAt().after(Conf.user_ca_oldest_date))
+						//	break;
+
 						// we are interested in retweets only.
 						if (! status.isRetweet())
 							break;
@@ -78,7 +79,8 @@ public class StreamSeedUsers {
 
 			@Override
 			public void onTrackLimitationNotice(int numberOfLimitedStatuses) {
-				StdoutWriter.W("Got track limitation notice:" + numberOfLimitedStatuses);
+				// Can be safely ignored
+				//StdoutWriter.W("Got track limitation notice:" + numberOfLimitedStatuses);
 			}
 
 			@Override

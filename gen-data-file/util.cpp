@@ -119,7 +119,7 @@ namespace Util {
 	CpuTimer::~CpuTimer() {
 		for (int i = 0; i < _indent + 2; i ++)
 			cout << " ";
-		cout << _tmr->elapsed().wall / 1000000000.0 << " sec.\n";
+		cout << boost::format("%.3f sec\n") % (_tmr->elapsed().wall / 1000000000.0);
 		delete _tmr;
 	}
 };

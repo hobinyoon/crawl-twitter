@@ -10,7 +10,7 @@ set xlabel "Year-Month" font ",9"
 set grid ytics lc rgb "#000000"
 set border 3 lc rgb "#808080"
 
-set xtics nomirror scale 0.5,0 font ",9" autofreq 0,1
+set xtics nomirror scale 0.5,0 font ",9" rotate by 90 right
 # thousand separator (comma)
 set decimal locale
 set ytics nomirror scale 0.5,0 font ",9" format "%'g"

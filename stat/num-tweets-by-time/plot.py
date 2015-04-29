@@ -5,7 +5,7 @@ import os
 import sys
 import subprocess
 
-DN_STAT="/mnt/mdc-data/pgr/twitter/stat"
+DN_STAT="/mnt/data/twitter/stat"
 
 FN_DATA_BY_DATE =      DN_STAT + "/num-tweets-by-date"
 FN_DATA_BY_MONTH =     DN_STAT + "/num-tweets-by-month"
@@ -22,7 +22,7 @@ CUR_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_USER="twitter"
 DB_PW="twitterpass"
 DB_HOST="localhost"
-DB_NAME="twitter2"
+DB_NAME="twitter3"
 
 
 def _ByDateGenData():

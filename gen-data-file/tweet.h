@@ -1,5 +1,4 @@
-#ifndef __TWEET_H__
-#define __TWEET_H__
+#pragma once
 
 #include <string>
 #include <vector>
@@ -35,5 +34,3 @@ struct Tweet {
 
 std::ostream& operator<< (std::ostream& os, const Tweet& op);
 std::ostream& operator<< (std::ostream& os, const Tweet::Type& opt);
-
-#endif

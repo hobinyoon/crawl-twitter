@@ -1,10 +1,7 @@
-#ifndef __DATA_GEN_H__
-#define __DATA_GEN_H__
+#pragma once
 
 namespace DataGen {
 	void Init();
 	void Gen();
 	void Cleanup();
 };
-
-#endif

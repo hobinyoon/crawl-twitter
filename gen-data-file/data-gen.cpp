@@ -1,3 +1,4 @@
+#include <ctime>
 #include <fstream>
 #include <set>
 #include <boost/format.hpp>
@@ -15,6 +16,8 @@
 using namespace std;
 
 namespace DataGen {
+	string _cur_datetime;
+
 	sql::Connection* _conn = NULL;
 	sql::Statement* _stmt = NULL;
 
@@ -25,7 +28,24 @@ namespace DataGen {
 	list<Tweet*> _tweets1;
 
 
+	void _SetCurDatetime() {
+		time_t t = time(NULL);
+		struct tm* now = localtime(&t);
+		_cur_datetime = str(boost::format("%02d%02d%02d-%02d%02d%02d")
+				% (now->tm_year + 1900 - 2000)
+				% (now->tm_mon + 1)
+				% now->tm_mday
+				% now->tm_hour
+				% now->tm_min
+				% now->tm_sec
+				);
+		//cout << _cur_datetime << "\n";
+	}
+
+
 	void Init() {
+		_SetCurDatetime();
+
 		_conn = get_driver_instance()->
 			connect("tcp://" + Conf::db_host + ":3306", Conf::db_user, Conf::db_pass);
 		_conn->setSchema(Conf::db_name);
@@ -221,11 +241,12 @@ namespace DataGen {
 	void _WriteTweetsToFile() {
 		Util::CpuTimer _("Writing tweets to file ...\n");
 		{
-			const string& fn = Conf::fn_tweets_w_lonely;
-			ofstream ofs(fn.c_str(), ios::binary);
+			size_t e_size = _tweets0.size();
+			const string fn = str(boost::format("%s/%s-tweets-w-lonely-%d")
+					% Conf::dn_data_home % _cur_datetime % e_size);
+			ofstream ofs(fn, ios::binary);
 			if (! ofs.is_open())
 				throw runtime_error(str(boost::format("unable to open file %1%") % fn));
-			size_t e_size = _tweets0.size();
 			ofs.write((char*)&e_size, sizeof(size_t));
 			for (auto o: _tweets0)
 				o->Write(ofs);
@@ -233,11 +254,12 @@ namespace DataGen {
 			cout << "  Generated file " << fn << " size=" << boost::filesystem::file_size(fn) << "\n";
 		}
 		{
-			const string& fn = Conf::fn_tweets;
-			ofstream ofs(fn.c_str(), ios::binary);
+			size_t e_size = _tweets1.size();
+			const string fn = str(boost::format("%s/%s-tweets-%d")
+					% Conf::dn_data_home % _cur_datetime % e_size);
+			ofstream ofs(fn, ios::binary);
 			if (! ofs.is_open())
 				throw runtime_error(str(boost::format("unable to open file %1%") % fn));
-			size_t e_size = _tweets1.size();
 			ofs.write((char*)&e_size, sizeof(size_t));
 			for (auto o: _tweets1)
 				o->Write(ofs);
@@ -248,11 +270,12 @@ namespace DataGen {
 		{
 			_FilterOutRepeatedAccessFromSameUser();
 
-			const string& fn = Conf::fn_tweets_1rv_per_user;
-			ofstream ofs(fn.c_str(), ios::binary);
+			size_t e_size = _tweets1.size();
+			const string fn = str(boost::format("%s/%s-tweets-1rvpu-%d")
+					% Conf::dn_data_home % _cur_datetime % e_size);
+			ofstream ofs(fn, ios::binary);
 			if (! ofs.is_open())
 				throw runtime_error(str(boost::format("unable to open file %1%") % fn));
-			size_t e_size = _tweets1.size();
 			ofs.write((char*)&e_size, sizeof(size_t));
 			for (auto o: _tweets1)
 				o->Write(ofs);
@@ -286,12 +309,13 @@ namespace DataGen {
 
 	void _WriteUsersToFile() {
 		Util::CpuTimer _("Writing users to file ...\n");
-		const string& fn = Conf::fn_users;
-		ofstream ofs(fn.c_str(), ios::binary);
+		size_t s = _uids.size();
+		const string fn = str(boost::format("%s/%s-users-%d")
+				% Conf::dn_data_home % _cur_datetime % s);
+		ofstream ofs(fn, ios::binary);
 		if (! ofs.is_open())
 			throw runtime_error(str(boost::format("unable to open file %1%") % fn));
 
-		size_t s = _uids.size();
 		ofs.write((char*)&s, sizeof(size_t));
 		for (long uid: _uids)
 			ofs.write((char*)&uid, sizeof(uid));

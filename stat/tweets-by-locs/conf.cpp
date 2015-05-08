@@ -11,9 +11,9 @@
 using namespace std;
 
 namespace Conf {
-	const string dn_data_home = "/mnt/mdc-data/pgr/twitter";
-	//const string fn_tweets = dn_data_home + "/tweets";
-	const string fn_tweets = dn_data_home + "/tweets-w-lonely";
+	const string dn_data_home = "/mnt/data/twitter";
+	const string fn_tweets = dn_data_home + "/tweets";
+	//const string fn_tweets = dn_data_home + "/tweets-w-lonely";
 
 	bool stat;
 	bool plot;

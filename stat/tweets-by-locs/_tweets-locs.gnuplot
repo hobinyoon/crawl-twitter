@@ -2,7 +2,8 @@
 
 FN_IN = system("echo $FN_IN")
 FN_OUT = system("echo $FN_OUT")
-FN_DC_LOC = "~/work/pgr/conf/dc-coord"
+FN_DC_LOC = "../../../../cold-storage/conf/youtube-dc-coord"
+FN_WORLD_MAP = "../../../worldmap/world_110m.txt"
 
 set terminal pdfcairo enhanced size 4.5in,3in
 set output FN_OUT
@@ -19,7 +20,7 @@ set yrange[-70:70]
 #set object 2 rect from -110,-88 to 110,-62 fs empty border lc rgb "#D0D0D0" front
 
 plot \
-'~/work/pgr/resource/world_110m.txt' with filledcurves fs transparent solid 0.15 noborder lc rgb "#C0C0C0" not, \
+FN_WORLD_MAP with filledcurves fs transparent solid 0.15 noborder lc rgb "#C0C0C0" not, \
 FN_IN     u 1:2:4 with circles fs transparent solid 0.35 noborder lc rgb "#FF0000" lw 0.4 not, \
 FN_IN     u 1:($2-8.0):5 with labels tc rgb "#000000" font ",8" not, \
 FN_DC_LOC u 3:2:(2.0) with circles lt 3 fs solid 1.0 noborder not, \

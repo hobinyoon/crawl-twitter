@@ -7,7 +7,7 @@ import sys
 import subprocess
 import time
 
-DN_STAT="/mnt/mdc-data/pgr/twitter/stat"
+DN_STAT="/mnt/data/twitter/stat"
 
 FN_DATA_BY_LOC = DN_STAT + "/num-tweets-by-loc"
 FN_PLOT_BY_LOC = DN_STAT + "/num-tweets-by-loc.pdf"
@@ -18,7 +18,7 @@ CUR_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_USER="twitter"
 DB_PW="twitterpass"
 DB_HOST="localhost"
-DB_NAME="twitter2"
+DB_NAME="twitter3"
 
 
 def _CircleSize(n):

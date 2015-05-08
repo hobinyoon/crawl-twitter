@@ -1,6 +1,7 @@
 # Tested with gnuplot 4.6 patchlevel 4
 
 FN_IN = system("echo $FN_IN")
+FN_WORLD_MAP = "../../worldmap/world_110m.txt"
 
 set terminal pdfcairo enhanced size 4.5in,3in
 
@@ -23,7 +24,7 @@ do for [i=0:23] {
 	set output fn_out
 
 	plot \
-	'world_110m.txt' with filledcurves ls 1 lc rgb "#F0F0F0" not, \
+	FN_WORLD_MAP with filledcurves ls 1 lc rgb "#F0F0F0" not, \
 	fn_in_ u 1:2:3 with points pt 6 ps variable lc rgb "#FF0000" lw 0.4 not, \
 	fn_in_ u 1:($2-10):4 with labels tc rgb "#000000" font ",7" not
 }
@@ -36,7 +37,7 @@ do for [i=0:23] {
 	fn_in_ = sprintf("%s-%02d", FN_IN, i)
 
 	plot \
-	'world_110m.txt' with filledcurves ls 1 lc rgb "#F0F0F0" not, \
+	FN_WORLD_MAP with filledcurves ls 1 lc rgb "#F0F0F0" not, \
 	fn_in_ u 1:2:3 with points pt 6 ps variable lc rgb "#FF0000" lw 0.4 not, \
 	fn_in_ u 1:($2-10):4 with labels tc rgb "#000000" font ",7" not
 }

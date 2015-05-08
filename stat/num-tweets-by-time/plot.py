@@ -59,8 +59,11 @@ def _ByMonthGenData():
 	query = ("SELECT DATE_FORMAT(created_at, '%y-%m') AS d, COUNT(*) AS cnt FROM tweets GROUP BY d")
 	cursor.execute(query)
 	fo = open(FN_DATA_BY_MONTH, "w")
+	i = 0
 	for (d, cnt) in cursor:
-		fo.write("%s %d\n" % (d, cnt))
+		# Write xtics every 2 rows
+		fo.write("\"%s\" %d\n" % ((d if (i % 2 == 0) else ""), cnt))
+		i += 1
 	fo.close()
 	cursor.close()
 	conn.close()

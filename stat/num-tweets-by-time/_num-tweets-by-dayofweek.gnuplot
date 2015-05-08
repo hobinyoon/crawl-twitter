@@ -6,6 +6,7 @@ FN_OUT = system("echo $FN_OUT")
 set terminal pdfcairo enhanced size 4.5in, 3in
 set output FN_OUT
 
+set lmargin at screen 0.1
 set grid lc rgb "#808080"
 set border 3 lc rgb "#808080"
 

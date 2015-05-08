@@ -6,7 +6,8 @@ FN_OUT = system("echo $FN_OUT")
 set terminal pdfcairo enhanced size 4.5in, 3in
 set output FN_OUT
 
-set xlabel "Year-Month" font ",9"
+set lmargin at screen 0.1
+set xlabel "Year-Month" offset 0,1
 set grid ytics lc rgb "#000000"
 set border 3 lc rgb "#808080"
 

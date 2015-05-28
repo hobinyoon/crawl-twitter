@@ -1,10 +1,7 @@
-#ifndef __OP_H__
-#define __OP_H__
+#pragma once
 
 #include <string>
 #include <boost/date_time/posix_time/posix_time.hpp>
-
-class DC;
 
 namespace Ops {
 	enum Type {
@@ -46,5 +43,3 @@ namespace Ops {
 
 std::ostream& operator<< (std::ostream& os, const Ops::Entry& op);
 std::ostream& operator<< (std::ostream& os, const Ops::Type& opt);
-
-#endif

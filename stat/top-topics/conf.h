@@ -1,5 +1,4 @@
-#ifndef __CONF_H__
-#define __CONF_H__
+#pragma once
 
 #include <string>
 
@@ -13,5 +12,3 @@ namespace Conf {
 
 	void Init(int argc, char* argv[]);
 };
-
-#endif

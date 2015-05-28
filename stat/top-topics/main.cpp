@@ -2,7 +2,6 @@
 #include <signal.h>
 #include <iostream>
 #include "conf.h"
-#include "dc.h"
 #include "op.h"
 
 using namespace std;
@@ -28,13 +27,11 @@ int main(int argc, char* argv[]) {
 		signal(SIGINT, on_signal);
 
 		Conf::Init(argc, argv);
-		DCs::LoadDCs();
 
 		Ops::Load();
 		Ops::GenTopTopics();
 
 		Ops::FreeMem();
-		DCs::FreeMem();
 		return 0;
 	} catch (const exception& e) {
 		cerr << "Exception: " << e.what() << "\n";

@@ -14,7 +14,6 @@ FIND_PACKAGE( Boost
 INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS})
 ADD_EXECUTABLE ( tt
 	conf.cpp
-	dc.cpp
 	main.cpp
 	op.cpp
 	util.cpp )

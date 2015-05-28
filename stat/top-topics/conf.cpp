@@ -10,14 +10,16 @@
 using namespace std;
 
 namespace Conf {
-	const string dn_prj_home = Util::HomeDir() + "/work/pgr";
-	const string fn_dc_coord = dn_prj_home + "/conf/dc-coord";
+	const string dn_prj_home = Util::HomeDir() + "/work/cold-storage";
+	const string fn_dc_coord = dn_prj_home + "/conf/youtube-dc-coord";
 	size_t partial_load;
 
-	const string dn_data_home = "/mnt/mdc-data/pgr/twitter";
+	// Input
+	const string dn_data_home = "/mnt/data/twitter";
 	const string fn_tweets = dn_data_home + "/tweets-1rvpu";
 
-	const string fn_top_topics = dn_data_home + "/top-topics";
+	// Output
+	const string fn_top_topics = "top-topics";
 
 	int max_output_lines;
 

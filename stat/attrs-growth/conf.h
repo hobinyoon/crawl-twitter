@@ -5,11 +5,6 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 
 namespace Conf {
-	extern const std::string db_host;
-	extern const std::string db_name;
-	extern const std::string db_user;
-	extern const std::string db_pass;
-
 	extern const std::string fn_dc_coord;
 
 	extern bool cnt;

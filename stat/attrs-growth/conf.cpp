@@ -10,12 +10,7 @@
 using namespace std;
 
 namespace Conf {
-	const string db_host = "localhost";
-	const string db_name = "twitter2";
-	const string db_user = "twitter";
-	const string db_pass = "twitterpass";
-
-	const string dn_prj_home = Util::HomeDir() + "/work/pgr";
+	const string dn_prj_home = Util::HomeDir() + "/work/coco";
 	const string fn_dc_coord = dn_prj_home + "/conf/dc-coord";
 
 	bool cnt;
@@ -24,7 +19,7 @@ namespace Conf {
 
 	size_t max_dcs;
 
-	const string dn_data_home = "/mnt/mdc-data/pgr/twitter";
+	const string dn_data_home = "/mnt/data/twitter";
 	const string fn_users = dn_data_home + "/users";
 	const string fn_tweets = dn_data_home + "/tweets";
 	const string fn_tweets_w_lonely = dn_data_home + "/tweets-w-lonely";

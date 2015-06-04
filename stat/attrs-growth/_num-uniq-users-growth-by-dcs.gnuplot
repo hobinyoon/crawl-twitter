@@ -1,28 +1,32 @@
 # Tested with gnuplot 4.6 patchlevel 4
 
-load "~/work/pgr/conf/colorscheme.gnuplot"
+load "~/work/coco/conf/colorscheme.gnuplot"
 
 FN_IN = system("echo $FN_IN")
 FN_PLOT = system("echo $FN_PLOT")
 
-set terminal pdfcairo enhanced size 4.5in, 3in
+set terminal pdfcairo enhanced size 3in, 2in
 set output FN_PLOT
 
-set xlabel "# of YouTube videos"
-set ylabel "# of users / # of videos"
-set grid lc rgb "#C0C0C0"
-set border 3 lc rgb "#C0C0C0"
+set rmargin at screen 0.97
+set tmargin at screen 0.97
+
+set xlabel "# of YouTube videos (K)" font ",14"
+set ylabel "# of users / # of videos" offset 1.0,-0.4 font ",14"
+#set grid lc rgb "#808080"
+set border 3 lc rgb "#808080"
 
 set xtics nomirror scale 0.5,0 tc rgb "#808080" ( \
-  "0"     0, \
-"15K" 15000, \
-"30K" 30000, \
-"45K" 45000, \
-"60K" 60000 \
+"100" 100000, \
+ "75"  75000, \
+ "50"  50000, \
+ "25"  25000, \
+  "0"      0 \
 )
-set ytics nomirror scale 0.5,0 tc rgb "#808080" format "%.2f" autofreq 0,0.25
-set key bottom right
+set ytics nomirror scale 0.5,0 tc rgb "#808080" format "%.2f" autofreq 0,0.25,1.3
+set key top right maxrows 4
 set xrange [0:]
+set yrange [:]
 
 set pointsize 0.2
 

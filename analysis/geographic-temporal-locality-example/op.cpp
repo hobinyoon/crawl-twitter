@@ -73,7 +73,8 @@ namespace Ops {
 		for (size_t i = 0; i < e_size; i ++) {
 			_entries.push_back(new Entry(ifs));
 
-			if (Conf::partial_load > 0 && i == Conf::partial_load)
+			if ( Conf::partial_load > 0
+					&& (100.0 * i / e_size >= Conf::partial_load) )
 				break;
 		}
 		cout << "    _entries.size()=" << _entries.size() << "\n";
@@ -118,11 +119,11 @@ namespace Ops {
 
 	void _PrintIBCByDCsByTime() {
 		boost::posix_time::ptime ca_b = boost::posix_time::time_from_string("2014-06-29 00:00:00");
-		boost::posix_time::ptime ca_e = boost::posix_time::time_from_string("2014-08-31 00:00:00");
+		boost::posix_time::ptime ca_e = boost::posix_time::time_from_string("2015-01-01 00:00:00");
 
 		stringstream ss;
 
-		ss << "#        ";
+		ss << "#         ";
 		for (auto dtc: _dc_time_cnt)
 			ss << boost::format(" %10s") % dtc.first->name;
 		ss << boost::format(" %10s") % "Sum";
@@ -153,7 +154,8 @@ namespace Ops {
 		if (! ofs.is_open())
 			throw runtime_error(str(boost::format("Unable to open file %1%") % fn));
 		ofs << ss.str();
-		cout << "  Created file " << fn << "\n";
+		ofs.close();
+		cout << "  Created file " << fn << " " << boost::filesystem::file_size(fn) << "\n";
 	}
 
 	void CntIBCByDCsByTime() {
@@ -193,12 +195,13 @@ namespace Ops {
 	}
 
 	double _CircleSize(int i) {
-		return pow(i / 20.0, (1.0/3));
+		return pow(i / 10.0, (1.0/3));
 	}
 
 
 	void CntFCKByDCsByLoc() {
-		Util::CpuTimer _("Counting icebucketchallenge by locations ...\n");
+		const string topic = "fck";
+		Util::CpuTimer _(str(boost::format("Counting topic %s by locations ...\n") % topic));
 
 		// rounded coord
 		struct RoCoord {
@@ -247,7 +250,7 @@ namespace Ops {
 				//	continue;
 
 				// mysql> select created_at, geo_lati, geo_longi, hashtags from tweets where hashtags REGEXP '[[:<:]]fck[[:>:]]';
-				if (t == "fck") {
+				if (t == topic) {
 					RoCoord rc(e->geo_longi, e->geo_lati);
 					Coord c(e->geo_longi, e->geo_lati);
 
@@ -268,6 +271,9 @@ namespace Ops {
 		ofstream ofs(fn);
 		if (! ofs.is_open())
 			throw runtime_error(str(boost::format("Unable to open file %1%") % fn));
+
+		ofs << "# longi lati circle_size num_topics label\n";
+
 		for (auto cg: coord_group) {
 
 			double lo = 0.0;
@@ -279,19 +285,20 @@ namespace Ops {
 			lo /= cg.second.size();
 			la /= cg.second.size();
 
-			ofs << boost::format("%5.1f %5.1f %f %d\n")
+			ofs << boost::format("%5.1f %5.1f %f %3d\n")
 				% lo % la % _CircleSize(cg.second.size()) % cg.second.size();
 		}
-		int sizes[] = {1, 10, 20, 30};
+		int sizes[] = {1, 5, 10, 20};
 		size_t sizes_len = sizeof(sizes) / sizeof(int);
 		for (size_t i = 0; i < sizes_len; i ++) {
-			double longi = 5.5 + 3.0 * i;
-			double lati = 33.0;
-			ofs << boost::format("%5.1f %5.1f %f %d %d\n")
+			double longi = -1.0 + 6.0 * i;
+			double lati = 31.0;
+			ofs << boost::format("%5.1f %5.1f %f %3d %3d\n")
 				% longi % lati % _CircleSize(sizes[i]) % sizes[i] % sizes[i];
 		}
+		ofs.close();
 
-		cout << "  Created file " << fn << "\n";
+		cout << "  Created file " << fn << " " << boost::filesystem::file_size(fn) << "\n";
 	}
 
 	void FreeMem() {

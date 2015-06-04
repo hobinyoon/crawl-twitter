@@ -10,13 +10,13 @@
 using namespace std;
 
 namespace Conf {
-	const string dn_prj_home = Util::HomeDir() + "/work/pgr";
+	const string dn_prj_home = Util::HomeDir() + "/work/coco";
 	const string fn_dc_coord = dn_prj_home + "/conf/dc-coord";
 	bool gen_stat;
 	bool gen_plot;
 	size_t partial_load;
 
-	const string dn_data_home = "/mnt/mdc-data/pgr/twitter";
+	const string dn_data_home = "/mnt/data/twitter";
 	const string fn_tweets = dn_data_home + "/tweets";
 	//const string fn_tweets = dn_data_home + "/tweets-1rvpu";
 
@@ -32,7 +32,7 @@ namespace Conf {
 		od0.add_options()
 			("gen_stat", po::value<bool>()->default_value(true), "Generate stat.")
 			("gen_plot", po::value<bool>()->default_value(true), "Generate plot.")
-			("partial_load", po::value<size_t>()->default_value(0), "Load up to partial_load. 0 for unlimited.")
+			("partial_load", po::value<size_t>()->default_value(0), "Partial load of data in percent. 0 for unlimited.")
 			("help", "show help message")
 			;
 

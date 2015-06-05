@@ -108,8 +108,8 @@ namespace YoutubeDataset {
 		size_t lc_len = sizeof(lcs) / sizeof(int);
 		for (size_t i = 0; i < lc_len; i ++) {
 			ofs << boost::format("%10.3f %10.3f %7d %8f %s\n")
-				% (-30.0 + 15.0 * i)
-				% -55.0
+				% (-50.0 + 25.0 * i)
+				% -50.0
 				% lcs[i]
 				% _CircleSize(lcs[i])
 				% lcsl[i];

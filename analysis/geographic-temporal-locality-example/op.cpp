@@ -195,7 +195,7 @@ namespace Ops {
 	}
 
 	double _CircleSize(int i) {
-		return pow(i / 10.0, (1.0/3));
+		return pow(i / 5.0, (1.0/3));
 	}
 
 

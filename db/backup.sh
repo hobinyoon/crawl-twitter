@@ -17,7 +17,8 @@ time /usr/bin/mysqldump --skip-tz-utc -u twitter -ptwitterpass $DB_NAME > $FN_SQ
 
 /usr/bin/find /mnt/data/twitter/backup -type f -ls | /usr/bin/sort -k 11 -r | /usr/bin/head -n 5
 
-REMOTE_MACHINE="143.215.207.89"
+#REMOTE_MACHINE="143.215.207.89"
+REMOTE_MACHINE="130.207.110.227"
 echo
 echo "Remote backup to "$REMOTE_MACHINE
 time scp -p $FN_SQL_7Z hobin@$REMOTE_MACHINE:archive/backup/twitter/

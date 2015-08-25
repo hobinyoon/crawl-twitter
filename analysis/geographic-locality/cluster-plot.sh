@@ -5,8 +5,6 @@ set -u
 
 SRC_DIR=`dirname $BASH_SOURCE`
 
-HT=tennis
-
 Cluster() {
 	pushd $SRC_DIR/cluster-locations/.build > /dev/null
 	make -j

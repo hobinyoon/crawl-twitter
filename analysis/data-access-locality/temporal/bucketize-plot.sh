@@ -6,7 +6,7 @@ set -u
 SRC_DIR=`dirname $BASH_SOURCE`
 
 Plot() {
-	export FN_IN=$SRC_DIR/data/$HT-by-time
+	export FN_IN=$SRC_DIR/../data/$HT-by-time
 	export FN_OUT=$SRC_DIR/temporal-locality-$HT.pdf
 	gnuplot $SRC_DIR/_temporal.gnuplot
 	echo "Created "$FN_OUT

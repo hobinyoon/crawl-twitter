@@ -1,5 +1,5 @@
-fn_tweet = "data/hashtag-wimbledon"
-fn_output = "data/wimbledon-by-time"
+fn_tweet = "../data/hashtag-wimbledon"
+fn_output = "../data/wimbledon-by-time"
 bucket_size = 2
 
 

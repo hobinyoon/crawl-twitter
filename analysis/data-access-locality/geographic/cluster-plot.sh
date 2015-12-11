@@ -6,8 +6,9 @@ set -u
 SRC_DIR=`dirname $BASH_SOURCE`
 
 Cluster() {
+	mkdir -p $SRC_DIR/cluster-locations/.build
 	pushd $SRC_DIR/cluster-locations/.build > /dev/null
-	echo "Building ... re-cmake and make when errors"
+	echo "Building ... re-cmake and make on errors"
 	make -j
 	popd > /dev/null
 	$SRC_DIR/cluster-locations/.build/cluster-locations \
@@ -24,7 +25,7 @@ Plot() {
 	export FN_IN=$SRC_DIR/../data/clustered-$HT
 	export FN_OUT=$SRC_DIR/geo-locality-$HT.pdf
 	gnuplot $SRC_DIR/_geographic.gnuplot
-	echo "Created "$FN_OUT
+	printf "Created %s %d\n" $FN_OUT `wc -c < $FN_OUT`
 }
 
 #hashtags=(tennis usopen wimbledon frenchopen aussieopen)

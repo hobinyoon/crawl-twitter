@@ -5,7 +5,6 @@
 #include "cnt-attrs.h"
 #include "conf.h"
 #include "dc.h"
-#include "plot.h"
 
 using namespace std;
 
@@ -36,10 +35,6 @@ int main(int argc, char* argv[]) {
 			CntAttrs::Load();
 			CntAttrs::CntNumUniqAttrGrowth();
 			CntAttrs::CntNumUniqAttrGrowthByDCs();
-		}
-
-		if (Conf::plot) {
-			Plot::Plot();
 		}
 
 		CntAttrs::FreeMem();

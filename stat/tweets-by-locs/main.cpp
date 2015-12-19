@@ -3,7 +3,6 @@
 #include <unistd.h>
 #include <iostream>
 #include "conf.h"
-#include "plot.h"
 #include "youtube-dataset.h"
 
 using namespace std;
@@ -33,10 +32,6 @@ int main(int argc, char* argv[]) {
 		if (Conf::stat) {
 			YoutubeDataset::Load();
 			YoutubeDataset::GenStat();
-		}
-
-		if (Conf::plot) {
-			Plot::Plot();
 		}
 
 		YoutubeDataset::FreeMem();

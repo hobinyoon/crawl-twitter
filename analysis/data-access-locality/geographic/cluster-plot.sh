@@ -8,7 +8,9 @@ SRC_DIR=`dirname $BASH_SOURCE`
 Cluster() {
 	mkdir -p $SRC_DIR/cluster-locations/.build
 	pushd $SRC_DIR/cluster-locations/.build > /dev/null
-	echo "Building ... re-cmake and make on errors"
+	pwd
+	echo "Building ..."
+	cmake ..
 	make -j
 	popd > /dev/null
 	$SRC_DIR/cluster-locations/.build/cluster-locations \
@@ -24,6 +26,7 @@ Cluster() {
 Plot() {
 	export FN_IN=$SRC_DIR/../data/clustered-$HT
 	export FN_OUT=$SRC_DIR/geo-locality-$HT.pdf
+	export BASE_MAP_TRASPARENCY=0.5
 	gnuplot $SRC_DIR/_geographic.gnuplot
 	printf "Created %s %d\n" $FN_OUT `wc -c < $FN_OUT`
 }

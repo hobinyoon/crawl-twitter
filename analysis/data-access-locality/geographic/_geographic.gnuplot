@@ -1,7 +1,10 @@
-# Tested with gnuplot 4.6 patchlevel 4
+# Tested with gnuplot 4.6 patchlevel 6
 
-FN_IN = system("echo $FN_IN")
+FN_IN  = system("echo $FN_IN")
 FN_OUT = system("echo $FN_OUT")
+BASE_MAP_TRASPARENCY = system("echo $BASE_MAP_TRASPARENCY")
+
+BASE_MAP_TRASPARENCY = BASE_MAP_TRASPARENCY + 0
 FN_WORLD_MAP="~/work/crawl-twitter/worldmap/world_110m.txt"
 
 set terminal pdfcairo enhanced size 2in, 1.5in
@@ -41,5 +44,5 @@ do for [i=0:4] {
 }
 
 plot \
-FN_IN u 1:2:(CircleSize($3)) with circles fs transparent solid 0.35 noborder lc rgb "#FF0000" not, \
-FN_WORLD_MAP w filledcurves fs transparent solid 0.25 noborder lc rgb "#C0C0C0" not
+FN_WORLD_MAP w filledcurves fs transparent solid BASE_MAP_TRASPARENCY noborder lc rgb "#C0C0C0" not, \
+FN_IN u 1:2:(CircleSize($3)) with circles fs transparent solid 0.35 noborder lc rgb "#FF0000" not

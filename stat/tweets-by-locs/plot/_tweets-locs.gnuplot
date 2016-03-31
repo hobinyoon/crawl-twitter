@@ -32,6 +32,9 @@ set label "Milan"      at    9.202015,  45.490065 left   offset  0.4,-0.5 tc rgb
 set label "SaoPaulo"   at  -46.661744, -23.556599 center offset    0,-0.8 tc rgb "black" front
 set label "Madrid"     at   -3.703812,  40.416759 center offset    0,-0.8 tc rgb "black" front
 
+# FN_WORLD_MAP transparency 0.25 or a bit higher for the paper.
+# 0.5 for the presentation slides
+
 plot \
 FN_WORLD_MAP with filledcurves fs transparent solid 0.50 noborder lc rgb "#C0C0C0" not, \
 FN_IN     u 1:2:4 with circles fs transparent solid 0.35 noborder lc rgb "#FF0000" lw 0.4 not, \

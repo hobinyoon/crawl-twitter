@@ -7,7 +7,12 @@ BASE_MAP_TRASPARENCY = system("echo $BASE_MAP_TRASPARENCY")
 BASE_MAP_TRASPARENCY = BASE_MAP_TRASPARENCY + 0
 FN_WORLD_MAP="~/work/crawl-twitter/worldmap/world_110m.txt"
 
-set terminal pdfcairo enhanced size 2in, 1.5in
+# For the paper
+#set terminal pdfcairo enhanced size 2in, 1.5in
+
+# For the presentation slides
+set terminal pdfcairo enhanced size 2.5in, 1.5in
+
 set output FN_OUT
 
 set lmargin at screen 0.0

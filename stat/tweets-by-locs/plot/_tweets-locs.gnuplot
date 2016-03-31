@@ -33,7 +33,7 @@ set label "SaoPaulo"   at  -46.661744, -23.556599 center offset    0,-0.8 tc rgb
 set label "Madrid"     at   -3.703812,  40.416759 center offset    0,-0.8 tc rgb "black" front
 
 plot \
-FN_WORLD_MAP with filledcurves fs transparent solid 0.25 noborder lc rgb "#C0C0C0" not, \
+FN_WORLD_MAP with filledcurves fs transparent solid 0.50 noborder lc rgb "#C0C0C0" not, \
 FN_IN     u 1:2:4 with circles fs transparent solid 0.35 noborder lc rgb "#FF0000" lw 0.4 not, \
 FN_IN     u 1:($2-8.0):5 with labels tc rgb "#000000" not, \
 FN_DC_LOC u 3:2:(2.0) with circles lt 3 lc rgb "black" fs solid 1.0 noborder not

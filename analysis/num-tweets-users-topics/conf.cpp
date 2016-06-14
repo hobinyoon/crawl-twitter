@@ -14,10 +14,10 @@ namespace Conf {
 	const string fn_dc_coord = dn_prj_home + "/conf/dc-coord";
 	size_t partial_load;
 
-	const string dn_data_home = "/mnt/mdc-data/pgr/twitter";
+	const string dn_data_home = "/mnt/data/twitter";
 	//const string fn_tweets = dn_data_home + "/tweets-w-lonely";
 	//const string fn_tweets = dn_data_home + "/tweets-1rvpu";
-	const string fn_tweets = dn_data_home + "/tweets";
+	const string fn_tweets = dn_data_home + "/150812-143151-tweets-5667779";
 
 	const string fn_top_topics = dn_data_home + "/top-topics";
 

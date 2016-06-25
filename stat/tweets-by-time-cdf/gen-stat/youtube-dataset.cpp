@@ -36,8 +36,9 @@ namespace YoutubeDataset {
 
 		size_t e_size;
 		ifs.read((char*)&e_size, sizeof(e_size));
-		for (size_t i = 0; i < e_size; i ++)
+		for (size_t i = 0; i < e_size; i ++) {
 			_tweets.push_back(new Tweet(ifs));
+		}
 		cout << "  _tweets.size()=" << _tweets.size() << "\n";
 	}
 
@@ -60,14 +61,30 @@ namespace YoutubeDataset {
 		int i = 0;
 		bool last_one_printed = false;
 		Tweet* last_tweet = NULL;
-		for (auto t: _tweets) {
+
+		if (_tweets.size() == 0)
+			throw runtime_error(str(boost::format("unexpected _tweets.size()=%d") % _tweets.size()));
+			//throw runtime_error(str(boost::format("Unable to popen: %1%") % cmd));
+
+		boost::posix_time::ptime* ca_begin = &((*_tweets.begin())->created_at);
+		boost::posix_time::ptime* ca_end = &((*_tweets.rbegin())->created_at);
+		//boost::posix_time::time_duration
+		double ca_dur_secs = (*ca_end - *ca_begin).total_seconds();
+
+		//boost::posix_time::ptime* ca_prev = NULL;
+		for (auto& t: _tweets) {
 			i ++;
+
 			last_one_printed = false;
 			last_tweet = t;
 			y = double(i) / _tweets.size();
 			if (y - prev_y >= 0.001) {
-				ofs << boost::format("%s %f\n") % _ToCompactDatetime(t->created_at) % y;
+				ofs << boost::format("%s %f %f\n")
+					% _ToCompactDatetime(t->created_at)
+					% ((t->created_at - *ca_begin).total_seconds() / ca_dur_secs)
+					% y;
 				prev_y = y;
+				//ca_prev = &(t->created_at);
 				last_one_printed = true;
 			}
 			// If needed,
@@ -77,7 +94,10 @@ namespace YoutubeDataset {
 		}
 		if (! last_one_printed) {
 			y = double(i) / _tweets.size();
-			ofs << boost::format("%s %f\n") % _ToCompactDatetime(last_tweet->created_at) % y;
+			ofs << boost::format("%s %f %f\n")
+				% _ToCompactDatetime(last_tweet->created_at)
+				% ((last_tweet->created_at - *ca_begin).total_seconds() / ca_dur_secs)
+				% y;
 		}
 
 		ofs.close();

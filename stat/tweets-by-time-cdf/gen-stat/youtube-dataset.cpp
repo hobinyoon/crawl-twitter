@@ -48,7 +48,7 @@ namespace YoutubeDataset {
 	}
 
 
-	void GenStat() {
+	void _TimeNumTweetsCDF() {
 		Util::CpuTimer _("Generating stats ...\n");
 
 		const string& fn = Conf::fn_output;
@@ -64,7 +64,6 @@ namespace YoutubeDataset {
 
 		if (_tweets.size() == 0)
 			throw runtime_error(str(boost::format("unexpected _tweets.size()=%d") % _tweets.size()));
-			//throw runtime_error(str(boost::format("Unable to popen: %1%") % cmd));
 
 		boost::posix_time::ptime* ca_begin = &((*_tweets.begin())->created_at);
 		boost::posix_time::ptime* ca_end = &((*_tweets.rbegin())->created_at);
@@ -102,6 +101,34 @@ namespace YoutubeDataset {
 
 		ofs.close();
 		cout << "  Generated file " << fn << " size=" << boost::filesystem::file_size(fn) << "\n";
+	}
+
+
+	void _MonthNumTweets() {
+		Util::CpuTimer _("Generating stats by months ...\n");
+
+		map<string, int> month_cnt;
+		for (auto& t: _tweets) {
+			// 2010-08-12 12:27:39
+			// 0123456
+			//cout << boost::format("%s\n") % t->created_at_str.substr(0, 7);
+			string month = t->created_at_str.substr(0, 7);
+			auto i = month_cnt.find(month);
+			if (i == month_cnt.end())
+				month_cnt.emplace(month, 1);
+			else
+				i->second ++;
+		}
+
+		for (auto const &e: month_cnt) {
+			cout << boost::format("  %s %6d\n") % e.first % e.second;
+		}
+	}
+
+
+	void GenStat() {
+		//_TimeNumTweetsCDF();
+		_MonthNumTweets();
 	}
 
 

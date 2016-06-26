@@ -17,7 +17,7 @@ Tweet::Tweet(ifstream& ifs) {
 
 	Util::ReadStr(ifs, created_at_str);
 	// Takes like 11sec for the 100% dataset
-	created_at = boost::posix_time::time_from_string(created_at_str);
+	//created_at = boost::posix_time::time_from_string(created_at_str);
 
 	ifs.read((char*)&geo_lati, sizeof(geo_lati));
 	ifs.read((char*)&geo_longi, sizeof(geo_longi));

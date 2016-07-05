@@ -5,9 +5,9 @@
 
 namespace Conf {
 	extern const std::string dn_data;
-	extern const std::string fn_tweets;
 
-	extern std::string fn_output;
+	extern const std::string dt_begin;
+	extern const std::string dt_end;
 
 	void Init(int argc, char* argv[]);
 	const std::string& Desc();

@@ -29,7 +29,8 @@ int main(int argc, char* argv[]) {
 
 		Conf::Init(argc, argv);
 
-		YoutubeDataset::Gen1YrFiles();
+		//YoutubeDataset::Gen1YrFiles();
+		YoutubeDataset::Gen6MonthFiles();
 		return 0;
 	} catch (const exception& e) {
 		cerr << e.what() << "\n";

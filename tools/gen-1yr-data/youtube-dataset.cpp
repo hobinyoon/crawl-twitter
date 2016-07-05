@@ -38,10 +38,6 @@ namespace YoutubeDataset {
 	}
 
 
-	// Datetime format: 2011-01-12 13:19:25
-	const string _dt_begin = "2013-11-01 00:00:00";
-	const string _dt_end   = "2014-11-01 00:00:00";
-
 	void _LoadTweets(const string& fn, vector<Tweet*>& tweets) {
 		Util::CpuTimer _(str(boost::format("Loading tweets from file %s ...\n") % fn));
 
@@ -55,11 +51,11 @@ namespace YoutubeDataset {
 			Tweet* t = new Tweet(ifs);
 
 			// Filter by created_at
-			if (t->created_at_str < _dt_begin) {
+			if (t->created_at_str < Conf::dt_begin) {
 				delete t;
 				continue;
 			}
-			if (_dt_end <= t->created_at_str) {
+			if (Conf::dt_end <= t->created_at_str) {
 				delete t;
 				break;
 			}
@@ -134,6 +130,21 @@ namespace YoutubeDataset {
 			_SetWR(tweets);
 
 			string fn_out = str(boost::format("%s-1yr") % fn1);
+			_Write(fn_out, tweets);
+		}
+	}
+
+
+	void Gen6MonthFiles() {
+		for (const string& fn: fns_src) {
+			string fn1 = str(boost::format("%s/%s") % Conf::dn_data % fn);
+			cout << boost::format("%s\n") % fn1;
+
+			vector<Tweet*> tweets;
+			_LoadTweets(fn1, tweets);
+			_SetWR(tweets);
+
+			string fn_out = str(boost::format("%s-6mo") % fn1);
 			_Write(fn_out, tweets);
 		}
 	}

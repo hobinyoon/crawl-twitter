@@ -14,11 +14,14 @@ using namespace std;
 
 namespace Conf {
 	const string dn_data = str(boost::format("%s/work/acorn-data") % getenv("HOME"));
-	const string fn_tweets = dn_data + "/tweets-100";
-	//const string fn_tweets = dn_data + "/tweets-w-lonely";
 
 	string _dn_output;
 	string fn_output;
+
+	// Datetime format: 2011-01-12 13:19:25
+	const string dt_begin = "2013-11-01 00:00:00";
+	//const string dt_end   = "2014-11-01 00:00:00";
+	const string dt_end   = "2014-05-01 00:00:00";
 
 	string _desc;
 
@@ -49,7 +52,6 @@ namespace Conf {
 		ss << "Conf:\n";
 		ss << std::boolalpha;
 		//ss << "  partial_load=" << partial_load << "\n";
-		ss << "  fn_tweets=" << fn_tweets << "\n";
 		ss << "  fn_output=" << fn_output << "\n";
 		_desc = ss.str();
 		cout << _desc;

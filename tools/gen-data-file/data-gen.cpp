@@ -76,7 +76,7 @@ namespace DataGen {
 		Util::CpuTimer _("Loading tweets from DB ...\n");
 		unique_ptr<sql::ResultSet> rs(_stmt->executeQuery(
 					"SELECT id, uid, created_at, geo_lati, geo_longi, youtube_video_id, hashtags FROM tweets "
-					// Useful while dev
+					// Useful during dev
 					//"WHERE id < 380000000000000000 "
 					"ORDER BY created_at "));
 

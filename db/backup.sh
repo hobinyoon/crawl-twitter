@@ -7,7 +7,7 @@ DB_NAME=twitter3
 CUR_DATETIME=`date +%y%m%d-%H%M%S`
 echo $CUR_DATETIME
 
-DN_BACKUP="/mnt/twitter/backup"
+DN_BACKUP="/mnt/data/twitter/backup"
 
 FN_SQL=$DN_BACKUP"/"$DB_NAME"-"$CUR_DATETIME".sql"
 FN_SQL_7Z=$FN_SQL".7z"

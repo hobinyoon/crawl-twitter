@@ -57,6 +57,8 @@ CREATE TABLE IF NOT EXISTS twitter3.users (
 	id BIGINT,
 	gen INT NOT NULL,	-- generation
 	added_at TIMESTAMP NULL DEFAULT NULL,
+	-- crawled_at is useful when playing with the Tweet (YouTube request)
+	-- density.
 	crawled_at TIMESTAMP NULL DEFAULT NULL,
 	status VARCHAR(2) NOT NULL, -- U(uncrawled seeded)
 															-- UC(uncrawled child), UP(uncrawled parent)

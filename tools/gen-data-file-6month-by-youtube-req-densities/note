@@ -1,0 +1,7 @@
+By YouTube request densities from 5% to 100% with a 5% increment.  It really
+controls the number of users.
+
+
+Dependencies
+------------
+$ sudo apt-get install -y libmysqlcppconn-dev

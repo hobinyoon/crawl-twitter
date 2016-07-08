@@ -223,7 +223,7 @@ namespace DataGen {
 	void _WriteTweetsToFile(const list<Tweet*> tweets) {
 		Util::CpuTimer _("Writing tweets to file ...\n");
 		size_t e_size = tweets.size();
-		const string fn = str(boost::format("%s/%s-tweets-%d")
+		const string fn = str(boost::format("%s/%s-tweets-%7d")
 				% Conf::dn_data_home % _cur_datetime % e_size);
 		ofstream ofs(fn, ios::binary);
 		if (! ofs.is_open())

@@ -175,7 +175,7 @@ namespace DataGen {
 					lonely_tweets.insert(*vi.second.begin());
 			}
 
-			for (auto it = tweets_before.begin(); it != tweets_before.end(); ) {
+			for (auto it = tweets_before.begin(); it != tweets_before.end(); it ++) {
 				if (lonely_tweets.find(*it) == lonely_tweets.end())
 					tweets_after.push_back(*it);
 			}
@@ -207,7 +207,7 @@ namespace DataGen {
 		};
 
 		set<UidVid> uid_vid_pairs;
-		for (auto it = tweets_before.begin(); it != tweets_before.end(); ) {
+		for (auto it = tweets_before.begin(); it != tweets_before.end(); it ++) {
 			UidVid k(*it);
 			if (uid_vid_pairs.find(k) == uid_vid_pairs.end()) {
 				tweets_after.push_back(*it);

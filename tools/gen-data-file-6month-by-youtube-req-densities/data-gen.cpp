@@ -294,11 +294,11 @@ namespace DataGen {
 			list<Tweet*> tweets_with_user;
 			_FilterOutTweetsWoUser(uids, tweets_all, tweets_with_user);
 
+			list<Tweet*> tweets_wo_lonely;
+			_SetUploaderTopicsAndFilterOutLonelyTweets(tweets_with_user, tweets_wo_lonely);
+
 			// For now, only tweets_with_user is used for the experiment.
 			_WriteTweetsToFile(tweets_with_user);
-
-			//list<Tweet*> tweets_wo_lonely;
-			//_SetUploaderTopicsAndFilterOutLonelyTweets(tweets_with_user, tweets_wo_lonely);
 
 			//list<Tweet*> tweets_wo_lonely_wo_repeated_accesses_from_the_same_user;
 			//_FilterOutRepeatedAccessFromSameUser(tweets_wo_lonely, tweets_wo_lonely_wo_repeated_accesses_from_the_same_user);

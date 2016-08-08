@@ -1,5 +1,4 @@
-#ifndef __DC_H__
-#define __DC_H__
+#pragma once
 
 #include <string>
 #include <vector>
@@ -20,5 +19,3 @@ namespace DCs {
 	DC* GetClosest(double lati, double longi);
 	const std::vector<DC*>& GetAll();
 };
-
-#endif

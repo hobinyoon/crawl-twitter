@@ -18,4 +18,6 @@ ADD_EXECUTABLE ( tr
 	main.cpp
 	op.cpp
 	util.cpp )
-TARGET_LINK_LIBRARIES ( tr ${Boost_LIBRARIES} mysqlcppconn )
+
+# TODO TARGET_LINK_LIBRARIES ( tr ${Boost_LIBRARIES} yaml-cpp mysqlcppconn )
+TARGET_LINK_LIBRARIES ( tr ${Boost_LIBRARIES} yaml-cpp )

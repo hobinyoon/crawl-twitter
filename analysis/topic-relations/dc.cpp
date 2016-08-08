@@ -60,25 +60,19 @@ namespace DCs {
 
 
 	void LoadDCs() {
-		const string& fn = Conf::fn_dc_coord;
-		cout << "Loading DCs from file " << fn << " ...\n";
+		cout << "Loading DCs ...\n";
 
-		ifstream ifs(fn.c_str());
-		if (! ifs.is_open())
-			throw runtime_error(str(boost::format("Unable to open file %1%") % fn));
-
-		string line;
-		while (getline(ifs, line)) {
-			if (line.length() == 0)
-				continue;
-			if (line[0] == '#')
-				continue;
+		auto delim = boost::is_any_of(", ");
+		for (const auto& n: Conf::Get("dc_coordinates")) {
+			const string& dc_name = n.first.as<string>();
 			vector<string> t;
-			boost::split(t, line, boost::is_any_of(" ,"));
-			if (t.size() != 3 && t.size() != 4)
-				continue;
-			//cout << line << endl;
-			_entries.push_back(new DC(t[0], atof(t[1].c_str()), atof(t[2].c_str())));
+			boost::split(t, n.second.as<string>(), delim, boost::token_compress_on);
+
+			//cout << boost::format("%s: [%s]\n") % dc_name % boost::algorithm::join(t, "|");
+			double longi = atof(t[0].c_str());
+			double lati  = atof(t[1].c_str());
+
+			_entries.push_back(new DC(dc_name, longi, lati));
 		}
 
 		sort(_entries.begin(), _entries.end(),

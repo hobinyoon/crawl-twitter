@@ -1,5 +1,4 @@
-#ifndef __UTIL_H__
-#define __UTIL_H__
+#pragma once
 
 #include <string>
 #include <boost/date_time/posix_time/posix_time.hpp>
@@ -25,5 +24,3 @@ namespace Util {
 		~CpuTimer();
 	};
 };
-
-#endif

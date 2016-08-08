@@ -7,15 +7,16 @@
 #include "conf.h"
 #include "util.h"
 
+
 using namespace std;
 
 namespace Conf {
-	const string dn_prj_home = Util::HomeDir() + "/work/pgr";
-	const string fn_dc_coord = dn_prj_home + "/conf/dc-coord";
+	YAML::Node _config;
+
 	size_t partial_load;
 
-	const string dn_data_home = "/mnt/mdc-data/pgr/twitter";
-	const string fn_tweets = dn_data_home + "/tweets-1rvpu";
+	// TODO: is this for 1 year or 6 months?
+	const string fn_tweets = Util::HomeDir() + "/work/acorn-data/150812-143151-tweets-5667779-1yr";
 
 	int max_output_lines;
 
@@ -41,13 +42,24 @@ namespace Conf {
 		partial_load = vm["partial_load"].as<size_t>();
 		max_output_lines = vm["max_output_lines"].as<int>();
 
+		// TODO: move these to the yaml
 		cout << "Conf:\n";
 		cout << std::boolalpha;
 		cout << "  partial_load=" << partial_load << "\n";
 		cout << "  max_output_lines=" << max_output_lines << "\n";
 	}
 
+	void _LoadYaml() {
+		string fn = str(boost::format("%s/config.yaml") % boost::filesystem::path(__FILE__).parent_path().string().c_str());
+		_config = YAML::LoadFile(fn);
+	}
+
 	void Init(int argc, char* argv[]) {
 		_ParseArgs(argc, argv);
+		_LoadYaml();
+	}
+
+	YAML::Node Get(string k) {
+		return _config[k];
 	}
 };

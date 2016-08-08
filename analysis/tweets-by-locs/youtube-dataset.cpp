@@ -88,6 +88,21 @@ namespace YoutubeDataset {
 		ofstream ofs(fn);
 		if (! ofs.is_open())
 			throw runtime_error(str(boost::format("unable to open file %s") % fn));
+
+		ofs << "# Legend circles and labels\n";
+		int lcs[] = {10, 100, 1000, 10000, 100000};
+		const char* lcsl[] = {"10^1", "10^2", "10^3", "10^4", "10^5"};
+		size_t lc_len = sizeof(lcs) / sizeof(int);
+		for (size_t i = 0; i < lc_len; i ++) {
+			ofs << boost::format("# %10.3f %10.3f %7d %8f %s\n")
+				% (-50.0 + 25.0 * i)
+				% -50.0
+				% lcs[i]
+				% _CircleSize(lcs[i])
+				% lcsl[i];
+		}
+		ofs << "\n";
+
 		for (auto cg: coord_group) {
 			double lo = 0.0;
 			double la = 0.0;
@@ -100,19 +115,6 @@ namespace YoutubeDataset {
 
 			ofs << boost::format("%10.3f %10.3f %7d %8f\n")
 				% lo % la % cg.second.size() % _CircleSize(cg.second.size());
-		}
-
-		// legends circles and labels
-		int lcs[] = {10, 100, 1000, 10000, 100000};
-		const char* lcsl[] = {"10^1", "10^2", "10^3", "10^4", "10^5"};
-		size_t lc_len = sizeof(lcs) / sizeof(int);
-		for (size_t i = 0; i < lc_len; i ++) {
-			ofs << boost::format("%10.3f %10.3f %7d %8f %s\n")
-				% (-50.0 + 25.0 * i)
-				% -50.0
-				% lcs[i]
-				% _CircleSize(lcs[i])
-				% lcsl[i];
 		}
 
 		ofs.close();

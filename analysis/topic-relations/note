@@ -1,0 +1,15 @@
+TODOs
+-----
+- Find attribute item interdependencies
+  - Topic - topic
+	- Topic - user
+	- There is no user - user interdependencies... wait that's not true.
+
+- By times (with 1-week sliding window), by locations (in the same data center)
+
+- Rename to analyze attribute item interdependency
+
+
+Done
+----
+used libyaml-cpp-dev 0.5.2-2

@@ -12,6 +12,8 @@ namespace Util {
 
 	std::string Indent(const std::string& in, int indent);
 
+	std::string Prepend(const std::string& a, const std::string& b);
+
 	void ClearLine();
 
 	std::string RunSubprocess(const std::string& cmd_);

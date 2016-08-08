@@ -39,6 +39,9 @@ namespace Conf {
 	const string fn_result = dn_output + "/youtube-op-locs";
 	const string fn_plot = fn_result + ".pdf";
 
+	const long cluster_granularity_longi = 2;
+	const long cluster_granularity_lati = 1;
+
 	string _desc;
 
 	void _ParseArgs(int argc, char* argv[]) {
@@ -69,16 +72,18 @@ namespace Conf {
 		partial_load = vm["partial_load"].as<size_t>();
 
 		stringstream ss;
-		ss << "Conf:\n";
 		ss << std::boolalpha;
-		ss << "  stat=" << stat << "\n";
-		ss << "  plot=" << plot << "\n";
-		ss << "  partial_load=" << partial_load << "\n";
-		ss << "  fn_tweets=" << fn_tweets << "\n";
-		ss << "  fn_result=" << fn_result << "\n";
-		ss << "  fn_plot=" << fn_plot << "\n";
+		ss << "stat=" << stat << "\n";
+		ss << "plot=" << plot << "\n";
+		ss << "partial_load=" << partial_load << "\n";
+		ss << "fn_tweets=" << fn_tweets << "\n";
+		ss << "fn_result=" << fn_result << "\n";
+		ss << "fn_plot=" << fn_plot << "\n";
+		ss << "cluster_granularity_longi=" << cluster_granularity_longi << "\n";
+		ss << "cluster_granularity_lati=" << cluster_granularity_lati << "\n";
 		_desc = ss.str();
-		cout << _desc;
+		cout << "Conf:\n";
+		cout << Util::Indent(_desc, 2);
 	}
 
 	void Init(int argc, char* argv[]) {

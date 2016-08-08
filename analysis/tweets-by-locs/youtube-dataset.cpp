@@ -49,8 +49,8 @@ namespace YoutubeDataset {
 			double lati;
 
 			RoCoord(double lo, double la)
-			//: longi(round(lo*2)/2), lati(round(la*2)/2)
-			: longi(round(lo/5)*5), lati(round(la/5)*5)
+			: longi(round(lo/Conf::cluster_granularity_longi) * Conf::cluster_granularity_longi)
+				, lati(round(la/Conf::cluster_granularity_lati) * Conf::cluster_granularity_lati)
 			{ }
 
 			bool operator < (const RoCoord& rhs) const {
@@ -88,6 +88,9 @@ namespace YoutubeDataset {
 		ofstream ofs(fn);
 		if (! ofs.is_open())
 			throw runtime_error(str(boost::format("unable to open file %s") % fn));
+
+		ofs << Util::Prepend(Conf::Desc(), "# ");
+		ofs << "\n";
 
 		ofs << "# Legend circles and labels\n";
 		int lcs[] = {10, 100, 1000, 10000, 100000};

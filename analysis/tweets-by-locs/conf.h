@@ -16,6 +16,9 @@ namespace Conf {
 
 	void Init(int argc, char* argv[]);
 	const std::string& Desc();
+
+	extern const long cluster_granularity_longi;
+	extern const long cluster_granularity_lati;
 };
 
 #endif

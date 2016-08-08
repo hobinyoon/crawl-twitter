@@ -2,9 +2,13 @@
 #include <pwd.h>
 #include <sys/types.h>
 #include <unistd.h>
+
 #include <fstream>
+#include <regex>
+
 #include <boost/algorithm/string.hpp>
 #include <boost/format.hpp>
+
 #include "util.h"
 
 using namespace std;
@@ -87,6 +91,14 @@ namespace Util {
 
 		return out;
 	}
+
+
+	// Prepend b at the beginning of every line of a
+	string Prepend(const string& a, const string& b) {
+		static const regex e("^|\n");
+		return regex_replace(a, e, "$0" + b);
+	}
+
 
 	void ClearLine() {
 		// http://en.wikipedia.org/wiki/ANSI_escape_code

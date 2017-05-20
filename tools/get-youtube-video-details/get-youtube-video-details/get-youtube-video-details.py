@@ -2,6 +2,7 @@
 
 import os
 import pprint
+import re
 import sys
 
 import cPickle as pickle
@@ -12,13 +13,43 @@ import Cons
 import YoutubeListVideos
 
 def GetVideoDetails():
-	ids = ["Ks-_Mh1QhMc", "c0KYU2j0TM4", "eIho2S0ZahI"]
-	vlist = YoutubeListVideos.List(ids)
-	#pprint.pprint(vlist)
+	fn = "../get-vids-to-query/.result/video-list"
+	vids = []
+	with open(fn) as fo:
+		for line in fo:
+			if len(line) == 0:
+				continue
+			if line[0] == "#":
+				continue
+			t = re.split(r" +", line)
+			if len(t) != 2:
+				raise RuntimeError("Unexpected")
+			vid = t[0]
+			#num_locs = t[1]
+			vids.append(vid)
+	#Cons.P(vids)
+
+	i = 0
+	items = []
+	got = 0
+	while i < len(vids):
+		j = min(len(vids), i + 50)
+		vids0 = vids[i:j]
+
+		#Cons.P(vids0)
+		vlist = YoutubeListVideos.List(vids0)
+		#pprint.pprint(vlist)
+		got += len(vlist["items"])
+		items += vlist["items"]
+		Cons.Pnnl("to_query=%d queried=%d(%.2f%%) got=%d(success_ratio=%.2f%%)" \
+				% (len(vids), j, (100.0 * j / len(vids)), got, (100.0 * got / j)))
+		Cons.ClearLine()
+		i += 50
+	Cons.P("to_query=%d queried=%d(%.2f%%) got=%d(success_ratio=%.2f%%)" \
+			% (len(vids), j, (100.0 * j / len(vids)), got, (100.0 * got / j)))
 
 	fn = "video-details.pkl"
 	with open(fn, "wb") as fo:
-		items = vlist["items"]
 		fo.write("%d\n" % len(items))
 		for i in items:
 			pickle.dump(i, fo, pickle.HIGHEST_PROTOCOL)

@@ -1,0 +1,5 @@
+Interesting.
+	View count >> num Tweets
+	Weak positive correlation.
+
+You can probably drop those Tweets where view count < 50,000

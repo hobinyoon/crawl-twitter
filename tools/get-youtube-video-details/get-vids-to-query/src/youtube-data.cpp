@@ -237,8 +237,8 @@ namespace YoutubeData {
 		ofs << Util::BuildHeader(fmt, "vid cnt") << "\n";
 
 		for (auto it = vidcnts.rbegin(); it != vidcnts.rend(); it ++) {
-			// Videos with at least 10 accesses
-			if (it->cnt < 10)
+			// Videos with at least 5 accesses
+			if (it->cnt < 5)
 				break;
 			ofs << boost::format(fmt + "\n") % it->vid % it->cnt;
 		}

@@ -104,7 +104,7 @@ def GenVideoDetailsFiles():
 			vids_to_query.append(vid)
 
 	# For dev
-	#vids_to_query = vids_to_query[0:50]
+	#vids_to_query = vids_to_query[0:150]
 
 	if len(vids_to_query) > 0:
 		vid_rvi_new = _QueryVideoDetails(vids_to_query)
@@ -115,7 +115,7 @@ def GenVideoDetailsFiles():
 			fn_out_pickled_new = "video-details-new.pkl"
 			with open(fn_out_pickled_new, "wb") as fo:
 				fo.write("%d\n" % len(vid_rvi))
-				for vid, rvi in vid_rvi.iteritems():
+				for vid, rvi in sorted(vid_rvi.iteritems()):
 					fo.write("%s\n" % vid)
 					pickle.dump(rvi, fo, pickle.HIGHEST_PROTOCOL)
 					fo.write("\n")

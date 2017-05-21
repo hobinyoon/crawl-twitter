@@ -1,11 +1,9 @@
 #!/usr/bin/gnuplot
 
-FN_IN = "get-youtube-video-details/video-detailed-merged"
+FN_IN = "get-youtube-video-details/video-info-concise"
 FN_OUT = "numtweets-vs-viewcnt.pdf"
 
 set print "-"
-#print sprintf("FN_IN=%s", FN_IN)
-#print sprintf("FN_OUT=%s", FN_OUT)
 
 if (1) {
 	set terminal unknown
@@ -14,6 +12,7 @@ if (1) {
 	X_MAX=GPVAL_DATA_X_MAX
 	Y_MIN=GPVAL_DATA_Y_MIN
 	Y_MAX=GPVAL_DATA_Y_MAX
+	print sprintf("X_MIN=%.0f X_MAX=%.0f Y_MIN=%.0f Y_MAX=%.0f", X_MIN, X_MAX, Y_MIN, Y_MAX)
 }
 
 set terminal pdfcairo enhanced size 2.3in, (2.3*0.85)in
@@ -30,8 +29,8 @@ set ylabel "View count"
 
 set logscale xy
 
-set xrange[:X_MAX]
-set yrange[:Y_MAX]
+set xrange[X_MIN:X_MAX]
+set yrange[Y_MIN:Y_MAX]
 
 plot FN_IN u 2:3 w p pt 7 pointsize 0.15 lc rgb "red" not
 

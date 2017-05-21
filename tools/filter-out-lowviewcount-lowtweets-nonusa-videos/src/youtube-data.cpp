@@ -163,11 +163,12 @@ namespace YoutubeData {
 	}
 
 	void FilteroutLowviewcntLownumtweets() {
-		Cons::MT _("Filtering out low-viwecnt-low-num-tweets tweets ...");
+		Cons::MT _("Filtering out low-viwecnt, low-num-tweets, non-usa tweets ...");
 
 		const string& fn = Conf::GetFn("youtube_video_info_file");
 
-		set<string> vids;
+		// High viewcnt videos
+		set<string> highvcvids;
 
 		ifstream ifs(fn);
 		if (! ifs.is_open())
@@ -187,44 +188,92 @@ namespace YoutubeData {
 				THROW(boost::format("Unexpected: [%s]") % line);
 			const string& id = t[0];
 
-			int num_locs = atoi(t[1].c_str());
-			if (num_locs < 5)
-				continue;
-
 			if (t[2] == "None")
 				continue;
 			long view_cnt = atol(t[2].c_str());
 			if (view_cnt < 50000)
 				continue;
 
-			vids.insert(id);
+			highvcvids.insert(id);
 		}
-		Cons::P(boost::format("Found %d videos that have 5 or more Tweets and 50000 or more view counts") % vids.size());
+		Cons::P(boost::format("Found %d videos that have 5 or more Tweets and 50000 or more view counts") % highvcvids.size());
 
-		// Filter out low-tweet-low-viewcnt videos
-		vector<Op*> new_entries;
-		int num_filtered_out = 0;
-		for (Op* op: _entries) {
-			auto it = vids.find(op->obj_id);
-			if (it == vids.end()) {
-				delete op;
-				num_filtered_out ++;
-			} else {
-				new_entries.push_back(op);
+		// Filter out low-viewcnt videos
+		{
+			vector<Op*> new_entries;
+			int num_filtered_out = 0;
+			for (Op* op: _entries) {
+				auto it = highvcvids.find(op->obj_id);
+				if (it == highvcvids.end()) {
+					delete op;
+					num_filtered_out ++;
+				} else {
+					new_entries.push_back(op);
+				}
 			}
+			size_t num_before = _entries.size();
+			_entries = new_entries;
+			Cons::P(boost::format("Filtered out %d (%.2f%%) low-viewcnt tweets. %d tweets now")
+					% num_filtered_out
+					% (100.0 * num_filtered_out / num_before)
+					% new_entries.size());
 		}
 
-		size_t num_before = _entries.size();
-		_entries = new_entries;
+		// Filter out non-usa videos
+		{
+			vector<Op*> new_entries;
+			int num_filtered_out = 0;
+			for (Op* op: _entries) {
+				if (op->in_usa == 'N') {
+					delete op;
+					num_filtered_out ++;
+				} else {
+					new_entries.push_back(op);
+				}
+			}
+			size_t num_before = _entries.size();
+			_entries = new_entries;
+			Cons::P(boost::format("Filtered out %d (%.2f%%) non-usa tweets. %d tweets now")
+					% num_filtered_out
+					% (100.0 * num_filtered_out / num_before)
+					% new_entries.size());
+		}
 
-		Cons::P(boost::format("filtered out %d (%.2f%%) tweets. Now %d tweets")
-				% num_filtered_out
-				% (100.0 * num_filtered_out / num_before)
-				% new_entries.size());
+		// Filter out low-num-tweets tweets
+		{
+			map<string, int> vid_cnt;
+			for (Op* op: _entries) {
+				const string& vid = op->obj_id;
+				auto it = vid_cnt.find(vid);
+				if (it == vid_cnt.end()) {
+					vid_cnt[vid] = 1;
+				} else {
+					it->second ++;
+				}
+			}
+
+			vector<Op*> new_entries;
+			int num_filtered_out = 0;
+			for (Op* op: _entries) {
+				const string& vid = op->obj_id;
+				if (vid_cnt[vid] < 5) {
+					delete op;
+					num_filtered_out ++;
+				} else {
+					new_entries.push_back(op);
+				}
+			}
+			size_t num_before = _entries.size();
+			_entries = new_entries;
+			Cons::P(boost::format("Filtered out %d (%.2f%%) low-num_tweets tweets. %d tweets now")
+					% num_filtered_out
+					% (100.0 * num_filtered_out / num_before)
+					% new_entries.size());
+		}
 	}
 
 	void Save() {
-		const string fn = str(boost::format("%s-nolowviewcnts-%d") % Conf::GetFn("in_file") % _entries.size());
+		const string fn = str(boost::format("%s-nolowviewcnts-inusa-%d") % Conf::GetFn("in_file") % _entries.size());
 		Cons::MT _(boost::format("Writing output file %s ...") % fn);
 
 		ofstream ofs(fn, ios::binary);

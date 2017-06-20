@@ -107,7 +107,7 @@ namespace YoutubeDataset {
 
 
 	void _NumTweetsByDay() {
-		Cons::MT _("Generating stats by months ...\n");
+		Cons::MT _("Generating stats by months ...");
 
 		map<string, int> day_cnt;
 		for (auto& t: _ops) {
@@ -122,9 +122,17 @@ namespace YoutubeDataset {
 				i->second ++;
 		}
 
-		for (auto const &e: day_cnt) {
-			cout << boost::format("  %s %6d\n") % e.first % e.second;
-		}
+		string dn = Conf::GetFn("out_dir");
+		boost::filesystem::create_directory(dn);
+
+		string out_fn = str(boost::format("%s/videoreqs-by-day") % dn);
+		ofstream ofs(out_fn);
+		if (! ofs.is_open())
+			throw runtime_error(str(boost::format("unable to open file %s") % out_fn));
+		for (const auto e: day_cnt)
+			ofs << boost::format("%s %6d\n") % e.first % e.second;
+		ofs.close();
+		Cons::P(boost::format("Created %s %d") % out_fn % boost::filesystem::file_size(out_fn));
 	}
 
 
@@ -135,7 +143,7 @@ namespace YoutubeDataset {
 
 
 	void FreeMem() {
-		Cons::MT _("Freeing memory ...\n");
+		Cons::MT _("Freeing memory ...");
 
 		for (auto& r: _ops)
 			delete r;

@@ -1,0 +1,3 @@
+out_dir: .output
+time_interval_granularity: "day"
+fn_tweets: "~/work/castnet-data/youtube/150812-143151-tweets-5667779-noads-3837612"

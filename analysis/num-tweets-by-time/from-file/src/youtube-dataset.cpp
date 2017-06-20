@@ -4,6 +4,7 @@
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
 #include "conf.h"
+#include "cons.h"
 #include "tweet.h"
 #include "stat.h"
 #include "util.h"
@@ -27,8 +28,8 @@ namespace YoutubeDataset {
 
 
 	void _LoadTweets() {
-		const string& fn = Conf::fn_tweets;
-		Util::CpuTimer _(str(boost::format("Loading tweets from file %s ...\n") % fn));
+		const string& fn = Conf::GetFn("fn_tweets");
+		Cons::MT _(str(boost::format("Loading tweets from file %s ...\n") % fn));
 
 		ifstream ifs(fn, ios::binary);
 		if (! ifs.is_open())
@@ -49,9 +50,9 @@ namespace YoutubeDataset {
 
 
 	void _TimeNumTweetsCDF() {
-		Util::CpuTimer _("Generating stats ...\n");
+		Cons::MT _("Generating stats ...\n");
 
-		const string& fn = Conf::fn_output;
+		const string& fn = "num-tweets-by-time";
 		ofstream ofs(fn);
 		if (! ofs.is_open())
 			throw runtime_error(str(boost::format("unable to open file %s") % fn));
@@ -105,7 +106,7 @@ namespace YoutubeDataset {
 
 
 	void _MonthNumTweets() {
-		Util::CpuTimer _("Generating stats by months ...\n");
+		Cons::MT _("Generating stats by months ...\n");
 
 		map<string, int> month_cnt;
 		for (auto& t: _tweets) {
@@ -133,7 +134,7 @@ namespace YoutubeDataset {
 
 
 	void FreeMem() {
-		Util::CpuTimer _("Freeing memory ...\n");
+		Cons::MT _("Freeing memory ...\n");
 
 		for (auto& r: _tweets)
 			delete r;

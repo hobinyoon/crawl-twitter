@@ -28,6 +28,7 @@ int main(int argc, char* argv[]) {
 		signal(SIGINT, on_signal);
 
 		Conf::Init(argc, argv);
+		exit(0);
 
 		YoutubeDataset::Load();
 		YoutubeDataset::GenStat();

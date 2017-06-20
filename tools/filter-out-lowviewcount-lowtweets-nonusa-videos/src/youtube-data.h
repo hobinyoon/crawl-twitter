@@ -2,7 +2,8 @@
 
 namespace YoutubeData {
 	void Load();
-	void FilteroutLowviewcntLownumtweets();
+	//void FilteroutLowviewcntLownumtweets();
+	void FilteroutNonusatweets();
 	void Save();
 	void FreeMem();
 };

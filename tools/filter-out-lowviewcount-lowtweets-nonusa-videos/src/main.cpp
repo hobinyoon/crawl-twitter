@@ -22,7 +22,8 @@ int main(int argc, char* argv[]) {
 		Conf::Init(argc, argv);
 
 		YoutubeData::Load();
-		YoutubeData::FilteroutLowviewcntLownumtweets();
+		//YoutubeData::FilteroutLowviewcntLownumtweets();
+		YoutubeData::FilteroutNonusatweets();
 		YoutubeData::Save();
 		YoutubeData::FreeMem();
 	} catch (const exception& e) {

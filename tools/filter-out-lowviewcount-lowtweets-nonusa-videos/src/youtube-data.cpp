@@ -162,6 +162,7 @@ namespace YoutubeData {
 		//_SetCreatedAtPt();
 	}
 
+#if 0
 	void FilteroutLowviewcntLownumtweets() {
 		Cons::MT _("Filtering out low-viwecnt, low-num-tweets, non-usa tweets ...");
 
@@ -271,9 +272,33 @@ namespace YoutubeData {
 					% new_entries.size());
 		}
 	}
+#endif
+
+	void FilteroutNonusatweets() {
+		Cons::MT _("Filtering out non-usa tweets ...");
+
+		// Filter out non-usa videos
+		vector<Op*> new_entries;
+		int num_filtered_out = 0;
+		for (Op* op: _entries) {
+			if (op->in_usa == 'N') {
+				delete op;
+				num_filtered_out ++;
+			} else {
+				new_entries.push_back(op);
+			}
+		}
+		size_t num_before = _entries.size();
+		_entries = new_entries;
+		Cons::P(boost::format("Filtered out %d (%.2f%%) non-usa tweets. %d tweets now")
+				% num_filtered_out
+				% (100.0 * num_filtered_out / num_before)
+				% new_entries.size());
+	}
 
 	void Save() {
-		const string fn = str(boost::format("%s-nolowviewcnts-inusa-%d") % Conf::GetFn("in_file") % _entries.size());
+		//const string fn = str(boost::format("%s-nolowviewcnts-inusa-%d") % Conf::GetFn("in_file") % _entries.size());
+		const string fn = str(boost::format("%s-inusa-%d") % Conf::GetFn("in_file") % _entries.size());
 		Cons::MT _(boost::format("Writing output file %s ...") % fn);
 
 		ofstream ofs(fn, ios::binary);

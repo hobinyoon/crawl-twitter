@@ -1,3 +1,4 @@
 out_dir: .output
 time_interval_granularity: "day"
-fn_tweets: "~/work/castnet-data/youtube/150812-143151-tweets-5667779-noads-3837612-nolowviewcnts-inusa-118386"
+#fn_tweets: "~/work/castnet-data/youtube/150812-143151-tweets-5667779-noads-3837612-nolowviewcnts-inusa-118386"
+fn_tweets: "~/work/castnet-data/youtube/150812-143151-tweets-5667779-noads-3837612-inusa-551666"

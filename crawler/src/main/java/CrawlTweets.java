@@ -1,9 +1,12 @@
 package crawltwitter;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.lang.InterruptedException;
 import java.lang.Math;
 import java.util.Date;
 import java.util.List;
+
 import twitter4j.GeoLocation;
 import twitter4j.HttpResponseCode;
 import twitter4j.IDs;
@@ -26,16 +29,22 @@ public class CrawlTweets {
 					while (! _stop_requested) {
 						_CrawlUserTweets();
 					}
-				} catch (InterruptedException e) {
-					;
 				} catch (Exception e) {
-					StdoutWriter.W(e.toString());
-					e.printStackTrace();
-					System.exit(1);
+					StringWriter sw = new StringWriter();
+					e.printStackTrace(new PrintWriter(sw));
+					StdoutWriter.W(String.format("Exception: %s\nStack: %s", e, sw));
 				}
 			}
 		};
 		_t.start();
+		try {
+			_t.join();
+		} catch (InterruptedException e) {
+			StringWriter sw = new StringWriter();
+			e.printStackTrace(new PrintWriter(sw));
+			StdoutWriter.W(String.format("Exception: %s\nStack: %s", e, sw));
+		}
+		_t = null;
 	}
 
 	public static void Stop() {
@@ -91,7 +100,7 @@ public class CrawlTweets {
 
 		GeoLocation known_gl = null;	// youngest known location older then the current (unknown) one.
 		while (! _stop_requested) {
-			//StdoutWriter.W(String.format("max_id=%d", max_id));
+			StdoutWriter.W(String.format("max_id=%d", max_id));
 			p.setMaxId(max_id);
 			List<Status> statuses = null;
 			long sleep_time = 1000;
@@ -131,7 +140,7 @@ public class CrawlTweets {
 				}
 			}
 
-			//StdoutWriter.W(String.format("getUserTimeline: Got %d", statuses.size()));
+			StdoutWriter.W(String.format("getUserTimeline: Got %d", statuses.size()));
 			long min_id = -1;
 			boolean hit_oldest_date = false;
 			for (Status s : statuses) {

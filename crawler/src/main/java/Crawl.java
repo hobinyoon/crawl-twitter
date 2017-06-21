@@ -27,6 +27,7 @@ public final class Crawl {
 				StreamSeedUsers.Start();
 
 			CrawlTweets.Run();
+			Cleanup();
 		} catch (Exception e) {
 			e.printStackTrace();
 			System.out.println("Exception caught: " + e);

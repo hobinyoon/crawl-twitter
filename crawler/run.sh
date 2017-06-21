@@ -3,10 +3,13 @@
 set -e
 set -u
 
+# Useful for debugging
+#set -x
+
 BIN_DIR=`cd "$( dirname "$0" )"; pwd`
 pushd $BIN_DIR > /dev/null
 DEF_CLASS_PATH_FILE=.dep-class-path
-TARGET_JAR=target/crawl-twitter-0.1.jar
+TARGET_JAR=target/crawl-twitter-0.2.jar
 
 function build_src {
 	need_build=false

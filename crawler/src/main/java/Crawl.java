@@ -23,8 +23,6 @@ public final class Crawl {
 			StdoutWriter.Start();
 			DB.Init();
 
-			// It seems that this needs to go through the end of the main function.
-			// strange thread model.
 			if (Conf.stream_seed_users)
 				StreamSeedUsers.Start();
 

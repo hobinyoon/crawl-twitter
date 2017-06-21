@@ -1,5 +1,9 @@
 package crawltwitter;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
@@ -13,15 +17,12 @@ import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 
 public final class Conf {
-	public static boolean stream_seed_users;
+	public static boolean stream_seed_users = false;
 	public static String db_ipaddr = null;
 
 	public static String db_url = null;
 	public static String db_user = "twitter";
-	public static String db_pass = "twitterpass";
-
-	public static String fn_twitter_credential_stream = System.getProperty("user.home") + "/private/.twitter_auth/crawl-seed-users";
-	public static String fn_twitter_credentials = System.getProperty("user.home") + "/private/.twitter_auth/credentials";
+	public static String db_pass = null;
 
 	public static Date tweet_oldest_date = null;
 	public static Date tweet_youngest_date = null;
@@ -34,19 +35,41 @@ public final class Conf {
 
 	public static int NEXT_CHECK_OUT_AFTER_SEC = 3600;
 
-	static {
-		Calendar cal = Calendar.getInstance();
-		//cal.set(2013, 8, 1, 0, 0, 0);	// 8 is September
-		//tweet_oldest_date = cal.getTime();
-
-		cal.set(2015, 4, 1, 0, 0, 0);
-		tweet_youngest_date = cal.getTime();
-
+	private static void _Init() {
 		try {
+			// Read the password
+			{
+				String fn = String.format("%s/.my.conf", System.getProperty("user.home"));
+				//String fn = String.format("%s/.my.cnf", System.getProperty("user.home"));
+				try (BufferedReader br = new BufferedReader(new FileReader(fn))) {
+					String line;
+					while ((line = br.readLine()) != null) {
+						StdoutWriter.W(line);
+					}
+				}
+
+				// If this were a static initialization block, you can't call System.exit() here.
+				// It triggers ShutdownHook of the main thread, which calls StdoutWriter.Stop(),
+				// which looks at Conf.stream_seed_users, which is, I think, not ready yet,
+				// because this static initialization block is not finished.
+				//
+				// When it's a regular function, it's okay. There's no such deadlock.
+				System.exit(1);
+			}
+
+			Calendar cal = Calendar.getInstance();
+			// TODO: Use a YAML configuration file
+			cal.set(2016, 5, 1, 0, 0, 0);	// 5 is June. Not intuitive.
+			tweet_oldest_date = cal.getTime();
+
+			cal.set(2017, 5, 21, 0, 0, 0);
+			tweet_youngest_date = cal.getTime();
+
 			ip = _GetIPv4Addr();
-		} catch (SocketException e) {
-			e.printStackTrace();
-			System.out.println("Exception caught: " + e);
+		} catch (Exception e) {
+			StringWriter sw = new StringWriter();
+			e.printStackTrace(new PrintWriter(sw));
+			StdoutWriter.W(String.format("Exception: %s\nStack trace: %s", e, sw));
 			System.exit(1);
 		}
 	}
@@ -73,6 +96,8 @@ public final class Conf {
 
 	public static void ParseArgs(String[] args)
 		throws java.io.IOException, java.text.ParseException, java.lang.InterruptedException {
+		_Init();
+
 		OptionSet options = _opt_parser.parse(args);
 		if (options.has("help")) {
 			_PrintHelp();

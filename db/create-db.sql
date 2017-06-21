@@ -85,23 +85,15 @@ CREATE TABLE IF NOT EXISTS twitter4.tweets (
 	geo_lati DOUBLE NOT NULL,
 	geo_longi DOUBLE NOT NULL,
 	youtube_video_id VARCHAR(22) NOT NULL,
-	-- hashtags VARCHAR(450) NOT NULL,
 	rt_id BIGINT NOT NULL,	-- -1 when not retweet
 	rt_uid BIGINT NOT NULL,	-- -1 when not retweet
-	-- text VARCHAR(450) NOT NULL,	-- give some cushion for utf8
-	child_uids VARCHAR(2200),	-- child tweets (retweet of this tweets)' uids
-														-- max 2200 = (10 + 1) * 200
-														--   example uid 2740470659
-														--               0123456789
-														-- TODO: I wonder why the max number of child tweets is 200?
 	PRIMARY KEY (id),
 	INDEX (uid),
 	INDEX (created_at),
 	INDEX (rt_id),
 	INDEX (rt_uid),
-	INDEX (youtube_video_id),
-	-- TODO: do you need this index?
-	INDEX (child_uids));
+	INDEX (youtube_video_id)
+	);
 
 CREATE TABLE IF NOT EXISTS twitter4.meta (
 	k VARCHAR(30) NOT NULL,

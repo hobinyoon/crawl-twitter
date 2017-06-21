@@ -5,7 +5,6 @@ import java.lang.Math;
 import java.util.Date;
 import java.util.List;
 import twitter4j.GeoLocation;
-import twitter4j.HashtagEntity;
 import twitter4j.HttpResponseCode;
 import twitter4j.IDs;
 import twitter4j.Paging;
@@ -43,7 +42,6 @@ public class CrawlTweets {
 		try {
 			_stop_requested = true;
 			if (_t != null) {
-				_t.interrupt();
 				_t.join();
 				StdoutWriter.W("CrawlTweets stopped.");
 			}
@@ -65,8 +63,9 @@ public class CrawlTweets {
 		DB.UserToCrawl u = DB.GetUserToCrawl();
 		Mon.user_being_crawled = u;
 
-		// A tweet on Apr 1, 2015. Althought not a tight bound, should be good enough.
-		long max_id = 583263500887191552L;
+		// Init max_id so that all user timeline crawling has the same youngest time bound
+		//   A tweet from Jul 21, 2017
+		long max_id = 877553326690361348L;
 
 		if (_tpt == null)
 			_tpt = TwitterPool.GetTwitter();
@@ -79,7 +78,7 @@ public class CrawlTweets {
 			p.setMaxId(max_id);
 			List<Status> statuses = null;
 			long sleep_time = 1000;
-			do {
+			while (true) {
 				try {
 					if (_stop_requested) return;
 					statuses = _tpt.twitter.getUserTimeline(u.id, p);
@@ -105,7 +104,7 @@ public class CrawlTweets {
 						DB.SetUserNotFound(u);
 						return;
 					} else {
-						// It can be 130(Over capacity), 131(Internal error), or anything.
+						// It can be 130 (Over capacity), 131 (Internal error), or anything.
 						StdoutWriter.W(String.format("uid=%d token=%s TwitterException=[%s]\n"
 									+ "Waiting %d ms and retrying ...",
 									u.id, _tpt.tc.token, e, sleep_time));
@@ -113,11 +112,11 @@ public class CrawlTweets {
 						sleep_time *= 2;
 					}
 				}
-			} while (true);
+			}
 
 			//StdoutWriter.W(String.format("getUserTimeline: Got %d", statuses.size()));
 			long min_id = -1;
-			//boolean hit_oldest_date = false;
+			boolean hit_oldest_date = false;
 			for (Status s : statuses) {
 				//StdoutWriter.W(DataObjectFactory.getRawJSON(s));
 				long id = s.getId();
@@ -138,10 +137,10 @@ public class CrawlTweets {
 				Date ca = s.getCreatedAt();
 				if (ca.after(Conf.tweet_youngest_date))
 					continue;
-				//if (ca.before(Conf.tweet_oldest_date)) {
-				//	hit_oldest_date = true;
-				//	break;
-				//}
+				if (ca.before(Conf.tweet_oldest_date)) {
+					hit_oldest_date = true;
+					break;
+				}
 
 				if (known_gl == null)
 					continue;
@@ -156,31 +155,6 @@ public class CrawlTweets {
 				if (youtube_video_id == null)
 					continue;
 
-				// filter ones with hashtags. space is not allowed in them and and is
-				// used to delimit multiple of them in DB.
-				HashtagEntity[] hashtags = s.getHashtagEntities();
-				if (hashtags.length == 0)
-					continue;
-				StringBuilder ht_string = new StringBuilder();
-				{
-					boolean empty = true;
-					for (int i = 0; i < hashtags.length; i ++) {
-						String ht = hashtags[i].getText();
-						// we don't count hashtag "youtube". The tweet always has a youtube
-						// link. It's too common and won't help distinguish videos.
-						if (ht.equalsIgnoreCase("youtube"))
-							continue;
-						if (empty) {
-							empty = false;
-						} else {
-							ht_string.append(" ");
-						}
-						ht_string.append(ht);
-					}
-					if (empty)
-						continue;
-				}
-
 				long rt_id = -1;
 				long rt_uid = -1;
 				if (s.isRetweet()) {
@@ -193,50 +167,58 @@ public class CrawlTweets {
 				int rt_cnt = s.getRetweetCount();
 				IDs c_uids = null;
 				if (rt_cnt > 0) {
-					long sleep_time1 = 1000;
-					do {
-						try {
-							if (_stop_requested) return;
-							c_uids = _tpt.twitter.getRetweeterIds(id, 200, -1);
-							_tpt.IncReqMade();
-							break;
-						} catch (TwitterException e) {
-							if (e.exceededRateLimitation()) {
-								int sec_until_reset = e.getRateLimitStatus().getSecondsUntilReset();
-								//StdoutWriter.W(String.format("rate-limited: %s", e));
-								_tpt.SetRateLimitedAndWait(sec_until_reset);
-								_tpt = TwitterPool.GetTwitter();
-							} else if (e.getStatusCode() == HttpResponseCode.UNAUTHORIZED) {
-								// 401: UNAUTHORIZED
-								if (e.getErrorCode() == 89) {
-									// "Invalid or expired token"
-									StdoutWriter.W(String.format("uid=%d token=%s TwitterException: [%s]",
-												u.id, _tpt.tc.token, e));
-									System.exit(0);
+					//StdoutWriter.W(String.format("The tweet is retweeted. Getting child users: id=%d rt_cnt=%d", id, rt_cnt));
+					long cursor = -1;
+					while (true) {
+						long sleep_time1 = 1000;
+						while (true) {
+							try {
+								if (_stop_requested) return;
+								c_uids = _tpt.twitter.getRetweeterIds(id, 200, cursor);
+								_tpt.IncReqMade();
+								break;
+							} catch (TwitterException e) {
+								if (e.exceededRateLimitation()) {
+									int sec_until_reset = e.getRateLimitStatus().getSecondsUntilReset();
+									//StdoutWriter.W(String.format("rate-limited: %s", e));
+									_tpt.SetRateLimitedAndWait(sec_until_reset);
+									_tpt = TwitterPool.GetTwitter();
+								} else if (e.getStatusCode() == HttpResponseCode.UNAUTHORIZED) {
+									// 401: UNAUTHORIZED
+									if (e.getErrorCode() == 89) {
+										// "Invalid or expired token"
+										StdoutWriter.W(String.format("uid=%d token=%s TwitterException: [%s]",
+													u.id, _tpt.tc.token, e));
+										System.exit(0);
+									}
+									DB.SetUserUnauthorized(u);
+									return;
+								} else if (e.getStatusCode() == HttpResponseCode.NOT_FOUND) {
+									DB.SetUserNotFound(u);
+									return;
+								} else {
+									// It can be 130 (Over capacity), 131 (Internal error), or anything.
+									StdoutWriter.W(String.format("uid=%d token=%s TwitterException=[%s]\n"
+												+ "Waiting %d ms and retrying ...",
+												u.id, _tpt.tc.token, e, sleep_time1));
+									Mon.Sleep(sleep_time1);
+									sleep_time1 *= 2;
 								}
-								DB.SetUserUnauthorized(u);
-								return;
-							} else if (e.getStatusCode() == HttpResponseCode.NOT_FOUND) {
-								DB.SetUserNotFound(u);
-								return;
-							} else {
-								// It can be 130(Over capacity), 131(Internal error), or anything.
-								StdoutWriter.W(String.format("uid=%d token=%s TwitterException=[%s]\n"
-											+ "Waiting %d ms and retrying ...",
-											u.id, _tpt.tc.token, e, sleep_time1));
-								Mon.Sleep(sleep_time1);
-								sleep_time1 *= 2;
 							}
 						}
-					} while (true);
-					DB.AddChildUsersToCrawl(c_uids.getIDs(), u.gen);
-					//StdoutWriter.W(String.format("The tweet is retweeted. Need to get children: id=%d rt_cnt=%d", id, rt_cnt));
+						DB.AddChildUsersToCrawl(c_uids.getIDs(), u.gen);
+
+						if (c_uids.hasNext()) {
+							cursor = c_uids.getNextCursor();
+						} else {
+							break;
+						}
+					}
 				}
 
-				DB.AddTweet(id, u.id, ca, known_gl, youtube_video_id, ht_string.toString(), rt_id, rt_uid, s.getText(), _IDsToStr(c_uids));
+				DB.AddTweet(id, u.id, ca, known_gl, youtube_video_id, rt_id, rt_uid);
 			}
-			//if (statuses.size() == 0 || min_id == -1 || hit_oldest_date) {
-			if (statuses.size() == 0 || min_id == -1) {
+			if (statuses.size() == 0 || min_id == -1 || hit_oldest_date) {
 				DB.SetUserCrawled(u);
 				break;
 			}

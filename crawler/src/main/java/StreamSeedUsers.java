@@ -24,8 +24,8 @@ public class StreamSeedUsers {
 			@Override
 			public void onStatus(Status status) {
 				try {
-					//System.out.println(status);
-					//System.out.println("@" + status.getUser().getScreenName() + " [" + status.getText() + "]");
+					//StdoutWriter.W(status.toString());
+					//StdoutWriter.W("@" + status.getUser().getScreenName() + " [" + status.getText() + "]");
 					Mon.num_users_to_crawl_streamed ++;
 
 					do {
@@ -33,14 +33,16 @@ public class StreamSeedUsers {
 						//if (status.getUser().getCreatedAt().after(Conf.user_ca_oldest_date))
 						//	break;
 
-						// we are interested in retweets only.
-						if (! status.isRetweet())
-							break;
-						// Check if the parent tweet has location. Retweets does not have
-						// geolocation.
-						// https://dev.twitter.com/docs/streaming-apis/parameters#locations
-						if (status.getRetweetedStatus().getGeoLocation() == null)
-							break;
+						if (false) {
+							// We are interested in retweets only. Hmm. Not sure. It doesn't have to.
+							if (! status.isRetweet())
+								break;
+
+							// Check if the parent tweet has location. Retweets does not have geolocation.
+							// https://dev.twitter.com/docs/streaming-apis/parameters#locations
+							if (status.getRetweetedStatus().getGeoLocation() == null)
+								break;
+						}
 
 						String youtube_video_id = null;
 						for (URLEntity e: status.getURLEntities()) {

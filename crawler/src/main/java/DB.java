@@ -456,7 +456,7 @@ public class DB {
 						//	+ "WHERE status IN ('UP', 'UC') "
 						//	+ "AND id < (RAND() * (SELECT MAX(id) FROM users))";
 
-						final String q1 = "SELECT id FROM users WHERE status IN ('UP', 'UC') "
+						final String q1 = "SELECT id FROM users WHERE status IN ('UP', 'UC', 'U') "
 							+ "ORDER BY RAND() LIMIT 1";
 						ResultSet rs1 = stmt.executeQuery(q1);
 						if (rs1.next()) {

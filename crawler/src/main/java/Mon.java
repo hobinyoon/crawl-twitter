@@ -45,8 +45,10 @@ public class Mon {
 	static public String Status() {
 		StringBuilder sb = new StringBuilder();
 		sb.append(status);
-		if (status == 'S')
+		if (status == 'S') {
+			sb.append("-");
 			sb.append(cur_sleep_amount);
+		}
 		return sb.toString();
 	}
 

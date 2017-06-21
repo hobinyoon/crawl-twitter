@@ -60,8 +60,25 @@ public class CrawlTweets {
 	}
 
 	static void _CrawlUserTweets() throws Exception {
-		DB.UserToCrawl u = DB.GetUserToCrawl();
-		Mon.user_being_crawled = u;
+		DB.UserToCrawl u;
+		while (true) {
+			u = DB.GetUserToCrawl();
+			if (u.id == -1) {
+				// No users to crawl
+				if (_stop_requested) {
+					StdoutWriter.W("No users to crawl. Stop requested.");
+					return;
+				} else {
+					StdoutWriter.W("No users to crawl. Retrying in 1 sec.");
+					Mon.Sleep(1000);
+					continue;
+				}
+			} else {
+				// We've got a user to crawl its timeline.
+				Mon.user_being_crawled = u;
+				break;
+			}
+		}
 
 		// Init max_id so that all user timeline crawling has the same youngest time bound
 		//   A tweet from Jul 21, 2017

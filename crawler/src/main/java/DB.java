@@ -466,13 +466,11 @@ public class DB {
 				}
 
 				if (id == -1) {
-					StdoutWriter.W("No user to crawl. will try again in 1 sec.");
-					Mon.Sleep(1000);
-					continue;
+					return new UserToCrawl(-1, -1);
 				}
 
 				{
-					// Check out. This prevents races between crawlers.
+					// Check out the user id. This prevents races between crawlers.
 					final String q = String.format("UPDATE users "
 							+ "SET check_out_at=NOW(), check_out_ip='%s' "
 							+ "WHERE id=%d AND "
@@ -644,7 +642,7 @@ public class DB {
 	//				return false;
 	//		}
 	//		{
-	//			String q = String.format("INSERT INTO twitter3.tweets "
+	//			String q = String.format("INSERT INTO twitter4.tweets "
 	//					+ "SELECT * FROM twitter.tweets WHERE uid=%d", u.id);
 	//			int rows_updated = stmt.executeUpdate(q);
 	//			Mon.num_crawled_tweets_new += rows_updated;

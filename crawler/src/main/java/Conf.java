@@ -12,6 +12,8 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
@@ -39,13 +41,19 @@ public final class Conf {
 		try {
 			// Read the password
 			{
-				String fn = String.format("%s/.my.conf", System.getProperty("user.home"));
-				//String fn = String.format("%s/.my.cnf", System.getProperty("user.home"));
+				String fn = String.format("%s/.my.cnf", System.getProperty("user.home"));
 				try (BufferedReader br = new BufferedReader(new FileReader(fn))) {
 					String line;
 					while ((line = br.readLine()) != null) {
-						StdoutWriter.W(line);
+						//StdoutWriter.W(line);
+						Pattern pattern = Pattern.compile("password=(.*)");
+						Matcher matcher = pattern.matcher(line);
+						if (matcher.find()) {
+							db_pass = matcher.group(1);
+						}
 					}
+					if (db_pass == null)
+						throw new RuntimeException("Unexpected");
 				}
 
 				// If this were a static initialization block, you can't call System.exit() here.
@@ -54,7 +62,7 @@ public final class Conf {
 				// because this static initialization block is not finished.
 				//
 				// When it's a regular function, it's okay. There's no such deadlock.
-				System.exit(1);
+				//System.exit(1);
 			}
 
 			Calendar cal = Calendar.getInstance();
@@ -111,7 +119,7 @@ public final class Conf {
 
 		stream_seed_users = options.has("stream_seed_users");
 		db_ipaddr = (String) options.valueOf("db_ipaddr");
-		db_url = String.format("jdbc:mysql://%s:3306/twitter3?useUnicode=true&characterEncoding=utf-8", Conf.db_ipaddr);
+		db_url = String.format("jdbc:mysql://%s:3306/twitter4?useUnicode=true&characterEncoding=utf-8", Conf.db_ipaddr);
 
 		System.out.printf("Conf:\n");
 		System.out.printf("  my ip addr: %s\n", ip);

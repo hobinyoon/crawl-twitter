@@ -7,7 +7,9 @@ import java.util.Arrays;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.List;
+
 import java.awt.geom.Path2D;
+import java.awt.geom.PathIterator;
 
 
 public final class UsaMap {
@@ -41,7 +43,9 @@ public final class UsaMap {
       double lon = tlr.nextDouble(-124.848974, -66.885444);
       double lat = tlr.nextDouble(24.396308, 49.384358);
 
-      // 10,000 point test: 2010 ms.
+      // 10,000 point test:
+      //   Without bounding box test: 2010 ms.
+      //   With bounding box test   :   96 ms.
       // Random doubles generation overhead is negligible: 3 ms.
       if (Contains(lon, lat))
         num_contains ++;
@@ -57,7 +61,45 @@ public final class UsaMap {
         );
   }
 
+  static class BB {
+    double x0, x1, y0, y1;
+
+    BB(Path2D.Double polygon) {
+      boolean first = true;
+      for (PathIterator pi = polygon.getPathIterator(null); pi.isDone() == false; ) {
+        double[] coordinates = new double[6];
+        int type = pi.currentSegment(coordinates);
+        if (type == PathIterator.SEG_LINETO) {
+          double x = coordinates[0];
+          double y = coordinates[1];
+          if (first) {
+            x0 = x1 = x;
+            y0 = y1 = y;
+            first = false;
+          } else {
+            if (x < x0) {
+              x0 = x;
+            } else if (x1 < x) {
+              x1 = x;
+            }
+            if (y < y0) {
+              y0 = y;
+            } else if (y1 < y) {
+              y1 = y;
+            }
+          }
+        }
+        pi.next();
+      }
+    }
+
+    boolean contains(double x, double y) {
+      return ((x0 <= x) && (x <= x1) && (y0 <= y) && (y <= y1));
+    }
+  }
+
   private static List<Path2D.Double> _polygons = new ArrayList();
+  private static List<BB> _BBs = new ArrayList();
 
   // Simple algorithm to test point in polygon
   //   https://stackoverflow.com/questions/8721406/how-to-determine-if-a-point-is-inside-a-2d-convex-polygon
@@ -120,6 +162,7 @@ public final class UsaMap {
             lats.clear();
 
             _polygons.add(polygon);
+            _BBs.add(new BB(polygon));
           }
           continue;
         }
@@ -139,171 +182,17 @@ public final class UsaMap {
   }
 
   static public boolean Contains(double lon, double lat) {
-    for (int i = 0; i < _polygons.size(); i ++) {
-      if (_polygons.get(i).contains(lon, lat))
-        return true;
-    }
-    return false;
-
-    /*
     // Optimizations:
     // - Quick reject by testing the point against the bounding box of the polygon.
     //   I'm guessing this will save time a lot. There are 574 polygons.
     // - Find the closest polygon from the point and start from there. You will need a R-tree for this.
 
-    // With the bounding-box quick-rejection optimization: 10 ms
-    // Without: 129 ms
-    auto pnt = gtl::construct<Point>(lon, lat);
-    for (size_t i = 0; i < _BBs.size(); i ++) {
-    if (_BBs[i].Contains(lon, lat) && gtl::contains(_polygons[i], pnt))
-    return true;
-    }
+    for (int i = 0; i < _polygons.size(); i ++) {
+      if (_BBs.get(i).contains(lon, lat) && _polygons.get(i).contains(lon, lat))
+        return true;
 
+      //if (_polygons.get(i).contains(lon, lat))
+      //  return true;
+    }
     return false;
-    */
-  }
 }
-
-/*
-// http://www.boost.org/doc/libs/1_61_0/libs/polygon/doc/gtl_custom_polygon.htm
-
-namespace gtl = boost::polygon;
-using namespace boost::polygon::operators;
-
-//first lets turn our polygon usage code into a generic
-//function parameterized by polygon type
-template <typename Polygon>
-void test_polygon() {
-//lets construct a 10x10 rectangle shaped polygon
-typedef typename gtl::polygon_traits<Polygon>::point_type PPoint;
-
-PPoint pts[] = {gtl::construct<PPoint>(0, 0),
-gtl::construct<PPoint>(10, 0),
-gtl::construct<PPoint>(10, 10),
-gtl::construct<PPoint>(0, 10) };
-
-Polygon poly;
-gtl::set_points(poly, pts, pts+4);
-
-cout << boost::format("area: %f\n") % gtl::area(poly);
-cout << boost::format("point in polygon: %s\n") % gtl::contains(poly, gtl::construct<PPoint>(5, 5));
-cout << boost::format("point in polygon: %s\n") % gtl::contains(poly, gtl::construct<PPoint>(15, 5));
-}
-
-
-//we have to get Point working with boost polygon to make our polygon
-//that uses Point working with boost polygon
-namespace boost { namespace polygon {
-template <>
-struct geometry_concept<Point> { typedef point_concept type; };
-template <>
-struct point_traits<Point> {
-typedef double coordinate_type;
-
-static inline coordinate_type get(const Point& point,
-orientation_2d orient) {
-if(orient == HORIZONTAL)
-return point.x;
-return point.y;
-}
-};
-
-template <>
-struct point_mutable_traits<Point> {
-typedef double coordinate_type;
-
-static inline void set(Point& point, orientation_2d orient, double value) {
-if(orient == HORIZONTAL)
-point.x = value;
-else
-point.y = value;
-}
-static inline Point construct(double x, double y) {
-return Point(x, y);
-}
-};
-} }
-
-//I'm lazy and use the stl everywhere to avoid writing my own classes
-//my toy polygon is a std::list<Point>
-typedef std::list<Point> CPolygon;
-
-//we need to specialize our polygon concept mapping in boost polygon
-namespace boost { namespace polygon {
-//first register CPolygon as a polygon_concept type
-template <>
-struct geometry_concept<CPolygon>{ typedef polygon_concept type; };
-
-template <>
-struct polygon_traits<CPolygon> {
-  typedef double coordinate_type;
-  typedef CPolygon::const_iterator iterator_type;
-  typedef Point point_type;
-
-  // Get the begin iterator
-  static inline iterator_type begin_points(const CPolygon& t) {
-    return t.begin();
-  }
-
-  // Get the end iterator
-  static inline iterator_type end_points(const CPolygon& t) {
-    return t.end();
-  }
-
-  // Get the number of sides of the polygon
-  static inline std::size_t size(const CPolygon& t) {
-    return t.size();
-  }
-
-  // Get the winding direction of the polygon
-  static inline winding_direction winding(const CPolygon& t) {
-    return unknown_winding;
-  }
-};
-
-template <>
-struct polygon_mutable_traits<CPolygon> {
-  //expects stl style iterators
-  template <typename iT>
-    static inline CPolygon& set_points(CPolygon& t,
-        iT input_begin, iT input_end) {
-      t.clear();
-      t.insert(t.end(), input_begin, input_end);
-      return t;
-    }
-
-};
-} }
-
-namespace UsaMap {
-  // Polygons of all states
-  vector<CPolygon> _polygons;
-  vector<BoundingBox> _BBs;
-
-
-  bool Contains(double lon, double lat) {
-    // Optimizations:
-    // - Quick reject by testing the point against the bounding box of the polygon.
-    //   I'm guessing this will save time a lot. There are 574 polygons.
-    // - Not sure how this would help: finding the closest polygon from the
-    //   point and start from there.
-
-    // With the bounding-box quick-rejection optimization: 10 ms
-    // Without: 129 ms
-    if (true) {
-      auto pnt = gtl::construct<Point>(lon, lat);
-      for (size_t i = 0; i < _BBs.size(); i ++) {
-        if (_BBs[i].Contains(lon, lat) && gtl::contains(_polygons[i], pnt))
-          return true;
-      }
-    } else {
-      auto pnt = gtl::construct<Point>(lon, lat);
-      for (auto p: _polygons) {
-        if (gtl::contains(p, pnt))
-          return true;
-      }
-    }
-
-    return false;
-  }
-  */

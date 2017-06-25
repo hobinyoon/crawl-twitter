@@ -45,7 +45,8 @@ public final class UsaMap {
 
       // 10,000 point test:
       //   Without bounding box test: 2010 ms.
-      //   With bounding box test   :   96 ms.
+      //   With bounding box test   :   94 - 114 ms.
+      //   With bounding box test and my own polygon class : 93 - 125 ms. Not worth the effort. Keep the code for portability.
       // Random doubles generation overhead is negligible: 3 ms.
       if (Contains(lon, lat))
         num_contains ++;
@@ -60,6 +61,35 @@ public final class UsaMap {
         , TimeUnit.NANOSECONDS.toMillis(t1 - t0)
         );
   }
+
+  //static class Polygon {
+  //  List<Double> lons;
+  //  List<Double> lats;
+
+  //  Polygon(List<Double> lons_, List<Double> lats_) {
+  //    lons = new ArrayList();
+  //    lats = new ArrayList();
+  //    for (Double p: lons_)
+  //      lons.add(p);
+  //      //lons.add(p.clone());
+  //    for (Double p: lats_)
+  //      lats.add(p);
+  //      //lats.add(p.clone());
+  //  }
+
+  //  public boolean contains(double x, double y) {
+  //    int i;
+  //    int j;
+  //    boolean result = false;
+  //    for (i = 0, j = lons.size() - 1; i < lons.size(); j = i++) {
+  //      if ( ((lats.get(i) > y) != (lats.get(j) > y))
+  //          && (x < (lons.get(j) - lons.get(i)) * (y - lats.get(i)) / (lats.get(j)-lats.get(i)) + lons.get(i)) ) {
+  //        result = ! result;
+  //      }
+  //    }
+  //    return result;
+  //  }
+  //}
 
   static class BB {
     double x0, x1, y0, y1;
@@ -93,12 +123,46 @@ public final class UsaMap {
       }
     }
 
+    // Can be put inside the polygon
+    //BB(Polygon polygon) {
+    //  boolean first = true;
+    //  for (Double x: polygon.lons) {
+    //    if (first) {
+    //      x0 = x1 = x;
+    //      first = false;
+    //    } else {
+    //      if (x < x0) {
+    //        x0 = x;
+    //      } else if (x1 < x) {
+    //        x1 = x;
+    //      }
+    //    }
+    //  }
+
+    //  first = true;
+    //  for (Double y: polygon.lats) {
+    //    if (first) {
+    //      y0 = y1 = y;
+    //      first = false;
+    //    } else {
+    //      if (y < y0) {
+    //        y0 = y;
+    //      } else if (y1 < y) {
+    //        y1 = y;
+    //      }
+    //    }
+    //  }
+    //}
+
     boolean contains(double x, double y) {
       return ((x0 <= x) && (x <= x1) && (y0 <= y) && (y <= y1));
     }
   }
 
   private static List<Path2D.Double> _polygons = new ArrayList();
+  // Trying out a simple inclusion test
+  //private static List<Polygon> _polygons = new ArrayList();
+
   private static List<BB> _BBs = new ArrayList();
 
   // Simple algorithm to test point in polygon
@@ -158,6 +222,8 @@ public final class UsaMap {
               }
             }
 
+            //Polygon polygon = new Polygon(lons, lats);
+
             lons.clear();
             lats.clear();
 
@@ -195,4 +261,5 @@ public final class UsaMap {
       //  return true;
     }
     return false;
+  }
 }

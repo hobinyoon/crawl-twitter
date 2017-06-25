@@ -44,6 +44,11 @@ public class StreamSeedUsers {
 								break;
 						}
 
+						// TODO: Check if the location is in the US. This will help reduce the database size big time.
+						//
+						// TODO: When the Tweet is not from within the US, don't include it and don't follow the followers or followees.
+						//   (Don't add the users to the to-crawl list).
+
 						String youtube_video_id = null;
 						for (URLEntity e: status.getURLEntities()) {
 							youtube_video_id = Filter.YouTubeLink(e.getExpandedURL());

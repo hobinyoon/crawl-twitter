@@ -42,6 +42,12 @@ fi
 
 build_src
 
+if [ $ARGC -eq 1 ] && [ "$1" == "test_usamap" ]
+then
+	java -cp $TARGET_JAR:`cat $DEF_CLASS_PATH_FILE` crawltwitter.UsaMap "${@:1}"
+	exit 0
+fi
+
 java -cp $TARGET_JAR:`cat $DEF_CLASS_PATH_FILE` crawltwitter.Crawl "${@:1}"
 
 popd > /dev/null

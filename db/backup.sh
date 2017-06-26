@@ -3,16 +3,16 @@
 set -e
 set -u
 
-DB_NAME=twitter3
+DB_NAME=twitter4
 CUR_DATETIME=`date +%y%m%d-%H%M%S`
 echo $CUR_DATETIME
 
-DN_BACKUP="/mnt/data/twitter/backup"
+DN_BACKUP=~/work/crawl-twitter-data/backup
 
 FN_SQL=$DN_BACKUP"/"$DB_NAME"-"$CUR_DATETIME".sql"
 FN_SQL_7Z=$FN_SQL".7z"
 
-time /usr/bin/mysqldump --skip-tz-utc -u twitter -ptwitterpass $DB_NAME > $FN_SQL
+time /usr/bin/mysqldump --skip-tz-utc -u twitter $DB_NAME > $FN_SQL
 
 /usr/bin/7z a -mx=9 $FN_SQL_7Z $FN_SQL
 \rm $FN_SQL

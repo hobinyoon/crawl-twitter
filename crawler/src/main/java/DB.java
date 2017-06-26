@@ -589,7 +589,7 @@ public class DB {
         prev_c_cnt = rs.getLong("cnt");
       }
       {
-        final String q = "SELECT v_int as cnt FROM meta WHERE k = 'C_cnt'";
+        final String q = "SELECT count(*) AS cnt FROM users WHERE status='C'";
         ResultSet rs = stmt.executeQuery(q);
         if (! rs.next())
           throw new RuntimeException("Unexpected");
@@ -671,31 +671,4 @@ public class DB {
         throw e;
     }
   }
-
-  //static boolean ImportFromTwitter1(UserToCrawl u) throws SQLException {
-  //	Statement stmt = null;
-  //	try {
-  //		stmt = _conn_crawl_tweets.createStatement();
-  //		{
-  //			String q = String.format("SELECT id FROM twitter.uids_to_crawl "
-  //					+ "WHERE crawled_at >= '2014-09-21 12:13:02' AND status='C' AND id=%d", u.id);
-  //			ResultSet rs = stmt.executeQuery(q);
-  //			if (! rs.next())
-  //				return false;
-  //		}
-  //		{
-  //			String q = String.format("INSERT INTO twitter4.tweets "
-  //					+ "SELECT * FROM twitter.tweets WHERE uid=%d", u.id);
-  //			int rows_updated = stmt.executeUpdate(q);
-  //			Mon.num_crawled_tweets_new += rows_updated;
-  //			Mon.num_crawled_tweets_new_imported += rows_updated;
-  //		}
-  //		// commit is in this function
-  //		SetUserCrawled(u);
-  //		return true;
-  //	} finally {
-  //		if (stmt != null)
-  //			stmt.close();
-  //	}
-  //}
 }

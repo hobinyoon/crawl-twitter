@@ -151,7 +151,7 @@ public class DB {
       String consumer_secret = null;
 
       while (true) {
-        // begin tranction
+        // begin transaction
         _conn_crawl_tweets.commit();
         {
           // wait for 1 hour when where has been more than 3 auth failures from this IP in the last hour

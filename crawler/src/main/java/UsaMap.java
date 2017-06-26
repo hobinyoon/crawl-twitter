@@ -174,7 +174,7 @@ public final class UsaMap {
   //	 https://docs.oracle.com/javase/8/docs/api/java/awt/geom/Path2D.Double.html
   //	   This does
   private static void _Load() throws java.io.FileNotFoundException, java.io.IOException {
-    String fn = String.format("%s/work/castnet/misc/us-states-map/usa.txt", System.getProperty("user.home"));
+    String fn = String.format("%s/work/crawl-twitter/resource/us-states-map.txt", System.getProperty("user.home"));
     System.out.printf("Loading the USA map from %s ...\n", fn);
 
     try (BufferedReader br = new BufferedReader(new FileReader(fn))) {

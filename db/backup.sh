@@ -19,5 +19,7 @@ time /usr/bin/mysqldump --skip-tz-utc -u twitter $DB_NAME > $FN_SQL
 
 /usr/bin/find $DN_BACKUP -type f -ls | /usr/bin/sort -k 11 -r | /usr/bin/head -n 5
 
+time /usr/bin/aws s3 sync ~/work/crawl-twitter-data/backup s3://youtube-accesses
+
 echo
-echo "Strip the credential table before distribution!"
+echo "Warning: keep in mind that it contains the Twitter credential data that you want to keep private!"

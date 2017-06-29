@@ -64,17 +64,16 @@ public class StdoutWriter {
 						Mon.user_being_crawled,
 						Mon.num_credentials_used,
 						CrawlTweets.GetCredTokenLast4());
-			//if (Conf.stream_seed_users) {
-			//	System.out.printf("         to_crawl: s=%d sn=%d sd=%d pn=%d pd=%d cn=%d cd=%d ",
-			//				Mon.num_users_to_crawl_streamed,
-			//				Mon.num_users_to_crawl_streamed_new,
-			//				Mon.num_users_to_crawl_streamed_dup,
-			//				Mon.num_users_to_crawl_parent_new,
-			//				Mon.num_users_to_crawl_parent_dup,
-			//				Mon.num_users_to_crawl_child_new,
-			//				Mon.num_users_to_crawl_child_dup);
-			//} else
-			{
+			if (Conf.stream_seed_users) {
+				System.out.printf("         to_crawl: s=%d sn=%d sd=%d pn=%d pd=%d cn=%d cd=%d ",
+							Mon.num_users_to_crawl_streamed,
+							Mon.num_users_to_crawl_streamed_new,
+							Mon.num_users_to_crawl_streamed_dup,
+							Mon.num_users_to_crawl_parent_new,
+							Mon.num_users_to_crawl_parent_dup,
+							Mon.num_users_to_crawl_child_new,
+							Mon.num_users_to_crawl_child_dup);
+			} else {
 				System.out.printf("         to_crawl: pn=%d pd=%d cn=%d cd=%d ",
 							Mon.num_users_to_crawl_parent_new,
 							Mon.num_users_to_crawl_parent_dup,

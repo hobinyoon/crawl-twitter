@@ -523,6 +523,20 @@ public class DB {
     _IncGen();
   }
 
+  static int GetNumUncrawledUsers() throws SQLException {
+    Statement stmt = null;
+    try {
+      stmt = _conn_crawl_tweets.createStatement();
+      final String q = "SELECT count(*) AS cnt FROM users WHERE status='U'";
+      ResultSet rs = stmt.executeQuery(q);
+      if (rs.next())
+        return rs.getInt("cnt");
+      throw new RuntimeException("Unexpected");
+    } finally {
+      if (stmt != null) stmt.close();
+    }
+  }
+
   private static void _InitGenIfNotExists() throws SQLException {
     Statement stmt = null;
     try {

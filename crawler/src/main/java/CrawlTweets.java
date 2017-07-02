@@ -168,10 +168,20 @@ public class CrawlTweets {
           break;
         }
 
-        if (known_gl == null)
+        // Restrict Tweets with a YouTube link
+        String youtube_video_id = null;
+        for (URLEntity e: s.getURLEntities()) {
+          youtube_video_id = Filter.YouTubeLink(e.getExpandedURL());
+          if (youtube_video_id != null)
+            break;
+        }
+        if (youtube_video_id == null)
           continue;
+        //StdoutWriter.W(String.format("CC %d %d %s", u.id, id, s.getCreatedAt()));
 
         // Restrict Tweets to those from the contiguous USA
+        if (known_gl == null)
+          continue;
         if (! UsaMap.Contains(known_gl.getLongitude(), known_gl.getLatitude()))
           break;
         //StdoutWriter.W(String.format("DD %d %d %s", u.id, id, s.getCreatedAt()));
@@ -239,17 +249,6 @@ public class CrawlTweets {
             }
           }
         }
-
-        // Restrict Tweets with a YouTube link
-        String youtube_video_id = null;
-        for (URLEntity e: s.getURLEntities()) {
-          youtube_video_id = Filter.YouTubeLink(e.getExpandedURL());
-          if (youtube_video_id != null)
-            break;
-        }
-        if (youtube_video_id == null)
-          continue;
-        //StdoutWriter.W(String.format("CC %d %d %s", u.id, id, s.getCreatedAt()));
 
         DB.AddTweet(id, u.id, ca, known_gl, youtube_video_id);
       }

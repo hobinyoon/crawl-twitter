@@ -4,8 +4,8 @@ use twitter4;
 
 set profiling=1;
 
--- select status, count(*) from users where status IN ('C', 'U', 'UC', 'UP') group by status order by status limit 5;
-select status, count(*) from users group by status order by status;
+select status, count(*) from users where status IN ('U', 'UC', 'UP') group by status order by status limit 5;
+-- select status, count(*) from users group by status order by status;
 
 -- select count(*), count(distinct uid), count(distinct youtube_video_id) from tweets;
 select count(*) as num_youtube_reqs from tweets;

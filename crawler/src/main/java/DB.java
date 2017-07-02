@@ -51,8 +51,8 @@ public class DB {
 
       _ps_insert_tweet = _conn_crawl_tweets.prepareStatement(
           "INSERT INTO tweets "
-          + "(id, uid, created_at, geo_lati, geo_longi, youtube_video_id, rt_id, rt_uid) "
-          + "VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+          + "(id, uid, created_at, geo_lati, geo_longi, youtube_video_id) "
+          + "VALUES (?, ?, ?, ?, ?, ?)");
 
       _ps_set_user_crawled1 = _conn_crawl_tweets.prepareStatement(
           "INSERT INTO users (id, gen, added_at, crawled_at, status, check_out_at, check_out_ip) "
@@ -676,8 +676,7 @@ public class DB {
     _conn_crawl_tweets.commit();
   }
 
-  static void AddTweet(long id, long uid, Date created_at, GeoLocation location,
-      String youtube_video_id, long rt_id, long rt_uid)
+  static void AddTweet(long id, long uid, Date created_at, GeoLocation location, String youtube_video_id)
     throws SQLException {
     try {
       // StdoutWriter.W(String.format("%d %d %s %s %s", id, uid, created_at, location, youtube_video_id));
@@ -687,8 +686,6 @@ public class DB {
       _ps_insert_tweet.setDouble(4, location.getLatitude());
       _ps_insert_tweet.setDouble(5, location.getLongitude());
       _ps_insert_tweet.setString(6, youtube_video_id);
-      _ps_insert_tweet.setLong(7, rt_id);
-      _ps_insert_tweet.setLong(8, rt_uid);
       _ps_insert_tweet.executeUpdate();
       _conn_crawl_tweets.commit();
       Mon.num_crawled_tweets_new ++;

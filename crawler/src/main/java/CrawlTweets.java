@@ -182,11 +182,6 @@ public class CrawlTweets {
           continue;
         //StdoutWriter.W(String.format("CC %d %d %s", u.id, id, s.getCreatedAt()));
 
-        // Restrict Tweets to those from the contiguous USA
-        if (! UsaMap.Contains(known_gl.getLongitude(), known_gl.getLatitude()))
-          break;
-        //StdoutWriter.W(String.format("DD %d %d %s", u.id, id, s.getCreatedAt()));
-
         long rt_id = -1;
         long rt_uid = -1;
         if (s.isRetweet()) {
@@ -251,7 +246,12 @@ public class CrawlTweets {
           }
         }
 
-        DB.AddTweet(id, u.id, ca, known_gl, youtube_video_id, rt_id, rt_uid);
+        // Restrict Tweets to those from the contiguous USA
+        if (! UsaMap.Contains(known_gl.getLongitude(), known_gl.getLatitude()))
+          break;
+        //StdoutWriter.W(String.format("DD %d %d %s", u.id, id, s.getCreatedAt()));
+
+        DB.AddTweet(id, u.id, ca, known_gl, youtube_video_id);
       }
       if (statuses.size() == 0 || min_id == -1 || hit_oldest_date) {
         DB.SetUserCrawled(u);

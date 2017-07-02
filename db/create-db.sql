@@ -85,13 +85,9 @@ CREATE TABLE IF NOT EXISTS twitter4.tweets (
 	geo_lati DOUBLE NOT NULL,
 	geo_longi DOUBLE NOT NULL,
 	youtube_video_id VARCHAR(22) NOT NULL,
-	rt_id BIGINT NOT NULL,	-- -1 when not retweet
-	rt_uid BIGINT NOT NULL,	-- -1 when not retweet
 	PRIMARY KEY (id),
 	INDEX (uid),
 	INDEX (created_at),
-	INDEX (rt_id),
-	INDEX (rt_uid),
 	INDEX (youtube_video_id)
 	);
 

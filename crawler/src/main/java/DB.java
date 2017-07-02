@@ -487,6 +487,7 @@ public class DB {
             if (e.getErrorCode() == MysqlErrorNumbers.ER_LOCK_WAIT_TIMEOUT) {
               StdoutWriter.W(String.format("Lock wait timeout while checking out uid=%d. rolling back and retrying ...", id));
               _conn_crawl_tweets.rollback();
+              Mon.Sleep(1000);
               continue;
             } else
               throw e;
@@ -508,17 +509,30 @@ public class DB {
     }
   }
 
-  static void SetUserCrawled(UserToCrawl u) throws SQLException {
-    _ps_set_user_crawled1.setLong(1, u.id);
-    _ps_set_user_crawled1.setInt(2, u.gen);
-    _ps_set_user_crawled1.setString(3, Conf.ip);
-    _ps_set_user_crawled1.executeUpdate();
+  static void SetUserCrawled(UserToCrawl u) throws SQLException, InterruptedException {
+    while (true) {
+      try {
+        _ps_set_user_crawled1.setLong(1, u.id);
+        _ps_set_user_crawled1.setInt(2, u.gen);
+        _ps_set_user_crawled1.setString(3, Conf.ip);
+        _ps_set_user_crawled1.executeUpdate();
 
-    _ps_set_user_crawled2.executeUpdate();
+        _ps_set_user_crawled2.executeUpdate();
 
-    _conn_crawl_tweets.commit();
-    Mon.num_crawled_users ++;
-    //StdoutWriter.W(String.format("crawled all tweets of user %d", u.id));
+        _conn_crawl_tweets.commit();
+        Mon.num_crawled_users ++;
+        //StdoutWriter.W(String.format("crawled all tweets of user %d", u.id));
+        break;
+      } catch (SQLException e) {
+        if (e.getErrorCode() == MysqlErrorNumbers.ER_LOCK_WAIT_TIMEOUT) {
+          StdoutWriter.W(String.format("Lock wait timeout while SetUserCrawled(uid=%d). rolling back and retrying ...", u.id));
+          _conn_crawl_tweets.rollback();
+          Mon.Sleep(1000);
+          continue;
+        } else
+          throw e;
+      }
+    }
 
     _IncGen();
   }

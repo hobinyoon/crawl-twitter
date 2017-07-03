@@ -12,7 +12,8 @@ DN_BACKUP=~/work/crawl-twitter-data/backup
 FN_SQL=$DN_BACKUP"/"$DB_NAME"-"$CUR_DATETIME".sql"
 FN_SQL_7Z=$FN_SQL".7z"
 
-time /usr/bin/mysqldump --skip-tz-utc -u twitter $DB_NAME > $FN_SQL
+# --skip-lock-tables to prevent deadlock. I've seen deadlocks on the credentials table many times without this option.
+time /usr/bin/mysqldump --skip-tz-utc --skip-lock-tables -u twitter $DB_NAME > $FN_SQL
 
 /usr/bin/7z a -mx=9 $FN_SQL_7Z $FN_SQL
 \rm $FN_SQL

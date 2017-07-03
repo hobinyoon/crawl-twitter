@@ -127,9 +127,59 @@ namespace DataGen {
         );
   }
 
+  void _ShowTop20Videos() {
+    Cons::MT _("Top 20 videos");
+
+    map<string, int> vid_cnt;
+
+    for (Tweet* t: _tweets) {
+      const string& vid = t->youtube_video_id;
+
+      auto it = vid_cnt.find(vid);
+      if (it == vid_cnt.end()) {
+        vid_cnt[vid] = 1;
+      } else {
+        it->second ++;
+      }
+    }
+
+    struct CntVid {
+      int cnt;
+      string vid;
+
+      CntVid(int cnt_, const string& vid_)
+        : cnt(cnt_), vid(vid_)
+      { }
+
+      bool operator < (const CntVid& r) {
+        if (cnt < r.cnt)
+          return true;
+        if (cnt > r.cnt)
+          return false;
+        return (vid < r.vid);
+      }
+    };
+
+    vector<CntVid> cnt_vids;
+
+    for (auto i: vid_cnt)
+      cnt_vids.push_back(CntVid(i.second, i.first));
+
+    sort(cnt_vids.begin(), cnt_vids.end());
+
+    int i = cnt_vids.size() - 1;
+    int j = i - 20;
+    while ((0 <= i) && (j < i)) {
+      const CntVid& cv = cnt_vids[i];
+      Cons::P(boost::format("%5d %s") % cv.cnt % cv.vid);
+      i --;
+    }
+  }
+
   void Gen() {
     _LoadTweetsFromDB();
     _FilterOutAds();
+    _ShowTop20Videos();
     _WriteTweetsToFile();
   }
 

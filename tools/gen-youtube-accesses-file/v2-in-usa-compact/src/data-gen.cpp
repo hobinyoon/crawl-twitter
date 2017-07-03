@@ -61,7 +61,7 @@ namespace DataGen {
     Cons::MT _("Filtering out ads ...");
 
     // At most 1 Tweet per video per person per location in the last 12 hours.
-    const long min_time_interval = 12 * 3600;
+    const long min_time_interval = 6 * 3600;
 
     struct VidUidLoc {
       string vid;

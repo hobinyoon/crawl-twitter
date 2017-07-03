@@ -47,7 +47,7 @@ public class StreamSeedUsers {
 
             // When there are enough seeded users (more than 50000), only add users with Tweets that have a Youtube link.
             // When there are not enough seeded users, add users with or without Tweets that have a Youtube link.
-            if (false && DB.GetNumUncrawledUsers() > 50000) {
+            if (true || DB.GetNumUncrawledUsers() > 50000) {
               String youtube_video_id = null;
               for (URLEntity e: status.getURLEntities()) {
                 youtube_video_id = Filter.YouTubeLink(e.getExpandedURL());

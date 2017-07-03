@@ -184,7 +184,7 @@ public class CrawlTweets {
 
         // When there aren't enough uncrawled users, let the crawler follow parent and children Tweets
         // even when the Tweet doesn't contain a YouTube video link.
-        if (false && DB.GetNumUncrawledUsers() > 40000) {
+        if (true || DB.GetNumUncrawledUsers() > 40000) {
           if (youtube_video_id == null)
             continue;
         }

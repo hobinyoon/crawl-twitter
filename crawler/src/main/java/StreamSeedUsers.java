@@ -22,8 +22,6 @@ public class StreamSeedUsers {
 
   static void Start() throws Exception {
     StatusListener listener = new StatusListener() {
-      private int num_uncrawled_users = -1;
-
       @Override
       public void onStatus(Status status) {
         try {
@@ -47,17 +45,9 @@ public class StreamSeedUsers {
                 break;
             }
 
-            if (num_uncrawled_users == -1) {
-              num_uncrawled_users = DB.GetNumUncrawledUsers();
-            } else {
-              if (Mon.num_users_to_crawl_streamed % 200 == 0) {
-                num_uncrawled_users = DB.GetNumUncrawledUsers();
-              }
-            }
-
             // When there are enough seeded users (more than 50000), only add users with Tweets that have a Youtube link.
             // When there are not enough seeded users, add users with or without Tweets that have a Youtube link.
-            if (num_uncrawled_users > 50000) {
+            if (DB.GetNumUncrawledUsers() > 50000) {
               String youtube_video_id = null;
               for (URLEntity e: status.getURLEntities()) {
                 youtube_video_id = Filter.YouTubeLink(e.getExpandedURL());

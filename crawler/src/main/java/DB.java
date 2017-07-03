@@ -537,7 +537,21 @@ public class DB {
     _IncGen();
   }
 
-  static int GetNumUncrawledUsers() throws SQLException {
+  private static int _num_uncrawled_users = -1;
+  private static int _num_calls_uncrawled_users = 0;
+
+  public static synchronized int GetNumUncrawledUsers() throws SQLException {
+    _num_calls_uncrawled_users ++;
+    if (_num_uncrawled_users == -1) {
+      _num_uncrawled_users = _GetNumUncrawledUsers();
+    } else {
+      if (_num_calls_uncrawled_users % 200 == 0)
+        _num_uncrawled_users = _GetNumUncrawledUsers();
+    }
+    return _num_uncrawled_users;
+  }
+
+  private static int _GetNumUncrawledUsers() throws SQLException {
     Statement stmt = null;
     try {
       stmt = _conn_crawl_tweets.createStatement();
@@ -547,7 +561,8 @@ public class DB {
         return rs.getInt("cnt");
       throw new RuntimeException("Unexpected");
     } finally {
-      if (stmt != null) stmt.close();
+      if (stmt != null)
+        stmt.close();
     }
   }
 

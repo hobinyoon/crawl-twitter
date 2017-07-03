@@ -168,6 +168,12 @@ public class CrawlTweets {
           break;
         }
 
+        // Restrict Tweets to those from the contiguous USA
+        if (known_gl == null)
+          continue;
+        if (! UsaMap.Contains(known_gl.getLongitude(), known_gl.getLatitude()))
+          continue;
+
         // Restrict Tweets with a YouTube link
         String youtube_video_id = null;
         for (URLEntity e: s.getURLEntities()) {
@@ -175,16 +181,13 @@ public class CrawlTweets {
           if (youtube_video_id != null)
             break;
         }
-        if (youtube_video_id == null)
-          continue;
-        //StdoutWriter.W(String.format("CC %d %d %s", u.id, id, s.getCreatedAt()));
 
-        // Restrict Tweets to those from the contiguous USA
-        if (known_gl == null)
-          continue;
-        if (! UsaMap.Contains(known_gl.getLongitude(), known_gl.getLatitude()))
-          break;
-        //StdoutWriter.W(String.format("DD %d %d %s", u.id, id, s.getCreatedAt()));
+        // When there aren't enough uncrawled users, let the crawler follow parent and children Tweets
+        // even when the Tweet doesn't contain a YouTube video link.
+        if (DB.GetNumUncrawledUsers() > 40000) {
+          if (youtube_video_id == null)
+            continue;
+        }
 
         long rt_id = -1;
         long rt_uid = -1;
@@ -249,6 +252,9 @@ public class CrawlTweets {
             }
           }
         }
+
+        if (youtube_video_id == null)
+          continue;
 
         DB.AddTweet(id, u.id, ca, known_gl, youtube_video_id);
       }

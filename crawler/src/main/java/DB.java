@@ -55,7 +55,7 @@ public class DB {
           + "VALUES (?, ?, ?, ?, ?, ?)");
 
       _ps_set_user_crawled1 = _conn_crawl_tweets.prepareStatement(
-          "INSERT INTO users (id, gen, added_at, crawled_at, status, check_out_at, check_out_ip) "
+          "INSERT INTO users (id, gen, added_at, crawled_at, status, checked_out_at, checked_out_ip) "
           + "VALUES (?, ?, NOW(), NOW(), 'C', NOW(), ?) "
           + "ON DUPLICATE KEY UPDATE crawled_at=NOW(), gen=VALUES(gen), status='C'");
 
@@ -63,12 +63,12 @@ public class DB {
           "UPDATE meta SET v_int = v_int + 1 WHERE k = 'C_cnt'");
 
       _ps_set_user_unauthorized = _conn_crawl_tweets.prepareStatement(
-          "INSERT INTO users (id, gen, added_at, crawled_at, status, check_out_at, check_out_ip) "
+          "INSERT INTO users (id, gen, added_at, crawled_at, status, checked_out_at, checked_out_ip) "
           + "VALUES (?, ?, NOW(), NOW(), 'P', NOW(), ?) "
           + "ON DUPLICATE KEY UPDATE crawled_at=NOW(), gen=VALUES(gen), status='P'");
 
       _ps_set_user_notfound = _conn_crawl_tweets.prepareStatement(
-          "INSERT INTO users (id, gen, added_at, crawled_at, status, check_out_at, check_out_ip) "
+          "INSERT INTO users (id, gen, added_at, crawled_at, status, checked_out_at, checked_out_ip) "
           + "VALUES (?, ?, NOW(), NOW(), 'NF', NOW(), ?) "
           + "ON DUPLICATE KEY UPDATE crawled_at=NOW(), gen=VALUES(gen), status='NF'");
 
@@ -121,27 +121,7 @@ public class DB {
     }
   }
 
-  static TC GetTwitterCredForStream() throws SQLException {
-    Statement stmt = null;
-    try {
-      stmt = _conn_stream_seed_users.createStatement();
-      final String q = "SELECT * FROM credentials WHERE for_stream=true and (status is null or status !='I') LIMIT 1";
-      ResultSet rs = stmt.executeQuery(q);
-      long id = -1;
-      if (! rs.next())
-        throw new RuntimeException("No record");
-      return new TC(
-          rs.getString("token"),
-          rs.getString("token_secret"),
-          rs.getString("consumer_key"),
-          rs.getString("consumer_secret"));
-    } finally {
-      if (stmt != null)
-        stmt.close();
-    }
-  }
-
-  static TC GetTwitterCred() throws SQLException, InterruptedException {
+  static TC GetTwitterCred(boolean checked_out_for_streaming) throws SQLException, InterruptedException {
     Statement stmt = null;
     try {
       stmt = _conn_crawl_tweets.createStatement();
@@ -151,10 +131,10 @@ public class DB {
       String consumer_secret = null;
 
       while (true) {
-        // begin transaction
+        // Begin transaction
         _conn_crawl_tweets.commit();
         {
-          // wait for 1 hour when where has been more than 3 auth failures from this IP in the last hour
+          // Wait for 1 hour when there has been more than 3 auth failures from this IP in the last hour
           final String q = String.format("SELECT count(*) as fail_cnt FROM cred_auth_history "
               + "WHERE status = 'F' and TIMESTAMPDIFF(SECOND, time_, NOW()) < 3600 and ip = '%s'", Conf.ip);
           ResultSet rs = stmt.executeQuery(q);
@@ -177,13 +157,13 @@ public class DB {
           }
         }
         {
-          // pick the oldest rate-limited credential
+          // Pick the oldest rate-limited credential
           final String q = String.format(
               "SELECT *, ADDDATE(rate_limited_at, INTERVAL sec_until_retry SECOND) as retry_after "
               + "FROM credentials "
-              + "WHERE for_stream=false "
-              + "and (status is null or status != 'I') "	// valid one
-              + "and (check_out_at is null or TIMESTAMPDIFF(SECOND, check_out_at, NOW()) > 60) "	// not checked-out in the last 60 secs
+              + "WHERE "
+              + "(status is null or status != 'I') "  // One with a valid status
+              + "and (checked_out_at is null or TIMESTAMPDIFF(SECOND, checked_out_at, NOW()) > 60) "  // One not checked-out in the last 60 secs
               + "and token not in (select distinct(token) from cred_auth_history where status='F' and TIMESTAMPDIFF(SECOND, time_, NOW()) < %d) "
               + "order by retry_after "
               + "LIMIT 1", Conf.cred_auth_fail_retry_wait_sec);
@@ -211,10 +191,12 @@ public class DB {
           // Check out the credential
           final String q = String.format(
               "UPDATE credentials "
-              + "SET check_out_at=NOW(), check_out_ip='%s', num_reqs_before_rate_limited=0 "
+              + "SET checked_out_at=NOW(), checked_out_ip='%s', checked_out_for_streaming=%d, num_reqs_before_rate_limited=0 "
               + "WHERE token='%s' "
-              + "and (check_out_at is null or TIMESTAMPDIFF(SECOND, check_out_at, NOW()) > 60)",
-              Conf.ip, token);
+              + "and (checked_out_at is null or TIMESTAMPDIFF(SECOND, checked_out_at, NOW()) > 60)"
+              , Conf.ip
+              , (checked_out_for_streaming ? 1 : 0)
+              , token);
           int rows_updated = stmt.executeUpdate(q);
           if (rows_updated == 1) {
             _conn_crawl_tweets.commit();
@@ -278,6 +260,27 @@ public class DB {
     } finally {
       if (stmt != null)
         stmt.close();
+    }
+  }
+
+  static void CredStreamSendHeartbeat(TC tc) throws SQLException {
+    Statement stmt = null;
+    while (true) {
+      try {
+        stmt = _conn_crawl_tweets.createStatement();
+        final String q = String.format(
+            "UPDATE credentials "
+            + "SET checked_out_at=NOW(), sec_until_retry=300 "
+            + "WHERE token='%s'", tc.token);
+        int rows_affected = stmt.executeUpdate(q);
+        if (rows_affected == 1) {
+          _conn_crawl_tweets.commit();
+          return;
+        }
+      } finally {
+        if (stmt != null)
+          stmt.close();
+      }
     }
   }
 
@@ -404,11 +407,11 @@ public class DB {
 
   static UserToCrawl GetUserToCrawl() throws SQLException, InterruptedException {
     //if (true) {
-    //	// java.sql.SQLException: Incorrect string value: '\xF0\x9F\x91\x86wi...' for column 'text' at row 1
-    //	return new UserToCrawl(84947814, -1);
+    //  // java.sql.SQLException: Incorrect string value: '\xF0\x9F\x91\x86wi...' for column 'text' at row 1
+    //  return new UserToCrawl(84947814, -1);
 
-    //	// contains UTF8 strings
-    //	return new UserToCrawl(348878135, -1);
+    //  // contains UTF8 strings
+    //  return new UserToCrawl(348878135, -1);
     //}
 
     // returns uid with status UC (uncrawled child) or UP(uncrawled parent),
@@ -425,7 +428,7 @@ public class DB {
           final String q = String.format("SELECT * FROM users "
               + "WHERE status IN('UC', 'UP') "
               + "AND gen=(select v_int FROM meta WHERE k='gen') "
-              + "AND (check_out_at IS NULL OR check_out_ip='%s' OR TIMESTAMPDIFF(SECOND, check_out_at, NOW())>%d) "
+              + "AND (checked_out_at IS NULL OR checked_out_ip='%s' OR TIMESTAMPDIFF(SECOND, checked_out_at, NOW())>%d) "
               + "ORDER BY added_at LIMIT 1",
               Conf.ip, Conf.NEXT_CHECK_OUT_AFTER_SEC);
           ResultSet rs = stmt.executeQuery(q);
@@ -445,7 +448,7 @@ public class DB {
           if (rs.getLong("cnt") > 1000) {
             final String q1 = String.format("SELECT * FROM users "
                 + "WHERE status='U' "
-                + "AND (check_out_at IS NULL OR check_out_ip='%s' OR TIMESTAMPDIFF(SECOND, check_out_at, NOW())>%d) "
+                + "AND (checked_out_at IS NULL OR checked_out_ip='%s' OR TIMESTAMPDIFF(SECOND, checked_out_at, NOW())>%d) "
                 + "ORDER BY added_at LIMIT 1",
                 Conf.ip, Conf.NEXT_CHECK_OUT_AFTER_SEC);
             ResultSet rs1 = stmt.executeQuery(q1);
@@ -455,8 +458,8 @@ public class DB {
           } else {
             // This doesn't seem to return random id. Maybe a MySQL bug. No idea.
             //final String q1 = "SELECT MAX(id) as max_id FROM users "
-            //	+ "WHERE status IN ('UP', 'UC') "
-            //	+ "AND id < (RAND() * (SELECT MAX(id) FROM users))";
+            //  + "WHERE status IN ('UP', 'UC') "
+            //  + "AND id < (RAND() * (SELECT MAX(id) FROM users))";
 
             final String q1 = "SELECT id FROM users WHERE status IN ('UP', 'UC', 'U') "
               + "ORDER BY RAND() LIMIT 1";
@@ -474,9 +477,9 @@ public class DB {
         {
           // Check out the user id. This prevents races between crawlers.
           final String q = String.format("UPDATE users "
-              + "SET check_out_at=NOW(), check_out_ip='%s' "
+              + "SET checked_out_at=NOW(), checked_out_ip='%s' "
               + "WHERE id=%d AND "
-              + "(check_out_at IS NULL OR check_out_ip='%s' OR TIMESTAMPDIFF(SECOND, check_out_at, NOW())>%d) ",
+              + "(checked_out_at IS NULL OR checked_out_ip='%s' OR TIMESTAMPDIFF(SECOND, checked_out_at, NOW())>%d) ",
               Conf.ip, id, Conf.ip, Conf.NEXT_CHECK_OUT_AFTER_SEC);
           try {
             int affected_rows = stmt.executeUpdate(q);

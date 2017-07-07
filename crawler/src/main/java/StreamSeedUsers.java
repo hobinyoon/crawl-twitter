@@ -18,18 +18,21 @@ import twitter4j.json.DataObjectFactory;
 
 
 public class StreamSeedUsers {
-  static private TwitterStream _ts = null;
+  static private TwitterPool.TS _ts = null;
 
   static void Start() throws Exception {
     StatusListener listener = new StatusListener() {
       @Override
       public void onStatus(Status status) {
         try {
-          //StdoutWriter.W(status.toString());
-          //StdoutWriter.W("@" + status.getUser().getScreenName() + " [" + status.getText() + "]");
-          Mon.num_users_to_crawl_streamed ++;
-
           do {
+            //StdoutWriter.W(status.toString());
+            //StdoutWriter.W("@" + status.getUser().getScreenName() + " [" + status.getText() + "]");
+            Mon.num_users_to_crawl_streamed ++;
+
+            // Set a heartbeat to indicate the Twitter credential is being used.
+            _ts.SendHeartbeat();
+
             // Do not skip young (recently joined) users. Used to skip.
             //if (status.getUser().getCreatedAt().after(Conf.user_ca_oldest_date))
             //	break;
@@ -47,8 +50,8 @@ public class StreamSeedUsers {
 
             // When there are enough seeded users (more than 50000), only add users with Tweets that have a Youtube link.
             // When there are not enough seeded users, add users with or without Tweets that have a Youtube link.
+            String youtube_video_id = null;
             if (true || DB.GetNumUncrawledUsers() > 50000) {
-              String youtube_video_id = null;
               for (URLEntity e: status.getURLEntities()) {
                 youtube_video_id = Filter.YouTubeLink(e.getExpandedURL());
                 if (youtube_video_id != null)
@@ -57,10 +60,6 @@ public class StreamSeedUsers {
               if (youtube_video_id == null)
                 continue;
             }
-
-            //StdoutWriter.W(String.format("AA %s %d"
-            //      , status.getUser().getScreenName(), status.getId()
-            //      ));
 
             if (false) {
               // Geolocation is null even when it shows the city name of where it was tweeted. Dropped this condition.
@@ -72,13 +71,11 @@ public class StreamSeedUsers {
               if (! UsaMap.Contains(gl.getLongitude(), gl.getLatitude()))
                 break;
             }
-            //StdoutWriter.W(String.format("BB %s %d %f %f"
-            //      , status.getUser().getScreenName(), status.getId()
-            //      , gl.getLongitude(), gl.getLatitude()));
 
             User u = status.getUser();
             long uid = u.getId();
-            //StdoutWriter.W(String.format("%d %s %d %s", uid, u.getScreenName(), status.getId(), youtube_video_id));
+            StdoutWriter.W(String.format("Seed user: %d %s %d %s"
+                  , uid, u.getScreenName(), status.getId(), youtube_video_id));
             DB.AddSeedUserToCrawl(uid);
 
             //System.out.println(DataObjectFactory.getRawJSON(status));
@@ -125,7 +122,7 @@ public class StreamSeedUsers {
     };
 
     _ts = TwitterPool.GetTwitterStream();
-    _ts.addListener(listener);
+    _ts.ts.addListener(listener);
     FilterQuery fq = new FilterQuery();
     String[] keywordsArray = {"youtube"};
     // Bounding box of the contiguous USA
@@ -135,13 +132,13 @@ public class StreamSeedUsers {
     //fq.track(keywordsArray);
     fq.locations(locations);
 
-    _ts.filter(fq);
+    _ts.ts.filter(fq);
   }
 
   static public void Stop() {
     if (_ts != null) {
-      _ts.cleanUp();
-      _ts.shutdown();
+      _ts.ts.cleanUp();
+      _ts.ts.shutdown();
       StdoutWriter.W("StreamSeedUsers stopped.");
     }
   }

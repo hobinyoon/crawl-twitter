@@ -12,8 +12,8 @@ select count(*) as num_youtube_reqs from tweets;
 
 -- select * from meta;
 
-select check_out_ip, max(check_out_at), min(check_out_at) from credentials where for_stream=false group by check_out_ip;
+select checked_out_ip, max(checked_out_at), min(checked_out_at) from credentials group by checked_out_ip;
 
-select check_out_ip, check_out_at from credentials where for_stream=false order by check_out_at limit 1;
+select checked_out_ip, checked_out_at from credentials order by checked_out_at limit 1;
 
 show profiles;

@@ -17,10 +17,10 @@ CREATE TABLE IF NOT EXISTS twitter4.credentials (
 	token_secret VARCHAR(100) NOT NULL,
 	consumer_key VARCHAR(100) NOT NULL,
 	consumer_secret VARCHAR(100) NOT NULL,
-	for_stream BOOL NOT NULL,
 	status CHAR(1),	-- V: valid, I: invalid, null: unknown
-	check_out_at TIMESTAMP NULL DEFAULT NULL,	-- permit null, no autoupdate
-	check_out_ip VARCHAR(20) DEFAULT NULL,
+	checked_out_at TIMESTAMP NULL DEFAULT NULL,	-- permit null, no autoupdate
+	checked_out_ip VARCHAR(20) DEFAULT NULL,
+	checked_out_for_streaming BOOL DEFAULT NULL,
 	num_reqs_before_rate_limited INT DEFAULT 0,
 	rate_limited_at TIMESTAMP NULL DEFAULT NULL,
 	sec_until_retry INT DEFAULT NULL,
@@ -65,8 +65,8 @@ CREATE TABLE IF NOT EXISTS twitter4.users (
 															-- C(crawled)
 															-- P(unauthorized. the user's tweets are protected)
 															-- NF(the user is not found)
-	check_out_at TIMESTAMP NULL DEFAULT NULL,
-	check_out_ip VARCHAR(20),
+	checked_out_at TIMESTAMP NULL DEFAULT NULL,
+	checked_out_ip VARCHAR(20),
 	PRIMARY KEY (id),
 	INDEX (status),
 	INDEX (crawled_at),
@@ -75,8 +75,8 @@ CREATE TABLE IF NOT EXISTS twitter4.users (
 	INDEX (gen),
 	INDEX (status, gen),
 	INDEX (status, gen, added_at),
-	INDEX (check_out_at),
-	INDEX (check_out_at, check_out_ip));
+	INDEX (checked_out_at),
+	INDEX (checked_out_at, checked_out_ip));
 
 CREATE TABLE IF NOT EXISTS twitter4.tweets (
 	id BIGINT,

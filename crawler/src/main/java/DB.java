@@ -548,7 +548,7 @@ public class DB {
     if (_num_uncrawled_users == -1) {
       _num_uncrawled_users = _GetNumUncrawledUsers();
     } else {
-      if (_num_calls_uncrawled_users % 200 == 0)
+      if (_num_calls_uncrawled_users % 100 == 0)
         _num_uncrawled_users = _GetNumUncrawledUsers();
     }
     return _num_uncrawled_users;

@@ -51,7 +51,8 @@ public class StreamSeedUsers {
             // When there are enough seeded users (more than 50000), only add users with Tweets that have a Youtube link.
             // When there are not enough seeded users, add users with or without Tweets that have a Youtube link.
             String youtube_video_id = null;
-            if (true || DB.GetNumUncrawledUsers() > 50000) {
+            //if (true || DB.GetNumUncrawledUsers() > 50000) {
+            if (DB.GetNumUncrawledUsers() > 50000) {
               for (URLEntity e: status.getURLEntities()) {
                 youtube_video_id = Filter.YouTubeLink(e.getExpandedURL());
                 if (youtube_video_id != null)
@@ -74,8 +75,7 @@ public class StreamSeedUsers {
 
             User u = status.getUser();
             long uid = u.getId();
-            StdoutWriter.W(String.format("Seed user: %d %s %d %s"
-                  , uid, u.getScreenName(), status.getId(), youtube_video_id));
+            //StdoutWriter.W(String.format("Seed user: %d %s %d %s", uid, u.getScreenName(), status.getId(), youtube_video_id));
             DB.AddSeedUserToCrawl(uid);
 
             //System.out.println(DataObjectFactory.getRawJSON(status));

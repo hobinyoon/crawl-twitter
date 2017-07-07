@@ -558,7 +558,7 @@ public class DB {
     Statement stmt = null;
     try {
       stmt = _conn_crawl_tweets.createStatement();
-      final String q = "SELECT count(*) AS cnt FROM users WHERE status='U'";
+      final String q = "SELECT count(*) AS cnt FROM users WHERE status IN ('U', 'UC', 'UP')";
       ResultSet rs = stmt.executeQuery(q);
       if (rs.next())
         return rs.getInt("cnt");

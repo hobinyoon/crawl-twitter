@@ -175,10 +175,12 @@ public class CrawlTweets {
         if (! UsaMap.Contains(known_gl.getLongitude(), known_gl.getLatitude()))
           continue;
 
-        // Restrict Tweets with a YouTube link
+        // We take the first encountered YouTube link. If there are multiple of them (not sure if there are), we take the first
+        // one. Hope we didn't miss many YouTube videos with this.
         String youtube_video_id = null;
         for (URLEntity e: s.getURLEntities()) {
           youtube_video_id = Filter.YouTubeLink(e.getExpandedURL());
+          // Restrict Tweets with a YouTube link
           if (youtube_video_id != null)
             break;
         }

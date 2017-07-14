@@ -72,6 +72,7 @@ public class CrawlTweets {
     DB.UserToCrawl u;
     while (true) {
       u = DB.GetUserToCrawl();
+      //StdoutWriter.W(String.format("u.id=%d", u.id));
       if (u.id == -1) {
         // No users to crawl
         if (_stop_requested) {

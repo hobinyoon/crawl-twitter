@@ -18,10 +18,7 @@ public class DB {
   static private Connection _conn_stream_seed_users = null;
   static private Connection _conn_crawl_tweets = null;
   static private PreparedStatement _ps_insert_tweet = null;
-  static private PreparedStatement _ps_set_user_crawled1 = null;
   static private PreparedStatement _ps_set_user_crawled2 = null;
-  static private PreparedStatement _ps_set_user_unauthorized = null;
-  static private PreparedStatement _ps_set_user_notfound = null;
   static private PreparedStatement _ps_credential_rate_limited = null;
 
   static private void _InitUtf8mb4() throws SQLException {
@@ -54,23 +51,8 @@ public class DB {
           + "(id, uid, created_at, geo_lati, geo_longi, youtube_video_id) "
           + "VALUES (?, ?, ?, ?, ?, ?)");
 
-      _ps_set_user_crawled1 = _conn_crawl_tweets.prepareStatement(
-          "INSERT INTO users (id, gen, added_at, crawled_at, status, checked_out_at, checked_out_ip) "
-          + "VALUES (?, ?, NOW(), NOW(), 'C', NOW(), ?) "
-          + "ON DUPLICATE KEY UPDATE crawled_at=NOW(), gen=VALUES(gen), status='C'");
-
       _ps_set_user_crawled2 = _conn_crawl_tweets.prepareStatement(
           "UPDATE meta SET v_int = v_int + 1 WHERE k = 'C_cnt'");
-
-      _ps_set_user_unauthorized = _conn_crawl_tweets.prepareStatement(
-          "INSERT INTO users (id, gen, added_at, crawled_at, status, checked_out_at, checked_out_ip) "
-          + "VALUES (?, ?, NOW(), NOW(), 'P', NOW(), ?) "
-          + "ON DUPLICATE KEY UPDATE crawled_at=NOW(), gen=VALUES(gen), status='P'");
-
-      _ps_set_user_notfound = _conn_crawl_tweets.prepareStatement(
-          "INSERT INTO users (id, gen, added_at, crawled_at, status, checked_out_at, checked_out_ip) "
-          + "VALUES (?, ?, NOW(), NOW(), 'NF', NOW(), ?) "
-          + "ON DUPLICATE KEY UPDATE crawled_at=NOW(), gen=VALUES(gen), status='NF'");
 
       _ps_credential_rate_limited = _conn_crawl_tweets.prepareStatement(
           "UPDATE credentials SET rate_limited_at=NOW(), sec_until_retry=(?) WHERE token=(?)");
@@ -86,10 +68,7 @@ public class DB {
   static void Close() {
     try {
       if (_ps_insert_tweet != null) _ps_insert_tweet.close();
-      if (_ps_set_user_crawled1 != null) _ps_set_user_crawled1.close();
       if (_ps_set_user_crawled2 != null) _ps_set_user_crawled2.close();
-      if (_ps_set_user_unauthorized != null) _ps_set_user_unauthorized.close();
-      if (_ps_set_user_notfound != null) _ps_set_user_notfound.close();
       if (_ps_credential_rate_limited != null) _ps_credential_rate_limited.close();
 
       if (_conn_stream_seed_users != null) _conn_stream_seed_users.close();
@@ -310,8 +289,20 @@ public class DB {
   static void AddParentUserToCrawl(long uid, int gen) throws SQLException {
     Statement stmt = null;
     try {
-      String status = null;
       stmt = _conn_crawl_tweets.createStatement();
+      {
+        long cnt = 0;
+        final String q = String.format("SELECT count(*) as cnt FROM users_crawled WHERE id=%d", uid);
+        ResultSet rs = stmt.executeQuery(q);
+        if (rs.next())
+          cnt = rs.getLong("cnt");
+        if (cnt > 0) {
+          Mon.num_users_to_crawl_child_dup ++;
+          return;
+        }
+      }
+
+      String status = null;
       {
         final String q = String.format("SELECT status FROM users WHERE id=%d", uid);
         ResultSet rs = stmt.executeQuery(q);
@@ -353,6 +344,18 @@ public class DB {
     try {
       stmt = _conn_crawl_tweets.createStatement();
       for (long uid: uids) {
+        {
+          long cnt = 0;
+          final String q = String.format("SELECT count(*) as cnt FROM users_crawled WHERE id=%d", uid);
+          ResultSet rs = stmt.executeQuery(q);
+          if (rs.next())
+            cnt = rs.getLong("cnt");
+          if (cnt > 0) {
+            Mon.num_users_to_crawl_child_dup ++;
+            return;
+          }
+        }
+
         String status = null;
         {
           final String q = String.format("SELECT status FROM users WHERE id=%d", uid);
@@ -513,22 +516,41 @@ public class DB {
   }
 
   static void SetUserCrawled(UserToCrawl u) throws SQLException, InterruptedException {
+    _SetUserCrawled(u);
+    _IncGen();
+  }
+
+  static void _SetUserCrawled(UserToCrawl u) throws SQLException, InterruptedException {
     while (true) {
+      Statement stmt = null;
       try {
-        _ps_set_user_crawled1.setLong(1, u.id);
-        _ps_set_user_crawled1.setInt(2, u.gen);
-        _ps_set_user_crawled1.setString(3, Conf.ip);
-        _ps_set_user_crawled1.executeUpdate();
+        stmt = _conn_crawl_tweets.createStatement();
+        String q = String.format(
+            "INSERT INTO users_crawled (id, crawled_at) VALUES (%d, NOW()) "
+            + "ON DUPLICATE KEY UPDATE crawled_at=NOW() "
+            , u.id);
+        int affected_rows = stmt.executeUpdate(q);
+        // 1 when inserted, 2 when updated an existing row
+        if (affected_rows == 0)
+          throw new RuntimeException(String.format("Unexpected: q=[%s]", q));
+
+        q = String.format("DELETE FROM users WHERE id=%d ", u.id);
+        affected_rows = stmt.executeUpdate(q);
+        if (affected_rows != 1)
+          throw new RuntimeException("Unexpected");
 
         _ps_set_user_crawled2.executeUpdate();
 
         _conn_crawl_tweets.commit();
         Mon.num_crawled_users ++;
         //StdoutWriter.W(String.format("crawled all tweets of user %d", u.id));
+
+        if (stmt != null)
+          stmt.close();
         break;
       } catch (SQLException e) {
         if (e.getErrorCode() == MysqlErrorNumbers.ER_LOCK_WAIT_TIMEOUT) {
-          StdoutWriter.W(String.format("Lock wait timeout while SetUserCrawled(uid=%d). rolling back and retrying ...", u.id));
+          StdoutWriter.W(String.format("Lock wait timeout while setting user crawled uid=%d. rolling back and retrying ...", u.id));
           _conn_crawl_tweets.rollback();
           Mon.Sleep(1000);
           continue;
@@ -536,8 +558,6 @@ public class DB {
           throw e;
       }
     }
-
-    _IncGen();
   }
 
   private static int _num_uncrawled_users = -1;
@@ -635,7 +655,7 @@ public class DB {
         prev_c_cnt = rs.getLong("cnt");
       }
       {
-        final String q = "SELECT count(*) AS cnt FROM users WHERE status='C'";
+        final String q = "SELECT count(*) AS cnt FROM users_crawled";
         ResultSet rs = stmt.executeQuery(q);
         if (! rs.next())
           throw new RuntimeException("Unexpected");
@@ -678,20 +698,14 @@ public class DB {
     }
   }
 
-  static void SetUserUnauthorized(UserToCrawl u) throws SQLException {
-    _ps_set_user_unauthorized.setLong(1, u.id);
-    _ps_set_user_unauthorized.setInt(2, u.gen);
-    _ps_set_user_unauthorized.setString(3, Conf.ip);
-    _ps_set_user_unauthorized.executeUpdate();
-    _conn_crawl_tweets.commit();
+  // We just add the user to users_crawled table. No need to keep them separate for now.
+  static void SetUserUnauthorized(UserToCrawl u) throws SQLException, InterruptedException {
+    _SetUserCrawled(u);
   }
 
-  static void SetUserNotFound(UserToCrawl u) throws SQLException {
-    _ps_set_user_notfound.setLong(1, u.id);
-    _ps_set_user_notfound.setInt(2, u.gen);
-    _ps_set_user_notfound.setString(3, Conf.ip);
-    _ps_set_user_notfound.executeUpdate();
-    _conn_crawl_tweets.commit();
+  // We just add the user to users_crawled table. No need to keep them separate for now.
+  static void SetUserNotFound(UserToCrawl u) throws SQLException, InterruptedException {
+    _SetUserCrawled(u);
   }
 
   static void AddTweet(long id, long uid, Date created_at, GeoLocation location, String youtube_video_id)

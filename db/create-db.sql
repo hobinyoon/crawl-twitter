@@ -78,6 +78,17 @@ CREATE TABLE IF NOT EXISTS twitter4.users (
 	INDEX (checked_out_at),
 	INDEX (checked_out_at, checked_out_ip));
 
+-- When selecting, rows with 'UP' and 'UC' has priority over those with 'U',
+-- which helps build bigger fan-out.
+CREATE TABLE IF NOT EXISTS twitter4.users_crawled (
+	id BIGINT,
+	-- crawled_at is useful when playing with the Tweet (YouTube request)
+	-- density.
+	crawled_at TIMESTAMP NULL DEFAULT NULL,
+	PRIMARY KEY (id),
+	INDEX (crawled_at)
+	);
+
 CREATE TABLE IF NOT EXISTS twitter4.tweets (
 	id BIGINT,
 	uid BIGINT NOT NULL,

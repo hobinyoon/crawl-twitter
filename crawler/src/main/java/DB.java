@@ -267,6 +267,18 @@ public class DB {
     Statement stmt = null;
     try {
       stmt = _conn_stream_seed_users.createStatement();
+      {
+        long cnt = 0;
+        final String q = String.format("SELECT count(*) as cnt FROM users_crawled WHERE id=%d", uid);
+        ResultSet rs = stmt.executeQuery(q);
+        if (rs.next())
+          cnt = rs.getLong("cnt");
+        if (cnt > 0) {
+          Mon.num_users_to_crawl_streamed_dup ++;
+          return;
+        }
+      }
+
       try {
         final String q = String.format("INSERT INTO users (id, gen, added_at, status) VALUES (%d, -1, NOW(), 'U')", uid);
         int affected_rows = stmt.executeUpdate(q);

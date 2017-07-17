@@ -297,7 +297,7 @@ public class DB {
         if (rs.next())
           cnt = rs.getLong("cnt");
         if (cnt > 0) {
-          Mon.num_users_to_crawl_child_dup ++;
+          Mon.num_users_to_crawl_parent_dup ++;
           return;
         }
       }

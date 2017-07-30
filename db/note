@@ -11,7 +11,7 @@ Restoring a backup
 	real    25m41.591s (without tweets table)
 
 Resetting users to U (uncrawled)
-	mysql> update users set gen=-1, crawled_at=NULL, status='U', check_out_at=NULL, check_out_ip=NULL where status='C'; 
+	mysql> update users set gen=-1, crawled_at=NULL, status='U', check_out_at=NULL, check_out_ip=NULL where status='C';
 	Query OK, 1385928 rows affected (1 hour 4 min 35.52 sec)
 	Rows matched: 1385928  Changed: 1385928  Warnings: 0
 
@@ -24,3 +24,48 @@ Resetting users to U (uncrawled)
 	| U      |  1386924 |
 	+--------+----------+
 	3 rows in set (14.80 sec)
+
+Monitoring credentials
+  select
+    substring(token, 1, 4) as token
+    , num_reqs_before_rate_limited
+    , rate_limited_at
+    , sec_until_retry
+    , (rate_limited_at + sec_until_retry - now()) as wait_for
+    , checked_out_at
+    , checked_out_ip
+  from credentials
+  order by rate_limited_at desc;
+
+  select
+    substring(token, 1, 4) as token
+    , rate_limited_at
+    , sec_until_retry
+    , (rate_limited_at + sec_until_retry - now()) as wait_for
+  from credentials
+  order by rate_limited_at desc;
+
+SELECT *, ADDDATE(rate_limited_at, INTERVAL sec_until_retry SECOND) as retry_after
+FROM credentials
+WHERE
+(status is null or status != 'I')
+and (checked_out_at is null or TIMESTAMPDIFF(SECOND, checked_out_at, NOW()) > 60)
+and token not in (select distinct(token) from cred_auth_history where status='F' and
+TIMESTAMPDIFF(SECOND, time_, NOW()) < 3600)
+order by retry_after
+LIMIT 1
+
+SELECT
+  substring(token, 10, 14) as token,
+  checked_out_ip,
+  checked_out_at,
+  ADDDATE(rate_limited_at, INTERVAL sec_until_retry SECOND) as retry_after,
+  NOW()
+FROM credentials
+WHERE
+(status is null or status != 'I')
+and (checked_out_at is null or TIMESTAMPDIFF(SECOND, checked_out_at, NOW()) > 60)
+and token not in (select distinct(token) from cred_auth_history where status='F' and
+TIMESTAMPDIFF(SECOND, time_, NOW()) < 3600)
+order by retry_after
+LIMIT 10;

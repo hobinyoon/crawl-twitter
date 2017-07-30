@@ -43,6 +43,21 @@ VALUE (
 );
 */
 
+-- http://smstics.com/index.php?phone=0037258458133
+INSERT INTO credentials
+(email, email_pw, twitter_pw, twitter_username, twitter_app_name, token, token_secret, consumer_key, consumer_secret)
+VALUE (
+'y...@yandex.com', -- email
+'y...r', -- email_pw
+'y...r', -- twitter_pw
+'y...2', -- twitter_username
+'y...2', -- twitter_app_name
+'8...D', -- token
+'i...i', -- token_secret
+'C...p', -- consumer_key
+'a...a' -- consumer_secret
+);
+
 CREATE TABLE IF NOT EXISTS twitter3.cred_auth_history (
 	time_ TIMESTAMP NULL DEFAULT NULL,
 	status CHAR(1) NOT NULL,	-- S: auth succeeded, F: auth failed

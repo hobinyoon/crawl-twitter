@@ -249,8 +249,8 @@ public class DB {
         stmt = _conn_crawl_tweets.createStatement();
         final String q = String.format(
             "UPDATE credentials "
-            + "SET checked_out_at=NOW(), sec_until_retry=300 "
-            + "WHERE token='%s'", tc.token);
+            + "SET checked_out_ip='%s', checked_out_at=NOW(), sec_until_retry=300 "
+            + "WHERE token='%s'", Conf.ip, tc.token);
         int rows_affected = stmt.executeUpdate(q);
         if (rows_affected == 1) {
           _conn_crawl_tweets.commit();

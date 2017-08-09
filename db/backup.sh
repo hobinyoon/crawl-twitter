@@ -10,13 +10,15 @@ echo $CUR_DATETIME
 DN_BACKUP=~/work/crawl-twitter-data/backup
 
 FN_SQL=$DN_BACKUP"/"$DB_NAME"-"$CUR_DATETIME".sql"
-FN_SQL_7Z=$FN_SQL".7z"
+#FN_SQL_7Z=$FN_SQL".7z"
+FN_SQL_BZ2=$FN_SQL".bz2"
 
 # --skip-lock-tables to prevent deadlock. I've seen deadlocks on the credentials table many times without this option.
-time /usr/bin/mysqldump --skip-tz-utc --skip-lock-tables -u twitter $DB_NAME > $FN_SQL
+#time /usr/bin/mysqldump --skip-tz-utc --skip-lock-tables -u twitter $DB_NAME > $FN_SQL
+#/usr/bin/7z a -mx=9 $FN_SQL_7Z $FN_SQL
+#\rm $FN_SQL
 
-/usr/bin/7z a -mx=9 $FN_SQL_7Z $FN_SQL
-\rm $FN_SQL
+time /usr/bin/mysqldump --skip-tz-utc --skip-lock-tables -u twitter $DB_NAME | /usr/bin/pbzip2 > $FN_SQL_BZ2
 
 /usr/bin/find $DN_BACKUP -type f -ls | /usr/bin/sort -k 11 -r | /usr/bin/head -n 5
 
